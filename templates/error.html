@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PUPHAUS</title>
+    <style>
+        a, a:hover, a:active {
+            color: black;
+        }
+        body {
+            background-color: #FFFFFF;
+            font-family: sans-serif;
+        }
+        div.container {
+            text-align: center;
+        }
+        div.container img {
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            /*border-radius: 25px;
+            box-shadow: 0px 5px 10px #000000;*/
+        }
+        div.ref {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <img src="static/pup.svg" width="400" style="transform: translate(-81%, -50%);" />
+    <img src="static/haus.svg" width="400"  style="transform: translate(-1%, -50%);" />
+    <h1>{{.ErrNum}}</h1>
+    {{if .CodeNum}}
+        <h2>{{.CodeNum}}</h2>
+    {{end}}
+    {{.ErrText}}
+</div>
+<div class="ref">
+    art by <a href="https://thenounproject.com/bonste/">Stefania Bonacasa</a> and <a href="https://thenounproject.com/bjorna1/">Björn Andersson</a> from the Noun Project
+</div>
+</body>
+</html>
