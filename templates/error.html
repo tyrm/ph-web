@@ -33,13 +33,14 @@
 </head>
 <body>
 <div class="container">
-    <img src="static/pup.svg" width="400" style="transform: translate(-81%, -50%);" />
-    <img src="static/haus.svg" width="400"  style="transform: translate(-1%, -50%);" />
+    <img src="static/img/pup.svg" width="400" style="transform: translate(-81%, -50%);" />
+    <img src="static/img/haus.svg" width="400"  style="transform: translate(-1%, -50%);" />
     <h1>{{.ErrNum}}</h1>
     {{if .CodeNum}}
         <h2>{{.CodeNum}}</h2>
     {{end}}
-    {{.ErrText}}
+    <b>{{.ErrText}}</b>{{if .Detail}}<b>:</b> {{.Detail}}{{end}}
+
 </div>
 <div class="ref">
     art by <a href="https://thenounproject.com/bonste/">Stefania Bonacasa</a> and <a href="https://thenounproject.com/bjorna1/">Björn Andersson</a> from the Noun Project

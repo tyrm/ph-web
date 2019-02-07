@@ -36,9 +36,13 @@ func main() {
 	models.InitDB(config.DBEngine)
 	defer models.CloseDB()
 
+	web.Init(config.DBEngine)
+	defer web.Close()
+
 	// Create Top Router
 	r := mux.NewRouter()
 	r.HandleFunc("/", web.HandleLanding).Methods("GET")
+	r.HandleFunc("/login", web.HandleLogin)
 
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))

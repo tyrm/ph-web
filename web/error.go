@@ -10,6 +10,7 @@ type TemplateVarError struct {
 	ErrNum  string
 	CodeNum string
 	ErrText string
+	Detail  string
 }
 
 var codeTitle = map[int]string{
@@ -26,6 +27,7 @@ func HandleNotFound(response http.ResponseWriter, request *http.Request) {
 func MakeErrorResponse(response http.ResponseWriter, status int, detail string, code int) {
 	templateVars := &TemplateVarError{
 		ErrNum: strconv.Itoa(status),
+		Detail: detail,
 	}
 
 	// Get Title
@@ -39,7 +41,14 @@ func MakeErrorResponse(response http.ResponseWriter, status int, detail string, 
 	// Send Response
 	response.WriteHeader(status)
 
-	tmpl := template.Must(template.ParseFiles("templates/error.html"))
+	tmlpStr, err := templates.FindString("templates/error.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	tmpl := template.New("landing template")
+	tmpl = template.Must(tmpl.Parse(tmlpStr))
 	tmpl.Execute(response, templateVars)
 
 	return

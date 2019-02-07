@@ -49,7 +49,5 @@ func InitDB(connectionString string) {
 		panic(err)
 	}
 
-
-
 	return
 }

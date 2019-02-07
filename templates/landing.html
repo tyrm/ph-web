@@ -11,6 +11,9 @@
       background-color: #FFFFFF;
       font-family: sans-serif;
     }
+    div.container {
+        text-align: center;
+    }
     div.container img {
       margin: 0;
       position: absolute;
@@ -29,6 +32,10 @@
   </style>
 </head>
 <body>
+    {{if .UserID}}
+        <h1>hello {{.UserID}}</h1>
+    {{end}}
+
   <div class="container">
     <img src="static/img/pup.svg" width="400" style="transform: translate(-81%, -50%);" />
     <img src="static/img/haus.svg" width="400"  style="transform: translate(-1%, -50%);" />

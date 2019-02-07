@@ -5,27 +5,22 @@ import (
 	"net/http"
 )
 
-type TemplateVarLanding struct {
-	UserID  string
+type TemplateVarLogin struct {
+	Error     string
+	Username  string
 }
 
-func HandleLanding(response http.ResponseWriter, request *http.Request) {
+func HandleLogin(response http.ResponseWriter, request *http.Request) {
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
 
-	tmlpStr, err := templates.FindString("templates/landing.html")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	templateVars := &TemplateVarLanding{}
-
 	if us.Values["LoggedInUserID"] != nil {
-		templateVars.UserID = us.Values["LoggedInUserID"].(string)
+		response.Header().Set("Location", "/")
+		response.WriteHeader(http.StatusFound)
+		return
 	}
 
 	if err = us.Save(request, response); err != nil {
@@ -34,8 +29,12 @@ func HandleLanding(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl := template.New("landing template")
+	tmlpStr, err := templates.FindString("templates/login.html")
+	tmpl := template.New("login template")
 	tmpl = template.Must(tmpl.Parse(tmlpStr))
-	tmpl.Execute(response, templateVars)
+
+	tmpl.Execute(response, &TemplateVarLogin{
+		Error: "whoop",
+	})
 	return
 }
