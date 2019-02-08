@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"html/template"
 	"net/http"
 
@@ -29,7 +30,10 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 		logger.Tracef("Trying login for: %s", formUsername)
 
 		user, err := models.GetUserByUsername(formUsername)
-		if err != nil {
+		if err == sql.ErrNoRows {
+			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized"})
+			return
+		} else if err != nil {
 			logger.Errorf("Couldn't get user for login: %s", err)
 			tmpl.Execute(response, &TemplateVarLogin{Error: err.Error()})
 			return
@@ -40,7 +44,11 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 
 		if valid {
 			us.Values["LoggedInUserID"] = user.ID
+		} else {
+			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized"})
+			return
 		}
+
 	}
 
 	if err = us.Save(request, response); err != nil {
