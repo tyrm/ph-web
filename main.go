@@ -50,6 +50,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", web.HandleLanding).Methods("GET")
 	r.HandleFunc("/login", web.HandleLogin)
+	r.HandleFunc("/logout", web.HandleLogout)
 
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
