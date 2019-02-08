@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -83,8 +84,16 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	return
 }
 
+
+
 func GetUsernameByID(uid uint) string {
 	var username string
+
+	if u, found := cUsernameByID.Get(strconv.FormatUint(uint64(uid), 10)); found {
+		username = u.(string)
+		logger.Tracef("GetUsernameByID(%d) (%s) [HIT]", uid, username)
+		return username
+	}
 
 	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
 	if err != nil {
@@ -92,6 +101,8 @@ func GetUsernameByID(uid uint) string {
 		return strconv.FormatUint(uint64(uid), 10)
 	}
 
+	cUsernameByID.Set(strconv.FormatUint(uint64(uid), 10), username, cache.DefaultExpiration)
+	logger.Tracef("GetUsernameByID(%d) (%s) [MISS]", uid, username)
 	return username
 }
 

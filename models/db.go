@@ -2,15 +2,19 @@ package models
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
 	_ "github.com/lib/pq"
+	"github.com/patrickmn/go-cache"
 	"github.com/rubenv/sql-migrate"
 )
 
 var DB *sql.DB
 var logger *loggo.Logger
+
+var cUsernameByID *cache.Cache
 
 func CloseDB() {
 	DB.Close()
@@ -48,6 +52,9 @@ func InitDB(connectionString string) {
 		logger.Criticalf("Coud not migrate database: %s", err)
 		panic(err)
 	}
+
+	// init cache
+	cUsernameByID = cache.New(5*time.Minute, 10*time.Minute)
 
 	return
 }
