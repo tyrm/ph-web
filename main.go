@@ -11,15 +11,9 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"github.com/juju/loggo"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var logger *loggo.Logger
-
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
 
 func main() {
 	loggo.ConfigureLoggers("<root>=TRACE")
@@ -35,6 +29,19 @@ func main() {
 	// Connect DB
 	models.InitDB(config.DBEngine)
 	defer models.CloseDB()
+
+	// Create Admin if no Users exist
+	count, err := models.EstimateCountUsers()
+	if err != nil {
+		return
+	}
+	if count == 0 {
+		logger.Infof("Creating admin user")
+		_, err := models.NewUser("admin", "admin")
+		if err != nil {
+			logger.Errorf("Error creating admin user")
+		}
+	}
 
 	web.Init(config.DBEngine)
 	defer web.Close()

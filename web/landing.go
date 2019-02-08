@@ -3,6 +3,8 @@ package web
 import (
 	"html/template"
 	"net/http"
+
+	"../models"
 )
 
 type TemplateVarLanding struct {
@@ -25,7 +27,8 @@ func HandleLanding(response http.ResponseWriter, request *http.Request) {
 	templateVars := &TemplateVarLanding{}
 
 	if us.Values["LoggedInUserID"] != nil {
-		templateVars.UserID = us.Values["LoggedInUserID"].(string)
+		uid := us.Values["LoggedInUserID"].(uint)
+		templateVars.UserID = models.GetUsernameByID(uid)
 	}
 
 	if err = us.Save(request, response); err != nil {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -17,14 +18,24 @@ type User struct {
 	DeletedAt *time.Time
 }
 
+const sqlUserEstimateCount = `
+SELECT n_live_tup
+FROM pg_stat_all_tables
+WHERE relname = 'users';`
+
 const sqlUserGet = `
 SELECT id, username, password, created_at, updated_at
 FROM users
-WHERE ;`
+WHERE lower(username) = lower($1) AND deleted_at IS NULL;`
+
+const sqlUserGetUsernameByID = `
+SELECT username
+FROM users
+WHERE id = $1 AND deleted_at IS NULL;`
 
 const sqlUserInsert = `
-INSERT INTO "public"."users" (id, username, path, method, content_length, "from", body)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO "public"."users" (username, password, created_at, updated_at)
+VALUES ($1, $2, $3, $4)
 RETURNING id;`
 
 func (u *User) CheckPassword(password string) bool {
@@ -32,8 +43,22 @@ func (u *User) CheckPassword(password string) bool {
 	return err == nil
 }
 
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func EstimateCountUsers() (count uint, err error) {
+	err = DB.QueryRow(sqlUserEstimateCount).Scan(&count)
+	if err != nil {
+		logger.Errorf("Error estimating user count: %s", err.Error())
+	}
+	logger.Tracef("EstimateCountUsers() (%d, %v)", count, err)
+	return
+}
+
 func GetUserByUsername(usernameStr string) (user User, err error) {
-	var id int
+	var id uint
 	var username string
 	var password string
 
@@ -41,6 +66,59 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	var updatedAt time.Time
 
 	err = DB.QueryRow(sqlUserGet, usernameStr).Scan(&id, &username, &password, &createdAt, &updatedAt)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
 
+	user = User{
+		ID: id,
+		Username: username,
+		Password: password,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+
+	logger.Tracef("GetUserByUsername(%s) (%s, %v)", usernameStr, user, err)
+	return
+}
+
+func GetUsernameByID(uid uint) string {
+	var username string
+
+	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return strconv.FormatUint(uint64(uid), 10)
+	}
+
+	return username
+}
+
+func NewUser(username string, password string) (user User, err error) {
+	createdAt := time.Now()
+	passHash, err := hashPassword(password)
+	if err != nil {
+		logger.Errorf("Error hashing password: %s", err.Error())
+		return
+	}
+
+	newUser := User{
+		Username: username,
+		Password: passHash,
+		CreatedAt: createdAt,
+		UpdatedAt: createdAt,
+	}
+
+	var newID uint
+	err = DB.QueryRow(sqlUserInsert, newUser.Username, newUser.Password, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
+	if err != nil {
+		logger.Errorf("Error inserting record into db: %s", err.Error())
+		return
+	}
+
+	newUser.ID = newID
+	logger.Tracef("New user created: %v", newUser)
+	user = newUser
 	return
 }

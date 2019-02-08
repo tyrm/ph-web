@@ -3,6 +3,8 @@ package web
 import (
 	"html/template"
 	"net/http"
+
+	"../models"
 )
 
 type TemplateVarLogin struct {
@@ -11,8 +13,38 @@ type TemplateVarLogin struct {
 }
 
 func HandleLogin(response http.ResponseWriter, request *http.Request) {
+	tmlpStr, err := templates.FindString("templates/login.html")
+	tmpl := template.New("login template")
+	tmpl = template.Must(tmpl.Parse(tmlpStr))
+
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	if request.Method == "POST" {
+		request.ParseForm()
+		formUsername := request.Form["username"][0]
+		logger.Tracef("Trying login for: %s", formUsername)
+
+		user, err := models.GetUserByUsername(formUsername)
+		if err != nil {
+			logger.Errorf("Couldn't get user for login: %s", err)
+			tmpl.Execute(response, &TemplateVarLogin{Error: err.Error()})
+			return
+		}
+
+		formPassword := request.Form["password"][0]
+		valid := user.CheckPassword(formPassword)
+
+		if valid {
+			us.Values["LoggedInUserID"] = user.ID
+		}
+	}
+
+	if err = us.Save(request, response); err != nil {
+		logger.Errorf("Error saving session: %v", err)
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
@@ -23,18 +55,6 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err = us.Save(request, response); err != nil {
-		logger.Errorf("Error saving session: %v", err)
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	tmlpStr, err := templates.FindString("templates/login.html")
-	tmpl := template.New("login template")
-	tmpl = template.Must(tmpl.Parse(tmlpStr))
-
-	tmpl.Execute(response, &TemplateVarLogin{
-		Error: "whoop",
-	})
+	tmpl.Execute(response, &TemplateVarLogin{})
 	return
 }
