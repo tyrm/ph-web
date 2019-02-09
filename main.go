@@ -52,10 +52,15 @@ func main() {
 	r.HandleFunc("/login", web.HandleLogin)
 	r.HandleFunc("/logout", web.HandleLogout)
 
+	rWeb := r.PathPrefix("/web").Subrouter()
+	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
+	rWeb.HandleFunc("/users", web.HandleUserIndex).Methods("GET")
+
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
 
 	// Serve 404
+	rWeb.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 	r.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 
 	go http.ListenAndServe(":8080", r)

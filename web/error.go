@@ -53,3 +53,20 @@ func MakeErrorResponse(response http.ResponseWriter, status int, detail string, 
 
 	return
 }
+
+func ProtectMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		us, err := globalSessions.Get(r, "session-key")
+		if err != nil {
+			MakeErrorResponse(w, 500, err.Error(), 0)
+			return
+		}
+
+		if us.Values["LoggedInUserID"] == nil {
+			MakeErrorResponse(w, 404, r.URL.Path, 0)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

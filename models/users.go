@@ -19,6 +19,11 @@ type User struct {
 	DeletedAt *time.Time
 }
 
+const sqlUserCount = `
+SELECT count(*)
+FROM users
+WHERE deleted_at IS NULL;`
+
 const sqlUserEstimateCount = `
 SELECT n_live_tup
 FROM pg_stat_all_tables
@@ -39,6 +44,11 @@ INSERT INTO "public"."users" (username, password, created_at, updated_at)
 VALUES ($1, $2, $3, $4)
 RETURNING id;`
 
+const sqlUsersGetPage = `
+SELECT id, username, created_at, updated_at
+FROM users WHERE deleted_at IS NULL
+ORDER BY id asc LIMIT $1 OFFSET $2;`
+
 func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	return err == nil
@@ -55,6 +65,15 @@ func EstimateCountUsers() (count uint, err error) {
 		logger.Errorf("Error estimating user count: %s", err.Error())
 	}
 	logger.Tracef("EstimateCountUsers() (%d, %v)", count, err)
+	return
+}
+
+func GetUserCount() (count uint, err error) {
+	err = DB.QueryRow(sqlUserCount).Scan(&count)
+	if err != nil {
+		logger.Errorf("Error estimating user count: %s", err.Error())
+	}
+	logger.Tracef("GetUserCount() (%d, %v)", count, err)
 	return
 }
 
@@ -84,7 +103,42 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	return
 }
 
+func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
+	offset := limit * page
+	var newUserList []*User
 
+	rows, err := DB.Query(sqlUsersGetPage, limit, offset)
+	if err != nil {
+		logger.Tracef("GetUsernameByID(%d, %d) (%v, %v)", limit, page, nil, err)
+		return
+	}
+	for rows.Next() {
+		var id uint
+		var username string
+		var createdAt time.Time
+		var updatedAt time.Time
+
+		err = rows.Scan(&id, &username, &createdAt, &updatedAt)
+		if err != nil {
+			logger.Tracef("GetUsernameByID(%d, %d) (%v, %v)", limit, page, nil, err)
+			return
+		}
+
+		newUser := User{
+			ID: id,
+			Username: username,
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		}
+
+		newUserList = append(newUserList, &newUser)
+	}
+
+	userList = newUserList
+	logger.Tracef("GetUsernameByID(%d, %d) ([%d]User, %v)", limit, page, len(userList), nil)
+
+	return
+}
 
 func GetUsernameByID(uid uint) string {
 	var username string

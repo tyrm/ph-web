@@ -1,0 +1,52 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+{{- if .AlertWarn}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+            {{.AlertWarn}}
+            </div>
+        </div>
+    </div>
+{{- end}}
+    <div class="row">
+        <div class="col">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/web/users">List</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">New</a>
+                </li>
+            </ul>
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Created At</th>
+                    <th scope="col">Updated At</th>
+                </tr>
+                </thead>
+                <tbody>
+{{- with .Users}}
+{{- range .}}
+                <tr>
+                    <th scope="row">{{.ID}}</th>
+                    <td>{{.Username}}</td>
+                    <td>{{.CreatedAt}}</td>
+                    <td>{{.UpdatedAt}}</td>
+                </tr>
+{{- end}}
+{{- end}}
+                </tbody>
+            </table>
+{{- if .Pages}}
+{{- template "pagination" .Pages}}
+{{- end}}
+        </div>
+    </div>
+</div>
+{{end}}
