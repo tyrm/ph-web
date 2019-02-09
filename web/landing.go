@@ -1,7 +1,6 @@
 package web
 
 import (
-	"html/template"
 	"net/http"
 
 	"../models"
@@ -13,12 +12,6 @@ type TemplateVarLanding struct {
 
 func HandleLanding(response http.ResponseWriter, request *http.Request) {
 	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	tmlpStr, err := templates.FindString("templates/landing.html")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -37,8 +30,12 @@ func HandleLanding(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl := template.New("landing template")
-	tmpl = template.Must(tmpl.Parse(tmlpStr))
+	tmpl, err := compileTemplates("templates/landing.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
 	tmpl.Execute(response, templateVars)
 	return
 }

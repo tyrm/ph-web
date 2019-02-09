@@ -1,7 +1,6 @@
 package web
 
 import (
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -41,14 +40,12 @@ func MakeErrorResponse(response http.ResponseWriter, status int, detail string, 
 	// Send Response
 	response.WriteHeader(status)
 
-	tmlpStr, err := templates.FindString("templates/error.html")
+	tmpl, err := compileTemplates("templates/error.html")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
 
-	tmpl := template.New("landing template")
-	tmpl = template.Must(tmpl.Parse(tmlpStr))
 	tmpl.Execute(response, templateVars)
 
 	return

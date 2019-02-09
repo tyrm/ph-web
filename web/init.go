@@ -1,11 +1,16 @@
 package web
 
 import (
+	"html/template"
 	"strconv"
+	"time"
 
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/css"
+	"github.com/tdewolff/minify/html"
 )
 
 type TemplatePages struct {
@@ -26,6 +31,39 @@ var globalSessions *pgstore.PGStore
 
 func Close() {
 	globalSessions.Close()
+}
+
+func compileTemplates(filenames ...string) (*template.Template, error) {
+	start := time.Now()
+
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.AddFunc("text/html", html.Minify)
+
+	var tmpl *template.Template
+	for _, filename := range filenames {
+		if tmpl == nil {
+			tmpl = template.New(filename)
+		} else {
+			tmpl = tmpl.New(filename)
+		}
+
+		b, err := templates.FindString(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		mb, err := m.String("text/html", b)
+		if err != nil {
+			return nil, err
+		}
+		tmpl.Parse(string(mb))
+
+		tmpl.Parse(string(mb))
+	}
+	elapsed := time.Since(start)
+	logger.Tracef("compileTemplates(%s) [%s]", filenames, elapsed)
+	return tmpl, nil
 }
 
 func Init(db string) {

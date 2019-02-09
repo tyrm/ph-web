@@ -2,7 +2,6 @@ package web
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -20,17 +19,6 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 
 	tmplVars := &TemplateVarUserIndex{}
 
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	tmlpLayoutStr, err := templates.FindString("templates/layout.html")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-	tmlpUserIndexStr, err := templates.FindString("templates/users_index.html")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -67,9 +55,9 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		logger.Tracef("got 'page' query parameter: %s", pageInt)
 	}
 
-	//
+	// Add Pagination if needed
 	if pageCount > 1 {
-		tmplVars.Pages = makePagination("/web/users", page, pageCount, 5)
+		tmplVars.Pages = makePagination("/web/users/", page, pageCount, 5)
 	}
 
 	// Get Users
@@ -86,8 +74,11 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl := template.New("landing template")
-	tmpl = template.Must(tmpl.Parse(tmlpUserIndexStr + tmlpLayoutStr))
+	tmpl, err := compileTemplates("templates/layout.html", "templates/users_index.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
 
 	tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	return

@@ -2,7 +2,6 @@ package web
 
 import (
 	"database/sql"
-	"html/template"
 	"net/http"
 
 	"../models"
@@ -14,9 +13,11 @@ type TemplateVarLogin struct {
 }
 
 func HandleLogin(response http.ResponseWriter, request *http.Request) {
-	tmlpStr, err := templates.FindString("templates/login.html")
-	tmpl := template.New("login template")
-	tmpl = template.Must(tmpl.Parse(tmlpStr))
+	tmpl, err := compileTemplates("templates/login.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
 
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {

@@ -54,7 +54,8 @@ func main() {
 
 	rWeb := r.PathPrefix("/web").Subrouter()
 	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
-	rWeb.HandleFunc("/users", web.HandleUserIndex).Methods("GET")
+	rWeb.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
+	//rWeb.HandleFunc("/users/{id:[0-9]+}", ArticleHandler)
 
 	// Serve static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
