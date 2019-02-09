@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
+	"github.com/patrickmn/go-cache"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
@@ -29,18 +31,32 @@ var logger *loggo.Logger
 var templates *packr.Box
 var globalSessions *pgstore.PGStore
 
+var templateCache *cache.Cache
+
 func Close() {
 	globalSessions.Close()
 }
 
 func compileTemplates(filenames ...string) (*template.Template, error) {
 	start := time.Now()
+	var tmpl *template.Template
+
+	filenamesStr := fmt.Sprintf("%s", filenames)
+
+	// This gets tedious if the value is used several times in the same function.
+	// You might do either of the following instead:
+	if x, found := templateCache.Get(filenamesStr); found {
+		tmpl := x.(*template.Template)
+
+		elapsed := time.Since(start)
+		logger.Tracef("compileTemplates(%s) [%s][HIT]", filenames, elapsed)
+		return tmpl, nil
+	}
 
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
 	m.AddFunc("text/html", html.Minify)
 
-	var tmpl *template.Template
 	for _, filename := range filenames {
 		if tmpl == nil {
 			tmpl = template.New(filename)
@@ -61,8 +77,11 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 
 		tmpl.Parse(string(mb))
 	}
+
+	templateCache.Set(filenamesStr, tmpl, cache.DefaultExpiration)
+
 	elapsed := time.Since(start)
-	logger.Tracef("compileTemplates(%s) [%s]", filenames, elapsed)
+	logger.Tracef("compileTemplates(%s) [%s][MISS]", filenames, elapsed)
 	return tmpl, nil
 }
 
@@ -78,6 +97,9 @@ func Init(db string) {
 
 
 	templates = packr.New("templates", "./templates")
+
+	// init cache
+	templateCache = cache.New(5*time.Minute, 10*time.Minute)
 }
 
 func makePagination(path string, curPage uint, maxPage uint, displayPages uint) (pages *TemplatePages) {
