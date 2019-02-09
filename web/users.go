@@ -10,19 +10,21 @@ import (
 
 type TemplateVarUserIndex struct {
 	AlertWarn  string
+	Username   string
 	Users      []*models.User
 	Pages      *TemplatePages
 }
 
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	us, err := globalSessions.Get(request, "session-key")
-
-	tmplVars := &TemplateVarUserIndex{}
-
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
+
+	tmplVars := &TemplateVarUserIndex{}
+	uid := us.Values["LoggedInUserID"].(uint)
+	tmplVars.Username = models.GetUsernameByID(uid)
 
 	// page stuff
 	var entriesPerPage uint = 5

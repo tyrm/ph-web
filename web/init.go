@@ -95,7 +95,7 @@ func Init(db string) {
 	}
 	globalSessions = gs
 
-
+	// Load Templates
 	templates = packr.New("templates", "./templates")
 
 	// init cache

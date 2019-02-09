@@ -31,9 +31,11 @@
                 <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
             </li>
         </ul>
+{{- if .Username}}
         <div class="navbar-text" style="text-align: right;">
-            Navbar text with an inline element
+            {{.Username}}
         </div>
+{{- end}}
     </div>
 </nav>
 {{- template "body" . -}}

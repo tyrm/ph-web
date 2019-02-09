@@ -49,7 +49,6 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized"})
 			return
 		}
-
 	}
 
 	if err = us.Save(request, response); err != nil {
