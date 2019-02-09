@@ -80,7 +80,7 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 		UpdatedAt: updatedAt,
 	}
 
-	logger.Tracef("GetUserByUsername(%s) (%s, %v)", usernameStr, user, err)
+	logger.Tracef("GetUserByUsername(%s) (%v, %v)", usernameStr, user, err)
 	return
 }
 

@@ -10,7 +10,6 @@ var logger *loggo.Logger
 var templates *packr.Box
 
 var globalSessions *pgstore.PGStore
-
 func Close() {
 	globalSessions.Close()
 }
@@ -24,6 +23,7 @@ func Init(db string) {
 		logger.Errorf(err.Error())
 	}
 	globalSessions = gs
+
 
 	templates = packr.New("templates", "./templates")
 }
