@@ -9,15 +9,17 @@ import (
 )
 
 type TemplateVarUserIndex struct {
-	AlertWarn  string
-	Username   string
-	Users      []*models.User
-	Pages      *TemplatePages
+	NavBar    *TemplateNavbar
+	AlertWarn string
+	Username  string
+	Users     []*models.User
+	Pages     *TemplatePages
 }
 
 type TemplateVarUserNew struct {
-	AlertWarn  string
-	Username   string
+	NavBar    *TemplateNavbar
+	AlertWarn string
+	Username  string
 }
 
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
@@ -30,6 +32,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	tmplVars := &TemplateVarUserIndex{}
 	uid := us.Values["LoggedInUserID"].(uint)
 	tmplVars.Username = models.GetUsernameByID(uid)
+	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
 	// page stuff
 	var entriesPerPage uint = 5
@@ -41,7 +44,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
-	pageCount = userCount/entriesPerPage
+	pageCount = userCount / entriesPerPage
 	if userCount%entriesPerPage > 0 {
 		pageCount++
 	}
@@ -91,7 +94,6 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	return
 }
 
-
 func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
@@ -102,6 +104,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	tmplVars := &TemplateVarUserIndex{}
 	uid := us.Values["LoggedInUserID"].(uint)
 	tmplVars.Username = models.GetUsernameByID(uid)
+	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
 	tmpl, err := compileTemplates("templates/layout.html", "templates/users_new.html")
 	if err != nil {

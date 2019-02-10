@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"html/template"
 	"strconv"
 	"time"
@@ -9,17 +8,32 @@ import (
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
-	"github.com/patrickmn/go-cache"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
 )
 
+type TemplateNavbar struct {
+	Nodes    []*TempalteNavbarNode
+	Username string
+}
+
+type TempalteNavbarNode struct {
+	Text   string
+	URL    string
+	FAIcon string
+
+	Active   bool
+	Disabled bool
+
+	Children []*TempalteNavbarNode
+}
+
 type TemplatePages struct {
 	PrevURI string
 	NextURI string
 
-	Pages   []*TemplatePage
+	Pages []*TemplatePage
 }
 type TemplatePage struct {
 	PageNum string
@@ -31,8 +45,6 @@ var logger *loggo.Logger
 var templates *packr.Box
 var globalSessions *pgstore.PGStore
 
-var templateCache *cache.Cache
-
 func Close() {
 	globalSessions.Close()
 }
@@ -40,18 +52,6 @@ func Close() {
 func compileTemplates(filenames ...string) (*template.Template, error) {
 	start := time.Now()
 	var tmpl *template.Template
-
-	filenamesStr := fmt.Sprintf("%s", filenames)
-
-	// This gets tedious if the value is used several times in the same function.
-	// You might do either of the following instead:
-	if x, found := templateCache.Get(filenamesStr); found {
-		tmpl := x.(*template.Template)
-
-		elapsed := time.Since(start)
-		logger.Tracef("compileTemplates(%s) [%s][HIT]", filenames, elapsed)
-		return tmpl, nil
-	}
 
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
@@ -78,8 +78,6 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 		tmpl.Parse(string(mb))
 	}
 
-	templateCache.Set(filenamesStr, tmpl, cache.DefaultExpiration)
-
 	elapsed := time.Since(start)
 	logger.Tracef("compileTemplates(%s) [%s][MISS]", filenames, elapsed)
 	return tmpl, nil
@@ -97,14 +95,62 @@ func Init(db string) {
 
 	// Load Templates
 	templates = packr.New("templates", "./templates")
+}
 
-	// init cache
-	templateCache = cache.New(5*time.Minute, 10*time.Minute)
+func makeNavbar(path string) (navbar *TemplateNavbar) {
+	newNavbar := &TemplateNavbar{
+		Nodes: []*TempalteNavbarNode{
+			{
+				Text: "Home",
+				URL:  "/web/",
+			},
+			{
+				Text: "Admin",
+				URL:  "#",
+				Children: []*TempalteNavbarNode{
+					{
+						Text:   "Users",
+						FAIcon: "user",
+						URL:    "/web/users/",
+					},
+					{
+						Text:     "Another action",
+						FAIcon:   "broadcast-tower",
+						URL:      "#",
+						Disabled: true,
+					},
+					{
+						Text:     "Something else here",
+						FAIcon:   "paw",
+						URL:      "#",
+						Disabled: true,
+					},
+				},
+			},
+		},
+	}
+
+	for i := 0; i < len(newNavbar.Nodes); i++ {
+		if newNavbar.Nodes[i].URL == path {
+			newNavbar.Nodes[i].Active = true
+		}
+
+		if newNavbar.Nodes[i].Children != nil {
+			for j := 0; j < len(newNavbar.Nodes[i].Children); j++ {
+				if newNavbar.Nodes[i].Children[j].URL == path {
+					newNavbar.Nodes[i].Active = true
+					newNavbar.Nodes[i].Children[j].Active = true
+				}
+			}
+		}
+	}
+
+	return newNavbar
 }
 
 func makePagination(path string, curPage uint, maxPage uint, displayPages uint) (pages *TemplatePages) {
 	newPages := &TemplatePages{}
-	halfPages := displayPages/2
+	halfPages := displayPages / 2
 
 	if curPage > 1 {
 		prevPage := curPage - 1
@@ -114,7 +160,9 @@ func makePagination(path string, curPage uint, maxPage uint, displayPages uint) 
 	if maxPage <= displayPages {
 		for i := uint(1); i <= maxPage; i++ {
 			active := false
-			if i == curPage {active = true}
+			if i == curPage {
+				active = true
+			}
 
 			pageStr := strconv.Itoa(int(i))
 			pageUri := path + "?page=" + pageStr
@@ -125,7 +173,7 @@ func makePagination(path string, curPage uint, maxPage uint, displayPages uint) 
 		var startingPage uint
 		if curPage <= halfPages {
 			startingPage = 1
-		} else if curPage > maxPage - halfPages {
+		} else if curPage > maxPage-halfPages {
 			startingPage = maxPage - displayPages + 1
 		} else {
 			startingPage = curPage - halfPages
@@ -133,7 +181,9 @@ func makePagination(path string, curPage uint, maxPage uint, displayPages uint) 
 		for i := uint(0); i < displayPages; i++ {
 			newPage := startingPage + i
 			active := false
-			if newPage == curPage {active = true}
+			if newPage == curPage {
+				active = true
+			}
 
 			pageStr := strconv.Itoa(int(newPage))
 			pageUri := path + "?page=" + pageStr

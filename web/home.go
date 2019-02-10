@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"../models"
-	)
-
+)
 
 type TemplateVarHome struct {
-	AlertWarn  string
-	Username   string
+	NavBar    *TemplateNavbar
+	AlertWarn string
+	Username  string
 }
 
 func HandleHome(response http.ResponseWriter, request *http.Request) {
@@ -22,6 +22,7 @@ func HandleHome(response http.ResponseWriter, request *http.Request) {
 	tmplVars := &TemplateVarHome{}
 	uid := us.Values["LoggedInUserID"].(uint)
 	tmplVars.Username = models.GetUsernameByID(uid)
+	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
 	tmpl, err := compileTemplates("templates/layout.html", "templates/home.html")
 	if err != nil {
