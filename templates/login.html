@@ -89,7 +89,11 @@
         {{end}}
             <tr>
                 <td><label><b>Username</b></label></td>
-                <td><input type="text" class="form-control" placeholder="Enter Username" name="username" value="{{.Username}}" required></td>
+        {{if .Username}}
+            <td><input type="text" class="form-control" placeholder="Enter Username" name="username" value="{{.Username}}" required></td>
+        {{else}}
+            <td><input type="text" class="form-control" placeholder="Enter Username" name="username" required></td>
+        {{end}}
             </tr>
             <tr>
                 <td><label><b>Password</b></label></td>

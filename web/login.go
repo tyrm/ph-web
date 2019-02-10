@@ -32,11 +32,11 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 
 		user, err := models.GetUserByUsername(formUsername)
 		if err == sql.ErrNoRows {
-			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized"})
+			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized", Username: formUsername})
 			return
 		} else if err != nil {
 			logger.Errorf("Couldn't get user for login: %s", err)
-			tmpl.Execute(response, &TemplateVarLogin{Error: err.Error()})
+			tmpl.Execute(response, &TemplateVarLogin{Error: err.Error(), Username: formUsername})
 			return
 		}
 
@@ -46,7 +46,7 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 		if valid {
 			us.Values["LoggedInUserID"] = user.ID
 		} else {
-			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized"})
+			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized", Username: formUsername})
 			return
 		}
 	}
