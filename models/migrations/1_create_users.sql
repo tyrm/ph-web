@@ -5,6 +5,7 @@ CREATE TABLE "public"."users" (
     password character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
+    last_login timestamp without time zone,
     deleted_at timestamp without time zone,
     PRIMARY KEY ("id")
 )

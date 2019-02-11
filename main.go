@@ -43,7 +43,7 @@ func main() {
 		}
 	}
 
-	web.Init(config.DBEngine)
+	web.Init(config.DBEngine, packr.New("templates", "./templates"))
 	defer web.Close()
 
 	// Create Top Router

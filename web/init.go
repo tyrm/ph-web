@@ -9,9 +9,6 @@ import (
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/css"
-	"github.com/tdewolff/minify/html"
 )
 
 type TemplateNavbar struct {
@@ -62,10 +59,6 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 	start := time.Now()
 	var tmpl *template.Template
 
-	m := minify.New()
-	m.AddFunc("text/css", css.Minify)
-	m.AddFunc("text/html", html.Minify)
-
 	for _, filename := range filenames {
 		if tmpl == nil {
 			tmpl = template.New(filename)
@@ -78,13 +71,7 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 			return nil, err
 		}
 
-		mb, err := m.String("text/html", b)
-		if err != nil {
-			return nil, err
-		}
-		tmpl.Parse(string(mb))
-
-		tmpl.Parse(string(mb))
+		tmpl.Parse(b)
 	}
 
 	elapsed := time.Since(start)
@@ -92,7 +79,7 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func Init(db string) {
+func Init(db string, box *packr.Box) {
 	newLogger := loggo.GetLogger("web.web")
 	logger = &newLogger
 
@@ -103,7 +90,7 @@ func Init(db string) {
 	globalSessions = gs
 
 	// Load Templates
-	templates = packr.New("templates", "./templates")
+	templates = box
 }
 
 func makeNavbar(path string) (navbar *TemplateNavbar) {
