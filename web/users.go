@@ -9,17 +9,14 @@ import (
 )
 
 type TemplateVarUserIndex struct {
-	NavBar    *TemplateNavbar
-	AlertWarn string
-	Username  string
+	TemplateVarLayout
+
 	Users     []*models.User
 	Pages     *TemplatePages
 }
 
 type TemplateVarUserNew struct {
-	NavBar    *TemplateNavbar
-	AlertWarn string
-	Username  string
+	TemplateVarLayout
 }
 
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {

@@ -7,9 +7,7 @@ import (
 )
 
 type TemplateVarHome struct {
-	NavBar    *TemplateNavbar
-	AlertWarn string
-	Username  string
+	TemplateVarLayout
 }
 
 func HandleHome(response http.ResponseWriter, request *http.Request) {

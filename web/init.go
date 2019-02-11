@@ -2,6 +2,7 @@ package web
 
 import (
 	"html/template"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -19,9 +20,10 @@ type TemplateNavbar struct {
 }
 
 type TempalteNavbarNode struct {
-	Text   string
-	URL    string
-	FAIcon string
+	Text     string
+	URL      string
+	MatchStr string
+	FAIcon   string
 
 	Active   bool
 	Disabled bool
@@ -39,6 +41,13 @@ type TemplatePage struct {
 	PageNum string
 	PageURI string
 	Active  bool
+}
+
+type TemplateVarLayout struct {
+	NavBar     *TemplateNavbar
+	AlertError string
+	AlertWarn  string
+	Username  string
 }
 
 var logger *loggo.Logger
@@ -101,17 +110,19 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 	newNavbar := &TemplateNavbar{
 		Nodes: []*TempalteNavbarNode{
 			{
-				Text: "Home",
-				URL:  "/web/",
+				Text:     "Home",
+				MatchStr: "^/web/$",
+				URL:      "/web/",
 			},
 			{
 				Text: "Admin",
 				URL:  "#",
 				Children: []*TempalteNavbarNode{
 					{
-						Text:   "Users",
-						FAIcon: "user",
-						URL:    "/web/users/",
+						Text:     "Users",
+						MatchStr: "^/web/users/.*$",
+						FAIcon:   "user",
+						URL:      "/web/users/",
 					},
 					{
 						Text:     "Another action",
@@ -131,16 +142,29 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 	}
 
 	for i := 0; i < len(newNavbar.Nodes); i++ {
-		if newNavbar.Nodes[i].URL == path {
-			newNavbar.Nodes[i].Active = true
+		if newNavbar.Nodes[i].MatchStr != "" {
+			match, _ := regexp.MatchString(newNavbar.Nodes[i].MatchStr, path)
+			if match {
+				newNavbar.Nodes[i].Active = true
+			}
+			logger.Tracef("%s %s, %v", newNavbar.Nodes[i].MatchStr, path, match)
+
 		}
 
 		if newNavbar.Nodes[i].Children != nil {
 			for j := 0; j < len(newNavbar.Nodes[i].Children); j++ {
-				if newNavbar.Nodes[i].Children[j].URL == path {
-					newNavbar.Nodes[i].Active = true
-					newNavbar.Nodes[i].Children[j].Active = true
+
+				if newNavbar.Nodes[i].Children[j].MatchStr != "" {
+					subMatch, _ := regexp.MatchString(newNavbar.Nodes[i].Children[j].MatchStr, path)
+
+					if subMatch {
+						newNavbar.Nodes[i].Active = true
+						newNavbar.Nodes[i].Children[j].Active = true
+					}
+					logger.Tracef("%s, %s, %v", newNavbar.Nodes[i].Children[j].MatchStr, path, subMatch)
+
 				}
+
 			}
 		}
 	}
