@@ -1,0 +1,66 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+{{- if .AlertError}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-error" role="alert">
+            {{.AlertError}}
+            </div>
+        </div>
+    </div>
+{{- end}}
+{{- if .AlertWarn}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+            {{.AlertWarn}}
+            </div>
+        </div>
+    </div>
+{{- end}}
+    <div class="row">
+        <div class="col">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="/web/users/">List</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/web/users/new">New</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">{{.User.Username}}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-10">
+            <h1>{{.User.Username}}</h1>
+        </div>
+        <div class="col"></div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4>Login Count:</h4>
+            {{.User.LoginCount}}
+        </div>
+        <div class="col">
+            <h4>Last Login:</h4>
+            {{.User.GetLastLogin}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4>Created At:</h4>
+            {{.User.GetCreatedAt}}
+        </div>
+        <div class="col">
+            <h4>Updated At:</h4>
+            {{.User.GetUpdatedAt}}
+        </div>
+    </div>
+</div>
+{{end}}

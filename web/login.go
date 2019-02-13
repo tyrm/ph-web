@@ -44,6 +44,7 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 		valid := user.CheckPassword(formPassword)
 
 		if valid {
+			user.UpdateLastLogin()
 			us.Values["LoggedInUserID"] = user.ID
 		} else {
 			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized", Username: formUsername})
@@ -58,11 +59,14 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if us.Values["LoggedInUserID"] != nil {
-		response.Header().Set("Location", "/")
+		response.Header().Set("Location", "/web/")
 		response.WriteHeader(http.StatusFound)
 		return
 	}
 
-	tmpl.Execute(response, &TemplateVarLogin{})
+	err = tmpl.Execute(response, &TemplateVarLogin{})
+	if err != nil {
+		logger.Errorf("HandleLogin: Error executing template: %v", err)
+	}
 	return
 }

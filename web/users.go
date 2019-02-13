@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"../models"
+	"github.com/gorilla/mux"
 )
 
 type TemplateVarUserIndex struct {
@@ -17,6 +18,52 @@ type TemplateVarUserIndex struct {
 
 type TemplateVarUserNew struct {
 	TemplateVarLayout
+}
+
+type TemplateVarUserView struct {
+	User *models.User
+	TemplateVarLayout
+}
+
+func HandleUserGet(response http.ResponseWriter, request *http.Request) {
+	us, err := globalSessions.Get(request, "session-key")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	vars := mux.Vars(request)
+	pageInt, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error parsing id: %v", err)
+		return
+	}
+	user, err := models.GetUser(uint(pageInt))
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting user: %v", err)
+		return
+	}
+
+	tmplVars := &TemplateVarUserView{
+		User: user,
+	}
+	uid := us.Values["LoggedInUserID"].(uint)
+	tmplVars.Username = models.GetUsernameByID(uid)
+	tmplVars.NavBar = makeNavbar(request.URL.Path)
+
+	tmpl, err := compileTemplates("templates/layout.html", "templates/users_get.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if err != nil {
+		logger.Errorf("HandleUserGet: Error executing template: %v", err)
+	}
+	return
 }
 
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
@@ -32,7 +79,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
 	// page stuff
-	var entriesPerPage uint = 5
+	var entriesPerPage uint = 10
 
 	// get Page Count
 	var pageCount uint = 1
@@ -59,7 +106,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		} else {
 			page = uint(pageInt)
 		}
-		logger.Tracef("got 'page' query parameter: %s", pageInt)
+		logger.Tracef("HandleUserIndex: got 'page' query parameter: %s", pageInt)
 	}
 
 	// Add Pagination if needed
@@ -87,7 +134,10 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if err != nil {
+		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
+	}
 	return
 }
 
@@ -109,5 +159,9 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if err != nil {
+		logger.Errorf("HandleUserNew: Error executing template: %v", err)
+	}
+	return
 }

@@ -1,9 +1,11 @@
 package models
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,9 +16,12 @@ type User struct {
 	Username  string
 	Password  string
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	LoginCount int
+	LastLogin pq.NullTime
+
+	CreatedAt pq.NullTime
+	UpdatedAt pq.NullTime
+	DeletedAt pq.NullTime
 }
 
 const sqlUserCount = `
@@ -30,7 +35,12 @@ FROM pg_stat_all_tables
 WHERE relname = 'users';`
 
 const sqlUserGet = `
-SELECT id, username, password, created_at, updated_at
+SELECT id, username, password, login_count, last_login, created_at, updated_at
+FROM users
+WHERE id = $1 AND deleted_at IS NULL;`
+
+const sqlUserGetByUsername = `
+SELECT id, username, password, login_count, last_login, created_at, updated_at
 FROM users
 WHERE lower(username) = lower($1) AND deleted_at IS NULL;`
 
@@ -44,14 +54,68 @@ INSERT INTO "public"."users" (username, password, created_at, updated_at)
 VALUES ($1, $2, $3, $4)
 RETURNING id;`
 
+const sqlUserUpdateLastLogin = `
+UPDATE users
+SET login_count = login_count + 1, last_login = now()
+WHERE id = $1
+RETURNING login_count, last_login;`
+
 const sqlUsersGetPage = `
-SELECT id, username, created_at, updated_at
+SELECT id, username, login_count, last_login, created_at, updated_at
 FROM users WHERE deleted_at IS NULL
 ORDER BY id asc LIMIT $1 OFFSET $2;`
 
 func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	return err == nil
+}
+
+func (u *User) GetCreatedAt() string {
+	timeStr := ""
+
+	if u.CreatedAt.Valid == true {
+		timeStr = fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			u.CreatedAt.Time.Year(), u.CreatedAt.Time.Month(), u.CreatedAt.Time.Day(),
+			u.CreatedAt.Time.Hour(), u.CreatedAt.Time.Minute(), u.CreatedAt.Time.Second())
+	}
+	return timeStr
+}
+
+func (u *User) GetLastLogin() string {
+	timeStr := ""
+
+	if u.LastLogin.Valid == true {
+		timeStr = fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			u.LastLogin.Time.Year(), u.LastLogin.Time.Month(), u.LastLogin.Time.Day(),
+			u.LastLogin.Time.Hour(), u.LastLogin.Time.Minute(), u.LastLogin.Time.Second())
+	}
+
+	return timeStr
+}
+
+func (u *User) GetUpdatedAt() string {
+	timeStr := ""
+
+	if u.UpdatedAt.Valid == true {
+		timeStr = fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			u.UpdatedAt.Time.Year(), u.UpdatedAt.Time.Month(), u.UpdatedAt.Time.Day(),
+			u.UpdatedAt.Time.Hour(), u.UpdatedAt.Time.Minute(), u.UpdatedAt.Time.Second())
+	}
+	return timeStr
+}
+
+func (u *User) UpdateLastLogin() (err error) {
+	var loginCount int
+	var newTime time.Time
+	err = DB.QueryRow(sqlUserUpdateLastLogin, u.ID).Scan(&loginCount, &newTime)
+	if err != nil {
+		logger.Errorf("Error estimating user count: %s", err.Error())
+		return
+	}
+	u.LoginCount = loginCount
+	u.LastLogin.Time = newTime
+	logger.Tracef("UpdateLastLogin(%d) (%v)[%d, %s]", u.ID, err, loginCount, newTime)
+	return
 }
 
 func hashPassword(password string) (string, error) {
@@ -77,15 +141,49 @@ func GetUserCount() (count uint, err error) {
 	return
 }
 
+func GetUser(sid uint) (user *User, err error) {
+	var id uint
+	var username string
+	var password string
+
+	var loginCount int
+	var lastLogin pq.NullTime
+
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+
+	err = DB.QueryRow(sqlUserGet, sid).Scan(&id, &username, &password, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
+
+	user = &User{
+		ID: id,
+		Username: username,
+		Password: password,
+		LoginCount: loginCount,
+		LastLogin: lastLogin,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+
+	logger.Tracef("GetUserByUsername(%s) (%v, %v)", sid, user, err)
+	return
+}
+
 func GetUserByUsername(usernameStr string) (user User, err error) {
 	var id uint
 	var username string
 	var password string
 
-	var createdAt time.Time
-	var updatedAt time.Time
+	var loginCount int
+	var lastLogin pq.NullTime
 
-	err = DB.QueryRow(sqlUserGet, usernameStr).Scan(&id, &username, &password, &createdAt, &updatedAt)
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+
+	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&id, &username, &password, &loginCount, &lastLogin, &createdAt, &updatedAt)
 	if err != nil {
 		logger.Errorf(err.Error())
 		return
@@ -95,6 +193,8 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 		ID: id,
 		Username: username,
 		Password: password,
+		LoginCount: loginCount,
+		LastLogin: lastLogin,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}
@@ -115,10 +215,14 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 	for rows.Next() {
 		var id uint
 		var username string
-		var createdAt time.Time
-		var updatedAt time.Time
 
-		err = rows.Scan(&id, &username, &createdAt, &updatedAt)
+		var loginCount int
+		var lastLogin pq.NullTime
+
+		var createdAt pq.NullTime
+		var updatedAt pq.NullTime
+
+		err = rows.Scan(&id, &username, &loginCount, &lastLogin, &createdAt, &updatedAt)
 		if err != nil {
 			logger.Tracef("GetUsernameByID(%d, %d) (%v, %v)", limit, page, nil, err)
 			return
@@ -127,6 +231,8 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 		newUser := User{
 			ID: id,
 			Username: username,
+			LoginCount: loginCount,
+			LastLogin: lastLogin,
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
 		}
@@ -161,7 +267,10 @@ func GetUsernameByID(uid uint) string {
 }
 
 func NewUser(username string, password string) (user User, err error) {
-	createdAt := time.Now()
+	createdAt := pq.NullTime{
+		Time: time.Now(),
+		Valid: true,
+	}
 	passHash, err := hashPassword(password)
 	if err != nil {
 		logger.Errorf("Error hashing password: %s", err.Error())

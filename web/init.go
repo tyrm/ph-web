@@ -130,7 +130,10 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 
 	for i := 0; i < len(newNavbar.Nodes); i++ {
 		if newNavbar.Nodes[i].MatchStr != "" {
-			match, _ := regexp.MatchString(newNavbar.Nodes[i].MatchStr, path)
+			match, err := regexp.MatchString(newNavbar.Nodes[i].MatchStr, path)
+			if err != nil {
+				logger.Errorf("makeNavbar:Error matching regex: %v", err)
+			}
 			if match {
 				newNavbar.Nodes[i].Active = true
 			}
@@ -142,7 +145,10 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 			for j := 0; j < len(newNavbar.Nodes[i].Children); j++ {
 
 				if newNavbar.Nodes[i].Children[j].MatchStr != "" {
-					subMatch, _ := regexp.MatchString(newNavbar.Nodes[i].Children[j].MatchStr, path)
+					subMatch, err := regexp.MatchString(newNavbar.Nodes[i].Children[j].MatchStr, path)
+					if err != nil {
+						logger.Errorf("makeNavbar:Error matching regex: %v", err)
+					}
 
 					if subMatch {
 						newNavbar.Nodes[i].Active = true

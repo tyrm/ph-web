@@ -23,9 +23,6 @@ func main() {
 
 	config := CollectConfig()
 
-	// Load Static Assets
-	box := packr.New("staticAssets", "./static")
-
 	// Connect DB
 	models.InitDB(config.DBEngine)
 	defer models.CloseDB()
@@ -43,10 +40,10 @@ func main() {
 		}
 	}
 
+	// Create Top Router
 	web.Init(config.DBEngine, packr.New("templates", "./templates"))
 	defer web.Close()
 
-	// Create Top Router
 	r := mux.NewRouter()
 	r.HandleFunc("/", web.HandleLanding).Methods("GET")
 	r.HandleFunc("/login", web.HandleLogin)
@@ -58,9 +55,10 @@ func main() {
 	rWeb.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
-	//rWeb.HandleFunc("/users/{id:[0-9]+}", ArticleHandler)
+	rWeb.HandleFunc("/users/{id:[0-9]+}", web.HandleUserGet).Methods("GET")
 
 	// Serve static files
+	box := packr.New("staticAssets", "./static")
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
 
 	// Serve 404
