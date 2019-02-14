@@ -153,6 +153,48 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
+	if request.Method == "POST" {
+		logger.Errorf("trying to parse form: %v", err)
+		err = request.ParseForm()
+		if err != nil {
+			logger.Errorf("Error parseing form: %v", err)
+			return
+		}
+		logger.Tracef("%v", request.Form)
+
+		formUsername := ""
+		if val, ok := request.Form["username"]; ok {
+			formUsername = val[0]
+		}
+		formPassword1 := ""
+		if val, ok := request.Form["password1"]; ok {
+			formPassword1 = val[0]
+		}
+		formPassword2 := ""
+		if val, ok := request.Form["password2"]; ok {
+			formPassword2 = val[0]
+		}
+
+		logger.Tracef("%s, [%s], [%s]", formUsername, formPassword1, formPassword2)
+
+		if formPassword1 == formPassword2 {
+			newUser, err := models.NewUser(formUsername, formPassword1)
+			if err != nil {
+				tmplVars.AlertError = err.Error()
+			} else {
+				newPage := fmt.Sprintf("/web/users/%d", newUser.ID)
+
+				response.Header().Set("Location", newPage)
+				response.WriteHeader(http.StatusFound)
+				return
+
+			}
+		} else {
+			tmplVars.AlertError = "Passwords don't match."
+		}
+
+	}
+
 	tmpl, err := compileTemplates("templates/layout.html", "templates/users_new.html")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
