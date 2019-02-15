@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/lib/pq"
@@ -11,7 +10,7 @@ import (
 )
 
 type User struct {
-	ID        uint
+	ID        string
 
 	Username  string
 	Password  string
@@ -49,9 +48,12 @@ SELECT username
 FROM users
 WHERE id = $1 AND deleted_at IS NULL;`
 
+const sqlUserIdExists = `
+SELECT exists(SELECT 1 FROM users WHERE id=$1);`
+
 const sqlUserInsert = `
-INSERT INTO "public"."users" (username, password, created_at, updated_at)
-VALUES ($1, $2, $3, $4)
+INSERT INTO "public"."users" (id, username, password, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id;`
 
 const sqlUserUpdateLastLogin = `
@@ -59,6 +61,9 @@ UPDATE users
 SET login_count = login_count + 1, last_login = now()
 WHERE id = $1
 RETURNING login_count, last_login;`
+
+const sqlUsernameExists = `
+SELECT exists(SELECT 1 FROM users WHERE username=$1);`
 
 const sqlUsersGetPage = `
 SELECT id, username, login_count, last_login, created_at, updated_at
@@ -141,8 +146,8 @@ func GetUserCount() (count uint, err error) {
 	return
 }
 
-func GetUser(sid uint) (user *User, err error) {
-	var id uint
+func GetUser(sid string) (user *User, err error) {
+	var id string
 	var username string
 	var password string
 
@@ -173,7 +178,7 @@ func GetUser(sid uint) (user *User, err error) {
 }
 
 func GetUserByUsername(usernameStr string) (user User, err error) {
-	var id uint
+	var id string
 	var username string
 	var password string
 
@@ -203,17 +208,39 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	return
 }
 
+func GetUserIdExists(id string)(exists bool, err error) {
+	err = DB.QueryRow(sqlUserIdExists, id).Scan(&exists)
+	if err != nil {
+		logger.Errorf("Error checking is user id exists: %s", err.Error())
+		return
+	}
+	return
+}
+
+func GetUsernameExists(id string)(exists bool, err error) {
+	var newExists bool
+
+	err = DB.QueryRow(sqlUsernameExists, id).Scan(&newExists)
+	if err != nil {
+		logger.Errorf("Error checking is user id exists: %s", err.Error())
+		return
+	}
+	exists = newExists
+	logger.Tracef("GetUsernameExists(%s) (%v, %v)", id, newExists, err)
+	return
+}
+
 func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 	offset := limit * page
 	var newUserList []*User
 
 	rows, err := DB.Query(sqlUsersGetPage, limit, offset)
 	if err != nil {
-		logger.Tracef("GetUsernameByID(%d, %d) (%v, %v)", limit, page, nil, err)
+		logger.Tracef("GetUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 		return
 	}
 	for rows.Next() {
-		var id uint
+		var id string
 		var username string
 
 		var loginCount int
@@ -224,7 +251,7 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 
 		err = rows.Scan(&id, &username, &loginCount, &lastLogin, &createdAt, &updatedAt)
 		if err != nil {
-			logger.Tracef("GetUsernameByID(%d, %d) (%v, %v)", limit, page, nil, err)
+			logger.Tracef("GetUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 			return
 		}
 
@@ -241,28 +268,28 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 	}
 
 	userList = newUserList
-	logger.Tracef("GetUsernameByID(%d, %d) ([%d]User, %v)", limit, page, len(userList), nil)
+	logger.Tracef("GetUsersPage(%d, %d) ([%d]User, %v)", limit, page, len(userList), nil)
 
 	return
 }
 
-func GetUsernameByID(uid uint) string {
+func GetUsernameByID(uid string) string {
 	var username string
 
-	if u, found := cUsernameByID.Get(strconv.FormatUint(uint64(uid), 10)); found {
+	if u, found := cUsernameByID.Get(uid); found {
 		username = u.(string)
-		logger.Tracef("GetUsernameByID(%d) (%s) [HIT]", uid, username)
+		logger.Tracef("GetUsernameByID(%s) (%s) [HIT]", uid, username)
 		return username
 	}
 
 	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
 	if err != nil {
 		logger.Errorf(err.Error())
-		return strconv.FormatUint(uint64(uid), 10)
+		return uid
 	}
 
-	cUsernameByID.Set(strconv.FormatUint(uint64(uid), 10), username, cache.DefaultExpiration)
-	logger.Tracef("GetUsernameByID(%d) (%s) [MISS]", uid, username)
+	cUsernameByID.Set(uid, username, cache.DefaultExpiration)
+	logger.Tracef("GetUsernameByID(%s) (%s) [MISS]", uid, username)
 	return username
 }
 
@@ -284,15 +311,28 @@ func NewUser(username string, password string) (user User, err error) {
 		UpdatedAt: createdAt,
 	}
 
-	var newID uint
-	err = DB.QueryRow(sqlUserInsert, newUser.Username, newUser.Password, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
+	newUser.ID = RandString(8)
+
+	var newID string
+	err = DB.QueryRow(sqlUserInsert, newUser.ID, newUser.Username, newUser.Password, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
+	if sqlErr, ok := err.(*pq.Error); ok {
+		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
+		logger.Errorf("pq error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+		return
+	}
+
+	logger.Debugf("New user created: %s", newUser.ID)
+	user = newUser
+	return
+}
+
+func getValidID() (id string, err error){
+	var exists bool
+
+	err = DB.QueryRow(sqlUserIdExists, id).Scan(&exists)
 	if err != nil {
 		logger.Errorf("Error inserting record into db: %s", err.Error())
 		return
 	}
-
-	newUser.ID = newID
-	logger.Tracef("New user created: %v", newUser)
-	user = newUser
 	return
 }

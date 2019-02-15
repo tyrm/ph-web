@@ -18,7 +18,7 @@ func HandleHome(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &TemplateVarHome{}
-	uid := us.Values["LoggedInUserID"].(uint)
+	uid := us.Values["LoggedInUserID"].(string)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 

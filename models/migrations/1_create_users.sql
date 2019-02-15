@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE "public"."users" (
-    id serial NOT NULL,
-    username character varying NOT NULL UNIQUE,
+    id character(8) NOT NULL UNIQUE,
+    username character varying NOT NULL,
     password character varying NOT NULL,
     login_count integer NOT NULL DEFAULT 0,
     last_login timestamp without time zone,

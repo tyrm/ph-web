@@ -33,13 +33,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	}
 
 	vars := mux.Vars(request)
-	pageInt, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		logger.Errorf("HandleUserGet: Error parsing id: %v", err)
-		return
-	}
-	user, err := models.GetUser(uint(pageInt))
+	user, err := models.GetUser(vars["id"])
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		logger.Errorf("HandleUserGet: Error getting user: %v", err)
@@ -49,7 +43,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	tmplVars := &TemplateVarUserView{
 		User: user,
 	}
-	uid := us.Values["LoggedInUserID"].(uint)
+	uid := us.Values["LoggedInUserID"].(string)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -74,7 +68,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(uint)
+	uid := us.Values["LoggedInUserID"].(string)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -149,7 +143,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(uint)
+	uid := us.Values["LoggedInUserID"].(string)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -177,12 +171,20 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 
 		logger.Tracef("%s, [%s], [%s]", formUsername, formPassword1, formPassword2)
 
-		if formPassword1 == formPassword2 {
+		usernameExists, err := models.GetUsernameExists(formUsername)
+		if err != nil {
+			logger.Errorf("Error chekcing for username: %v", err)
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
+		if usernameExists {
+			tmplVars.AlertError = "Username taken."
+		} else if formPassword1 == formPassword2 {
 			newUser, err := models.NewUser(formUsername, formPassword1)
 			if err != nil {
 				tmplVars.AlertError = err.Error()
 			} else {
-				newPage := fmt.Sprintf("/web/users/%d", newUser.ID)
+				newPage := fmt.Sprintf("/web/users/%s", newUser.ID)
 
 				response.Header().Set("Location", newPage)
 				response.WriteHeader(http.StatusFound)

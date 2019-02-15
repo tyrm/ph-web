@@ -55,7 +55,7 @@ func main() {
 	rWeb.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
-	rWeb.HandleFunc("/users/{id:[0-9]+}", web.HandleUserGet).Methods("GET")
+	rWeb.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")
 
 	// Serve static files
 	box := packr.New("staticAssets", "./static")

@@ -20,7 +20,7 @@ func HandleLanding(response http.ResponseWriter, request *http.Request) {
 	templateVars := &TemplateVarLanding{}
 
 	if us.Values["LoggedInUserID"] != nil {
-		uid := us.Values["LoggedInUserID"].(uint)
+		uid := us.Values["LoggedInUserID"].(string)
 		templateVars.UserID = models.GetUsernameByID(uid)
 	}
 
