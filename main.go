@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"./models"
+	"./registry"
 	"./web"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
@@ -18,14 +19,18 @@ var logger *loggo.Logger
 func main() {
 	loggo.ConfigureLoggers("<root>=TRACE")
 
-	newLogger := loggo.GetLogger("web")
+	newLogger := loggo.GetLogger("main")
 	logger = &newLogger
 
 	config := CollectConfig()
 
-	// Connect DB
+	// Connect db
 	models.InitDB(config.DBEngine)
 	defer models.CloseDB()
+
+	// Open Registry
+	registry.Init(config.DBEngine, config.AESSecret)
+	defer registry.Close()
 
 	// Create Admin if no Users exist
 	count, err := models.EstimateCountUsers()
@@ -56,6 +61,7 @@ func main() {
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
 	rWeb.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")
+	rWeb.HandleFunc("/registry/", web.HandleRegistryIndex).Methods("GET")
 
 	// Serve static files
 	box := packr.New("staticAssets", "./static")

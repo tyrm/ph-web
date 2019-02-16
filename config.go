@@ -2,25 +2,50 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
 type Config struct {
-	DBEngine string
-	DBEngineFile string
-
 	AESSecret string
-	AESSecretFile string
+	DBEngine string
 }
 
 func CollectConfig() (config Config) {
 	var missingEnv []string
 
+	// AES_SECRET
+	config.AESSecret = os.Getenv("AES_SECRET")
+	if config.AESSecret == "" {
+		AESSecretFile := os.Getenv("AES_SECRET_FILE")
+		if AESSecretFile == "" {
+			AESSecretFile = "/run/ph_web_aes_secret"
+		}
+
+		data, err := ioutil.ReadFile(AESSecretFile)
+		if err != nil {
+			missingEnv = append(missingEnv, "AES_SECRET")
+			missingEnv = append(missingEnv, "AES_SECRET_FILE")
+		} else {
+			config.AESSecret = string(data)
+		}
+	}
+
 	// DB_ENGINE
 	config.DBEngine = os.Getenv("DB_ENGINE")
-	config.DBEngineFile = os.Getenv("DB_ENGINE_FILE")
-	if config.DBEngine == "" && config.DBEngineFile == "" {
-		missingEnv = append(missingEnv, "DB_ENGINE")
+	if config.DBEngine == "" {
+		DBEngineFile := os.Getenv("DB_ENGINE_FILE")
+		if DBEngineFile == "" {
+			DBEngineFile = "/run/ph_web_db_engine"
+		}
+
+		data, err := ioutil.ReadFile(DBEngineFile)
+		if err != nil {
+			missingEnv = append(missingEnv, "DB_ENGINE")
+			missingEnv = append(missingEnv, "DB_ENGINE_FILE")
+		} else {
+			config.DBEngine = string(data)
+		}
 	}
 
 	// Validation

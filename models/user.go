@@ -21,44 +21,44 @@ FROM pg_stat_all_tables
 WHERE relname = 'users';`
 
 const sqlUserGet = `
-SELECT id, username, password, email, login_count, last_login, created_at, updated_at
+SELECT token, username, password, email, login_count, last_login, created_at, updated_at
 FROM users
-WHERE id = $1 AND deleted_at IS NULL;`
+WHERE token = $1 AND deleted_at IS NULL;`
 
 const sqlUserGetByUsername = `
-SELECT id, username, password, email, login_count, last_login, created_at, updated_at
+SELECT token, username, password, email, login_count, last_login, created_at, updated_at
 FROM users
 WHERE lower(username) = lower($1) AND deleted_at IS NULL;`
 
 const sqlUserGetUsernameByID = `
 SELECT username
 FROM users
-WHERE id = $1 AND deleted_at IS NULL;`
+WHERE token = $1 AND deleted_at IS NULL;`
 
 const sqlUserIdExists = `
 SELECT exists(SELECT 1 FROM users WHERE id=$1);`
 
 const sqlUserInsert = `
-INSERT INTO "public"."users" (id, username, password, email, created_at, updated_at)
+INSERT INTO "public"."users" (token, username, password, email, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id;`
+RETURNING token;`
 
 const sqlUserUpdateLastLogin = `
 UPDATE users
 SET login_count = login_count + 1, last_login = now()
-WHERE id = $1
+WHERE token = $1
 RETURNING login_count, last_login;`
 
 const sqlUsernameExists = `
 SELECT exists(SELECT 1 FROM users WHERE username=$1 AND deleted_at IS NULL);`
 
 const sqlUsersGetPage = `
-SELECT id, username, email, login_count, last_login, created_at, updated_at
+SELECT token, username, email, login_count, last_login, created_at, updated_at
 FROM users WHERE deleted_at IS NULL
 ORDER BY created_at asc LIMIT $1 OFFSET $2;`
 
 type User struct {
-	ID        string
+	Token string
 
 	Username  string
 	Password  string
@@ -124,14 +124,14 @@ func (u *User) GetUpdatedAt() string {
 func (u *User) UpdateLastLogin() (err error) {
 	var loginCount int
 	var newTime time.Time
-	err = DB.QueryRow(sqlUserUpdateLastLogin, u.ID).Scan(&loginCount, &newTime)
+	err = DB.QueryRow(sqlUserUpdateLastLogin, u.Token).Scan(&loginCount, &newTime)
 	if err != nil {
 		logger.Errorf("Error estimating user count: %s", err.Error())
 		return
 	}
 	u.LoginCount = loginCount
 	u.LastLogin.Time = newTime
-	logger.Tracef("UpdateLastLogin(%d) (%v)[%d, %s]", u.ID, err, loginCount, newTime)
+	logger.Tracef("UpdateLastLogin(%d) (%v)[%d, %s]", u.Token, err, loginCount, newTime)
 	return
 }
 
@@ -159,7 +159,7 @@ func GetUserCount() (count uint, err error) {
 }
 
 func GetUser(sid string) (user *User, err error) {
-	var id string
+	var token string
 	var username string
 	var password string
 	var email string
@@ -170,21 +170,21 @@ func GetUser(sid string) (user *User, err error) {
 	var createdAt pq.NullTime
 	var updatedAt pq.NullTime
 
-	err = DB.QueryRow(sqlUserGet, sid).Scan(&id, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	err = DB.QueryRow(sqlUserGet, sid).Scan(&token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
 	if err != nil {
 		logger.Errorf(err.Error())
 		return
 	}
 
 	user = &User{
-		ID: id,
-		Username: username,
-		Password: password,
-		Email: email,
+		Token:      token,
+		Username:   username,
+		Password:   password,
+		Email:      email,
 		LoginCount: loginCount,
-		LastLogin: lastLogin,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		LastLogin:  lastLogin,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 	}
 
 	logger.Tracef("GetUserByUsername(%s) (%v, %v)", sid, user, err)
@@ -192,7 +192,7 @@ func GetUser(sid string) (user *User, err error) {
 }
 
 func GetUserByUsername(usernameStr string) (user User, err error) {
-	var id string
+	var token string
 	var username string
 	var password string
 	var email string
@@ -203,21 +203,21 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	var createdAt pq.NullTime
 	var updatedAt pq.NullTime
 
-	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&id, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
 	if err != nil {
 		logger.Errorf(err.Error())
 		return
 	}
 
 	user = User{
-		ID: id,
-		Username: username,
-		Password: password,
-		Email: email,
+		Token:      token,
+		Username:   username,
+		Password:   password,
+		Email:      email,
 		LoginCount: loginCount,
-		LastLogin: lastLogin,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		LastLogin:  lastLogin,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 	}
 
 	logger.Tracef("GetUserByUsername(%s) (%v, %v)", usernameStr, user, err)
@@ -259,7 +259,7 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 		return
 	}
 	for rows.Next() {
-		var id string
+		var token string
 		var username string
 		var email string
 
@@ -269,20 +269,20 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 		var createdAt pq.NullTime
 		var updatedAt pq.NullTime
 
-		err = rows.Scan(&id, &username, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+		err = rows.Scan(&token, &username, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
 		if err != nil {
 			logger.Tracef("GetUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 			return
 		}
 
 		newUser := User{
-			ID: id,
-			Username: username,
-			Email: email,
+			Token:      token,
+			Username:   username,
+			Email:      email,
 			LoginCount: loginCount,
-			LastLogin: lastLogin,
-			CreatedAt: createdAt,
-			UpdatedAt: updatedAt,
+			LastLogin:  lastLogin,
+			CreatedAt:  createdAt,
+			UpdatedAt:  updatedAt,
 		}
 
 		newUserList = append(newUserList, &newUser)
@@ -333,17 +333,17 @@ func NewUser(username string, password string, email string) (user User, err err
 		UpdatedAt: createdAt,
 	}
 
-	newUser.ID = RandString(8)
+	newUser.Token = RandString(8)
 
 	var newID string
-	err = DB.QueryRow(sqlUserInsert, newUser.ID, newUser.Username, newUser.Password, newUser.Email, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
+	err = DB.QueryRow(sqlUserInsert, newUser.Token, newUser.Username, newUser.Password, newUser.Email, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("pq error %d: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 
-	logger.Debugf("New user created: %s", newUser.ID)
+	logger.Debugf("New user created: %s", newUser.Token)
 	user = newUser
 	return
 }

@@ -196,7 +196,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				tmplVars.AlertError = err.Error()
 			} else {
-				newPage := fmt.Sprintf("/web/users/%s", newUser.ID)
+				newPage := fmt.Sprintf("/web/users/%s", newUser.Token)
 
 				response.Header().Set("Location", newPage)
 				response.WriteHeader(http.StatusFound)

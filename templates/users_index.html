@@ -41,8 +41,8 @@
 {{- range .}}
                 <tr>
                     <td><img src="{{.GetGravatar 32}}"></td>
-                    <th scope="row">{{.ID}}</th>
-                    <td><a href="/web/users/{{.ID}}">{{.Username}}</a></td>
+                    <th scope="row">{{.Token}}</th>
+                    <td><a href="/web/users/{{.Token}}">{{.Username}}</a></td>
                     <td>{{.Email}}</td>
                     <td>{{.LoginCount}}</td>
                     <td>{{.GetLastLogin}}</td>

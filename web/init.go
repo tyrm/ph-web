@@ -11,6 +11,12 @@ import (
 	"github.com/juju/loggo"
 )
 
+type TemplateBreadcrumb struct {
+	Text   string
+	URL    string
+	Active bool
+}
+
 type TemplateNavbar struct {
 	Nodes    []*TempalteNavbarNode
 	Username string
@@ -42,6 +48,7 @@ type TemplatePage struct {
 
 type TemplateVarLayout struct {
 	NavBar     *TemplateNavbar
+	AlertSuccess string
 	AlertError string
 	AlertWarn  string
 	Username  string
@@ -80,7 +87,7 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 }
 
 func Init(db string, box *packr.Box) {
-	newLogger := loggo.GetLogger("web.web")
+	newLogger := loggo.GetLogger("web")
 	logger = &newLogger
 
 	gs, err := pgstore.NewPGStore(db, []byte("secret-key"))
@@ -106,16 +113,22 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 				URL:  "#",
 				Children: []*TempalteNavbarNode{
 					{
-						Text:     "Users",
-						MatchStr: "^/web/users/.*$",
-						FAIcon:   "user",
-						URL:      "/web/users/",
-					},
-					{
 						Text:     "Oauth Clients",
 						MatchStr: "^/web/oauth-clients/.*$",
 						FAIcon:   "desktop",
 						URL:      "/web/oauth-clients/",
+					},
+					{
+						Text:     "Registry",
+						MatchStr: "^/web/registry/.*$",
+						FAIcon:   "book",
+						URL:      "/web/registry/",
+					},
+					{
+						Text:     "Users",
+						MatchStr: "^/web/users/.*$",
+						FAIcon:   "user",
+						URL:      "/web/users/",
 					},
 					{
 						Text:     "Something else here",

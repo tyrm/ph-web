@@ -111,3 +111,17 @@
     </ul>
 </nav>
 {{end}}
+
+{{define "breadcrumbs"}}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+    {{range .}}
+    {{if .Active}}
+        <li class="breadcrumb-item active" aria-current="page">{{.Text}}</li>
+    {{else}}
+        <li class="breadcrumb-item" aria-current="page"><a href="{{.URL}}">{{.Text}}</a></li>
+    {{end}}
+    {{end}}
+    </ol>
+</nav>
+{{end}}

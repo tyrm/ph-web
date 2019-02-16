@@ -36,5 +36,5 @@ func (c *Client) GetDomain() string {
 
 // GetUserID user id
 func (c *Client) GetUserID() string {
-	return fmt.Sprint(c.User.ID)
+	return fmt.Sprint(c.User.Token)
 }

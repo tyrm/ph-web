@@ -1,0 +1,72 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+{{- if .AlertSuccess}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-success" role="alert">{{.AlertSuccess}}</div>
+        </div>
+    </div>
+{{- end}}
+{{- if .AlertError}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-danger" role="alert">{{.AlertError}}</div>
+        </div>
+    </div>
+{{- end}}
+{{- if .AlertWarn}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">{{.AlertWarn}}</div>
+        </div>
+    </div>
+{{- end}}
+    <div class="row">
+        <div class="col">{{template "breadcrumbs" .Breadcrumbs}}</div>
+    </div>
+    <div class="row" style="padding-top: 0px;">
+        <div class="col">
+            <ul class="nav nav-tabs">
+                <li class="nav-item ml-auto" data-toggle="tooltip" data-placement="top" title="Add Sibling">
+                    <a class="nav-link text-success" href="#"><i class="fas fa-plus"></i></a>
+                </li>
+            </ul>
+        </div>
+        <div class="col">
+            <ul class="nav nav-tabs">
+                <li class="nav-item mr-auto">
+                    <a class="nav-link active" href="#">plex</a>
+                </li>
+                <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Add Child">
+                    <a class="nav-link text-success" href="#"><i class="fas fa-plus"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-edit"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="#"><i class="fas fa-trash-alt"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action">twitter</a>
+                <a href="#" class="list-group-item list-group-item-action active">plex</a>
+                <a href="#" class="list-group-item list-group-item-action">email</a>
+            </div>
+        </div>
+        <div class="col">
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>words and words and words</textarea>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+{{end}}

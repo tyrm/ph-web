@@ -24,7 +24,7 @@ func CloseDB() {
 }
 
 func InitDB(connectionString string) {
-	newLogger := loggo.GetLogger("web.models")
+	newLogger := loggo.GetLogger("models")
 	logger = &newLogger
 
 	logger.Debugf("Connecting to Database")
