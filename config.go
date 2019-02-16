@@ -19,7 +19,7 @@ func CollectConfig() (config Config) {
 	if config.AESSecret == "" {
 		AESSecretFile := os.Getenv("AES_SECRET_FILE")
 		if AESSecretFile == "" {
-			AESSecretFile = "/run/ph_web_aes_secret"
+			AESSecretFile = "/run/secrets/ph_web_aes_secret"
 		}
 
 		data, err := ioutil.ReadFile(AESSecretFile)
@@ -36,7 +36,7 @@ func CollectConfig() (config Config) {
 	if config.DBEngine == "" {
 		DBEngineFile := os.Getenv("DB_ENGINE_FILE")
 		if DBEngineFile == "" {
-			DBEngineFile = "/run/ph_web_db_engine"
+			DBEngineFile = "/run/secrets/ph_web_db_engine"
 		}
 
 		data, err := ioutil.ReadFile(DBEngineFile)
