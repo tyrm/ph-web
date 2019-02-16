@@ -1,3 +1,7 @@
 div.container div.row {
     padding-top: 15px;
 }
+
+table#usersListTable td {
+    vertical-align: middle;
+}

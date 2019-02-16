@@ -112,10 +112,10 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 						URL:      "/web/users/",
 					},
 					{
-						Text:     "Another action",
-						FAIcon:   "broadcast-tower",
-						URL:      "#",
-						Disabled: true,
+						Text:     "Oauth Clients",
+						MatchStr: "^/web/oauth-clients/.*$",
+						FAIcon:   "desktop",
+						URL:      "/web/oauth-clients/",
 					},
 					{
 						Text:     "Something else here",
@@ -137,7 +137,6 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 			if match {
 				newNavbar.Nodes[i].Active = true
 			}
-			logger.Tracef("%s %s, %v", newNavbar.Nodes[i].MatchStr, path, match)
 
 		}
 
@@ -154,7 +153,6 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 						newNavbar.Nodes[i].Active = true
 						newNavbar.Nodes[i].Children[j].Active = true
 					}
-					logger.Tracef("%s, %s, %v", newNavbar.Nodes[i].Children[j].MatchStr, path, subMatch)
 
 				}
 

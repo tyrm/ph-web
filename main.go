@@ -34,7 +34,7 @@ func main() {
 	}
 	if count == 0 {
 		logger.Infof("Creating admin user")
-		_, err := models.NewUser("admin", "admin")
+		_, err := models.NewUser("admin", "admin", "admin@admin.com")
 		if err != nil {
 			logger.Errorf("Error creating admin user")
 		}

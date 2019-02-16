@@ -7,6 +7,10 @@ import (
 
 type Config struct {
 	DBEngine string
+	DBEngineFile string
+
+	AESSecret string
+	AESSecretFile string
 }
 
 func CollectConfig() (config Config) {
@@ -14,7 +18,8 @@ func CollectConfig() (config Config) {
 
 	// DB_ENGINE
 	config.DBEngine = os.Getenv("DB_ENGINE")
-	if config.DBEngine == "" {
+	config.DBEngineFile = os.Getenv("DB_ENGINE_FILE")
+	if config.DBEngine == "" && config.DBEngineFile == "" {
 		missingEnv = append(missingEnv, "DB_ENGINE")
 	}
 

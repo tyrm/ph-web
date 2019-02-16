@@ -160,6 +160,10 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		if val, ok := request.Form["username"]; ok {
 			formUsername = val[0]
 		}
+		formEmail := ""
+		if val, ok := request.Form["email"]; ok {
+			formEmail = val[0]
+		}
 		formPassword1 := ""
 		if val, ok := request.Form["password1"]; ok {
 			formPassword1 = val[0]
@@ -179,8 +183,16 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		}
 		if usernameExists {
 			tmplVars.AlertError = "Username taken."
-		} else if formPassword1 == formPassword2 {
-			newUser, err := models.NewUser(formUsername, formPassword1)
+		} else if formUsername == "" {
+			tmplVars.AlertError = "Username missing."
+		} else if formEmail == "" {
+			tmplVars.AlertError = "Email missing."
+		} else if formPassword1 == "" || formPassword2 == "" {
+			tmplVars.AlertError = "Password missing."
+		} else if formPassword1 != formPassword2 {
+			tmplVars.AlertError = "Passwords don't match."
+		} else {
+			newUser, err := models.NewUser(formUsername, formPassword1, formEmail)
 			if err != nil {
 				tmplVars.AlertError = err.Error()
 			} else {
@@ -191,8 +203,6 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 				return
 
 			}
-		} else {
-			tmplVars.AlertError = "Passwords don't match."
 		}
 
 	}

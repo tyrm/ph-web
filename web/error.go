@@ -60,7 +60,8 @@ func ProtectMiddleware(next http.Handler) http.Handler {
 		}
 
 		if us.Values["LoggedInUserID"] == nil {
-			MakeErrorResponse(w, 404, r.URL.Path, 0)
+			w.Header().Set("Location", "/login")
+			w.WriteHeader(http.StatusFound)
 			return
 		}
 
