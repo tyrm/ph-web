@@ -17,6 +17,13 @@ type TemplateBreadcrumb struct {
 	Active bool
 }
 
+type TemplateListGroup struct {
+	Text    string
+	URL     string
+	Active  bool
+	Count   int
+}
+
 type TemplateNavbar struct {
 	Nodes    []*TempalteNavbarNode
 	Username string

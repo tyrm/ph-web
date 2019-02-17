@@ -24,7 +24,7 @@
     </div>
 {{- end}}
     <div class="row">
-        <div class="col">{{template "breadcrumbs" .Breadcrumbs}}</div>
+        <div class="col"><h1>Registry Browser</h1>{{template "breadcrumbs" .Breadcrumbs}}</div>
     </div>
     <div class="row" style="padding-top: 0px;">
         <div class="col">
@@ -37,7 +37,7 @@
         <div class="col">
             <ul class="nav nav-tabs">
                 <li class="nav-item mr-auto">
-                    <a class="nav-link active" href="#">plex</a>
+                    <a class="nav-link active" href="#">{{.Reg.Key}}</a>
                 </li>
                 <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Add Child">
                     <a class="nav-link text-success" href="#"><i class="fas fa-plus"></i></a>
@@ -53,14 +53,14 @@
     </div>
     <div class="row">
         <div class="col">
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">twitter</a>
-                <a href="#" class="list-group-item list-group-item-action active">plex</a>
-                <a href="#" class="list-group-item list-group-item-action">email</a>
-            </div>
+            <div class="list-group">{{template "list-group" .Siblings}}</div>
         </div>
         <div class="col">
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>words and words and words</textarea>
+        {{if .Reg.Secure}}
+            <h2 class="text-center"><i class="fas fa-lock"></i></h2>
+        {{else}}
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>{{.Reg.Value}}</textarea>
+        {{end}}
         </div>
     </div>
 </div>
