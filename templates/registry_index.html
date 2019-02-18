@@ -24,7 +24,7 @@
     </div>
 {{- end}}
     <div class="row">
-        <div class="col"><h1>Registry Browser</h1>{{template "breadcrumbs" .Breadcrumbs}}</div>
+        <div class="col"><h1>Registry Browser</h1></div>
     </div>
     <div class="row" style="padding-top: 0px;">
         <div class="col">
@@ -37,7 +37,7 @@
         <div class="col">
             <ul class="nav nav-tabs">
                 <li class="nav-item mr-auto">
-                    <a class="nav-link active" href="#">{{.Reg.Key}}</a>
+                    <a class="nav-link active" href="#">{{.Reg.GetPath}}</a>
                 </li>
                 {{- if .ShowAddChild}}
                 <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Add Child">
@@ -55,6 +55,7 @@
     </div>
     <div class="row">
         <div class="col">
+            {{template "breadcrumbs" .Breadcrumbs}}
             <div class="list-group">{{template "list-group" .Siblings}}</div>
         </div>
         <div class="col">
@@ -70,7 +71,7 @@
 <div class="modal fade" id="newChildModal" tabindex="-1" role="dialog" aria-labelledby="newChildModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form>
+            <form action="/web/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newChildModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -88,19 +89,20 @@
                         <input type="text" class="form-control" id="inputKey" name="key">
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="inputSecureCheck">
+                        <input class="form-check-input" type="checkbox" value="true" id="inputSecureCheckSibling" name="secure">
                         <label class="form-check-label" for="inputSecureCheck">
                             Secure
                         </label>
                     </div>
                     <div class="form-group">
                         <label for="inputValue">Value</label>
-                        <textarea class="form-control" id="inputValue" rows="10"></textarea>
+                        <textarea class="form-control" id="inputValue" rows="10" name="value"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create</button>
+                    <input type="hidden" name="_action" value="create">
                 </div>
             </form>
         </div>
@@ -111,7 +113,7 @@
 <div class="modal fade" id="newSiblingModal" tabindex="-1" role="dialog" aria-labelledby="newSiblingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form>
+            <form action="/web/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newSiblingModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -129,19 +131,20 @@
                         <input type="text" class="form-control" id="inputKey" name="key">
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="inputSecureCheckSibling">
+                        <input class="form-check-input" type="checkbox" value="true" id="inputSecureCheckSibling" name="secure">
                         <label class="form-check-label" for="inputSecureCheckSibling">
                             Secure
                         </label>
                     </div>
                     <div class="form-group">
                         <label for="inputValueSibling">Value</label>
-                        <textarea class="form-control" id="inputValueSibling" rows="10"></textarea>
+                        <textarea class="form-control" id="inputValueSibling" rows="10" name="value"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create</button>
+                    <input type="hidden" name="_action" value="create">
                 </div>
             </form>
         </div>

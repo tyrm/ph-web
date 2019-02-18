@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"strconv"
@@ -17,38 +18,11 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-const sqlGetRegistryByID = `
-SELECT r1.id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
-sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
-FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
-WHERE r1.id = $1
-GROUP BY r1.id;`
-
-const sqlGetChildrenByParentID = `
-SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
-sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
-FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
-WHERE r1.parent_id = $1
-GROUP BY r1.id;`
-
-const sqlGetRegistryByKeyParentID = `
-SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
-sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
-FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
-WHERE r1.key = $1 AND r1.parent_id = $2
-GROUP BY r1.id;`
-
-const sqlGetRegistryRoot = `
-SELECT r1.id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
-sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
-FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
-WHERE r1.key = '{ROOT}' AND r1.parent_id IS NULL
-GROUP BY r1.id;`
-
 var db *sql.DB
 var logger *loggo.Logger
 
 var cPathByID *cache.Cache
+var cRegByID *cache.Cache
 
 var reg_key []byte
 
@@ -65,13 +39,34 @@ type RegistryEntry struct {
 	UpdatedAt pq.NullTime
 }
 
-func Close() {
-	db.Close()
-
+func (r *RegistryEntry) Delete() (err error) {
+	_, err = db.Exec(sqlDeleteByID, r.ID)
 	return
 }
 
-func DeleteByID(id int) (err error) {
+
+func (r *RegistryEntry) GetPath() (v string, err error) {
+	v, err = GetPathByID(r.ID)
+	return
+}
+
+func (r *RegistryEntry) GetValue() (v string, err error) {
+	if r.Secure {
+		bDec, newErr := base64.StdEncoding.DecodeString(r.Value)
+		if err != nil {
+			err = newErr
+		}
+		sDec := decrypt(bDec)
+		v = string(sDec)
+	} else {
+		v = r.Value
+	}
+	return
+}
+
+
+func Close() {
+	db.Close()
 	return
 }
 
@@ -94,14 +89,12 @@ func Init(connectionString string, password string) {
 
 	// init cache
 	cPathByID = cache.New(5*time.Minute, 10*time.Minute)
+	cRegByID = cache.New(5*time.Minute, 10*time.Minute)
 }
 
 func Get(path string) (reg *RegistryEntry, err error) {
 	regCursor, newErr := getRegistryRoot()
-	if newErr != nil {
-		err = newErr
-		return
-	}
+	if newErr != nil {err = newErr; return}
 
 	if path == "/" {
 		reg = regCursor
@@ -113,13 +106,18 @@ func Get(path string) (reg *RegistryEntry, err error) {
 
 	for _, key := range parts {
 		regCursor, newErr = getRegistryByKey(key, regCursor.ID)
-		if newErr != nil {
-			err = newErr
-			return
-		}
+		if newErr != nil {err = newErr; return}
 	}
 	reg = regCursor
+	return
+}
 
+func GetByID(id int) (reg *RegistryEntry, err error) {
+	regNew, newErr := getRegistry(id)
+	if newErr != nil {err = newErr; return}
+
+	reg = regNew
+	logger.Tracef("GetByID(%d) (%v, %v)", id, reg, err)
 	return
 }
 
@@ -127,10 +125,7 @@ func GetChildrenByID(id int) (reg []*RegistryEntry, err error) {
 	var newRegList []*RegistryEntry
 
 	rows, err := db.Query(sqlGetChildrenByParentID, id)
-	if err != nil {
-		logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
-		return
-	}
+	if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
 	for rows.Next() {
 		var id int
 		var parentID int
@@ -142,10 +137,7 @@ func GetChildrenByID(id int) (reg []*RegistryEntry, err error) {
 		var childCount int
 
 		err = rows.Scan(&id, &parentID, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
-		if err != nil {
-			logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
-			return
-		}
+		if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
 
 		newReg := RegistryEntry{
 			ID:         id,
@@ -174,10 +166,74 @@ func GetPathByID(id int) (path string, err error) {
 		return
 	}
 
+	regCursor, newErr := getRegistry(id)
+	if newErr != nil {err = newErr; return}
 
+	if regCursor.Key == "{ROOT}" {
+		path = "/"
+		logger.Tracef("GetPathByID(%d) (%s, %s) [MISS]", id, path, err)
+		return
+	}
 
-	//top := ge
+	newPath := ""
+	for {
+		if regCursor.Key == "{ROOT}" {
+			break
+		} else {
+			newPath = "/" + regCursor.Key + newPath
+			regCursor, newErr = getRegistry(regCursor.ParentID)
 
+			if newErr != nil {err = newErr; return}
+		}
+	}
+
+	path = newPath
+	logger.Tracef("GetPathByID(%d) (%s, %s) [MISS]", id, path, err)
+	return
+}
+
+func New(newPid int, newKey string, newValue string, newSecure bool) (reg *RegistryEntry, err error) {
+	newEncodedValue := ""
+	if newSecure {
+		bEnc := encrypt([]byte(newValue))
+		sEnc := base64.URLEncoding.EncodeToString(bEnc)
+		newEncodedValue = sEnc
+	} else {
+		newEncodedValue = newValue
+	}
+
+	var id int
+	var parentID sql.NullInt64
+	var key string
+	var value sql.NullString
+	var secure bool
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+
+	newCreatedAt := time.Now()
+	err = db.QueryRow(sqlCreateEntry, newPid, newKey, newEncodedValue, newSecure, newCreatedAt, newCreatedAt).
+		Scan(&id, &parentID, &key, &value, &secure, &createdAt, &updatedAt)
+	if err != nil {
+		logger.Errorf(err.Error())
+		logger.Tracef("New(%d, %s, ***, %v) (%v, %v)", newPid, newKey, newSecure, reg, err)
+		return
+	}
+
+	reg = &RegistryEntry{
+		ID:        id,
+		Key:       key,
+		Secure:    secure,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+
+	if parentID.Valid {
+		reg.ParentID = int(parentID.Int64)
+	}
+
+	if value.Valid {
+		reg.Value = value.String
+	}
 	return
 }
 
@@ -227,6 +283,7 @@ func encrypt(data []byte) []byte {
 
 func getRegistry(searchId int) (reg *RegistryEntry, err error) {
 	var id int
+	var parentID sql.NullInt64
 	var key string
 	var value sql.NullString
 	var secure bool
@@ -234,10 +291,10 @@ func getRegistry(searchId int) (reg *RegistryEntry, err error) {
 	var updatedAt pq.NullTime
 	var childCount int
 
-	err = db.QueryRow(sqlGetRegistryByID, searchId).Scan(&id, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
-
+	err = db.QueryRow(sqlGetRegistryByID, searchId).Scan(&id, &parentID, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
 	if err != nil {
 		logger.Errorf(err.Error())
+		logger.Tracef("getRegistry(%d) (%v, %v)", searchId, reg, err)
 		return
 	}
 
@@ -250,11 +307,15 @@ func getRegistry(searchId int) (reg *RegistryEntry, err error) {
 		ChildCount: childCount,
 	}
 
+	if parentID.Valid {
+		reg.ParentID = int(parentID.Int64)
+	}
+
 	if value.Valid {
 		reg.Value = value.String
 	}
 
-	logger.Tracef("getRegistry() (%v, %v)", reg, err)
+	logger.Tracef("getRegistry(%d) (%v, %v)", searchId, reg, err)
 	return
 }
 
@@ -268,11 +329,7 @@ func getRegistryRoot() (reg *RegistryEntry, err error) {
 	var childCount int
 
 	err = db.QueryRow(sqlGetRegistryRoot).Scan(&id, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
-
-	if err != nil {
-		logger.Errorf(err.Error())
-		return
-	}
+	if err != nil {logger.Errorf(err.Error());	return}
 
 	reg = &RegistryEntry{
 		ID:        id,
