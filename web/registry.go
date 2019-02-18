@@ -26,6 +26,43 @@ type templateVarRegistryIndex struct {
 	Reg         *registry.RegistryEntry
 }
 
+func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
+	_, err := globalSessions.Get(request, "session-key")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	err = request.ParseForm()
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+	logger.Tracef("got post: %v", request.Form)
+
+	formAction := ""
+	if val, ok := request.Form["_action"]; ok {
+		formAction = val[0]
+	} else {
+		MakeErrorResponse(response, 400, "missing action", 0)
+		return
+	}
+
+	if formAction == "delete" {
+		logger.Debugf("got delete")
+
+	}
+
+	MakeErrorResponse(response, 400, fmt.Sprintf("unknown action: %s", formAction), 0)
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleRegistryPost() [%s]", elapsed)
+	return
+}
+
 func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -65,7 +102,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get Registry Entry
-	reg, err := registry.GetRegistryEntry(path)
+	reg, err := registry.Get(path)
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return

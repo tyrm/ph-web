@@ -102,6 +102,7 @@ func Init(db string, box *packr.Box) {
 		logger.Errorf(err.Error())
 	}
 	globalSessions = gs
+	defer globalSessions.StopCleanup(globalSessions.Cleanup(time.Minute * 5))
 
 	// Load Templates
 	templates = box

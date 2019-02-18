@@ -2,6 +2,6 @@ div.container div.row {
     padding-top: 15px;
 }
 
-table#usersListTable td {
+table#usersListTable td,table#usersListTable th  {
     vertical-align: middle;
 }

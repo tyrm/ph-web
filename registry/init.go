@@ -8,11 +8,21 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"io"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/juju/loggo"
 	"github.com/lib/pq"
+	"github.com/patrickmn/go-cache"
 )
+
+const sqlGetRegistryByID = `
+SELECT r1.id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
+sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
+FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
+WHERE r1.id = $1
+GROUP BY r1.id;`
 
 const sqlGetChildrenByParentID = `
 SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
@@ -38,6 +48,8 @@ GROUP BY r1.id;`
 var db *sql.DB
 var logger *loggo.Logger
 
+var cPathByID *cache.Cache
+
 var reg_key []byte
 
 type RegistryEntry struct {
@@ -59,6 +71,10 @@ func Close() {
 	return
 }
 
+func DeleteByID(id int) (err error) {
+	return
+}
+
 func Init(connectionString string, password string) {
 	newLogger := loggo.GetLogger("registry")
 	logger = &newLogger
@@ -75,9 +91,12 @@ func Init(connectionString string, password string) {
 
 	// calculate hash
 	reg_key = []byte(createHash(password))
+
+	// init cache
+	cPathByID = cache.New(5*time.Minute, 10*time.Minute)
 }
 
-func GetRegistryEntry(path string) (reg *RegistryEntry, err error) {
+func Get(path string) (reg *RegistryEntry, err error) {
 	regCursor, newErr := getRegistryRoot()
 	if newErr != nil {
 		err = newErr
@@ -85,7 +104,7 @@ func GetRegistryEntry(path string) (reg *RegistryEntry, err error) {
 	}
 
 	if path == "/" {
-		reg = &regCursor
+		reg = regCursor
 		return
 	}
 
@@ -99,7 +118,7 @@ func GetRegistryEntry(path string) (reg *RegistryEntry, err error) {
 			return
 		}
 	}
-	reg = &regCursor
+	reg = regCursor
 
 	return
 }
@@ -143,6 +162,21 @@ func GetChildrenByID(id int) (reg []*RegistryEntry, err error) {
 
 	reg = newRegList
 	logger.Tracef("GetUsersPage(%d) ([%d]User, %v)", id, len(reg), nil)
+
+	return
+}
+
+func GetPathByID(id int) (path string, err error) {
+	idStr := strconv.Itoa(id)
+	if p, found := cPathByID.Get(idStr); found {
+		path = p.(string)
+		logger.Tracef("GetPathByID(%s) (%s, %s) [HIT]", id, path, err)
+		return
+	}
+
+
+
+	//top := ge
 
 	return
 }
@@ -191,7 +225,40 @@ func encrypt(data []byte) []byte {
 	return ciphertext
 }
 
-func getRegistryRoot() (reg RegistryEntry, err error) {
+func getRegistry(searchId int) (reg *RegistryEntry, err error) {
+	var id int
+	var key string
+	var value sql.NullString
+	var secure bool
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+	var childCount int
+
+	err = db.QueryRow(sqlGetRegistryByID, searchId).Scan(&id, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
+
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
+
+	reg = &RegistryEntry{
+		ID:        id,
+		Key:       key,
+		Secure:    secure,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		ChildCount: childCount,
+	}
+
+	if value.Valid {
+		reg.Value = value.String
+	}
+
+	logger.Tracef("getRegistry() (%v, %v)", reg, err)
+	return
+}
+
+func getRegistryRoot() (reg *RegistryEntry, err error) {
 	var id int
 	var key string
 	var value sql.NullString
@@ -207,7 +274,7 @@ func getRegistryRoot() (reg RegistryEntry, err error) {
 		return
 	}
 
-	reg = RegistryEntry{
+	reg = &RegistryEntry{
 		ID:        id,
 		Key:       key,
 		Secure:    secure,
@@ -224,7 +291,7 @@ func getRegistryRoot() (reg RegistryEntry, err error) {
 	return
 }
 
-func getRegistryByKey(searchKey string, pID int) (reg RegistryEntry, err error) {
+func getRegistryByKey(searchKey string, pID int) (reg *RegistryEntry, err error) {
 	var id int
 	var parentID int
 	var key string
@@ -241,7 +308,7 @@ func getRegistryByKey(searchKey string, pID int) (reg RegistryEntry, err error) 
 		return
 	}
 
-	reg = RegistryEntry{
+	reg = &RegistryEntry{
 		ID:        id,
 		ParentID:  parentID,
 		Key:       key,

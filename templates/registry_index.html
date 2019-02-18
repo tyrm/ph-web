@@ -183,7 +183,7 @@
 <div class="modal fade" id="deleteRegModal" tabindex="-1" role="dialog" aria-labelledby="deleteRegModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form>
+            <form action="/web/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteRegModalLabel"><i class="fas fa-eraser"></i> Delete Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -208,6 +208,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger">Delete</button>
+                    <input type="hidden" name="_action" value="delete">
                 </div>
             </form>
         </div>

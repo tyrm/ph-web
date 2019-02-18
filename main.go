@@ -32,6 +32,8 @@ func main() {
 	registry.Init(config.DBEngine, config.AESSecret)
 	defer registry.Close()
 
+	registry.GetPathByID(5)
+
 	// Create Admin if no Users exist
 	count, err := models.EstimateCountUsers()
 	if err != nil {
@@ -62,6 +64,7 @@ func main() {
 	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
 	rWeb.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")
 	rWeb.HandleFunc("/registry/", web.HandleRegistryIndex).Methods("GET")
+	rWeb.HandleFunc("/registry/", web.HandleRegistryPost).Methods("POST")
 
 	// Serve static files
 	box := packr.New("staticAssets", "./static")
