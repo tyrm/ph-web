@@ -3,6 +3,7 @@ package web
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"../models"
 )
@@ -13,13 +14,16 @@ type TemplateVarLogin struct {
 }
 
 func HandleLogin(response http.ResponseWriter, request *http.Request) {
-	tmpl, err := compileTemplates("templates/login.html")
+	start := time.Now()
+
+	// Init Session
+	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
 
-	us, err := globalSessions.Get(request, "session-key")
+	tmpl, err := compileTemplates("templates/login.html")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -68,5 +72,8 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Errorf("HandleLogin: Error executing template: %v", err)
 	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleLogin() [%s]", elapsed)
 	return
 }

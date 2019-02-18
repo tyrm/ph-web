@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"../models"
 	"../registry"
@@ -26,6 +27,8 @@ type templateVarRegistryIndex struct {
 }
 
 func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
 	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
@@ -98,7 +101,6 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	tmplVars.ModalNewSiblingParentID = getID
 
 	children, err := registry.GetChildrenByID(getID)
-	logger.Tracef("got children: %v", children)
 
 	// Add Children to List
 	for _, child := range children {
@@ -121,5 +123,8 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
 	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
 	return
 }

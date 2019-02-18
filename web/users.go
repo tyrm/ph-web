@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"../models"
 	"github.com/gorilla/mux"
@@ -26,6 +27,9 @@ type TemplateVarUserView struct {
 }
 
 func HandleUserGet(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
@@ -57,10 +61,16 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Errorf("HandleUserGet: Error executing template: %v", err)
 	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleUserGet() [%s]", elapsed)
 	return
 }
 
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
@@ -86,7 +96,6 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	if userCount%entriesPerPage > 0 {
 		pageCount++
 	}
-	logger.Tracef("Got %d pages.", pageCount)
 
 	// Get Page Num
 	var page uint = 1
@@ -132,10 +141,16 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
 	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleUserIndex() [%s]", elapsed)
 	return
 }
 
 func HandleUserNew(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
@@ -217,5 +232,8 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		logger.Errorf("HandleUserNew: Error executing template: %v", err)
 	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleUserNew() [%s]", elapsed)
 	return
 }
