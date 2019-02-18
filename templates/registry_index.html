@@ -30,7 +30,7 @@
         <div class="col">
             <ul class="nav nav-tabs">
                 <li class="nav-item ml-auto" data-toggle="tooltip" data-placement="top" title="Add Sibling">
-                    <a class="nav-link text-success" href="#"><i class="fas fa-plus"></i></a>
+                    <a class="nav-link text-success" href="#" data-toggle="modal" data-target="#newSiblingModal"><i class="fas fa-plus"></i></a>
                 </li>
             </ul>
         </div>
@@ -39,14 +39,16 @@
                 <li class="nav-item mr-auto">
                     <a class="nav-link active" href="#">{{.Reg.Key}}</a>
                 </li>
+                {{- if .ShowAddChild}}
                 <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Add Child">
-                    <a class="nav-link text-success" href="#"><i class="fas fa-plus"></i></a>
+                    <a class="nav-link text-success" href="#" data-toggle="modal" data-target="#newChildModal"><i class="fas fa-plus"></i></a>
+                </li>
+                {{- end}}
+                <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Edit Value">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#editRegModal"><i class="fas fa-edit"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#"><i class="fas fa-edit"></i></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-danger" href="#"><i class="fas fa-trash-alt"></i></a>
+                    <a class="nav-link{{if .Reg.ChildCount}} disabled{{else}} text-danger{{end}}" href="#" data-toggle="modal" data-target="#deleteRegModal"><i class="fas fa-trash-alt"></i></a>
                 </li>
             </ul>
         </div>
@@ -64,6 +66,154 @@
         </div>
     </div>
 </div>
+<!-- New Child Modal Start -->
+<div class="modal fade" id="newChildModal" tabindex="-1" role="dialog" aria-labelledby="newChildModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newChildModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputParentID">Parent</label>
+                        <input type="text" class="form-control" id="inputParentID" value="{{.ModalNewChildParent}}" readonly>
+                        <input type="hidden" name="parent_id" value="{{.ModalNewChildParentID}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputKey">Key</label>
+                        <input type="text" class="form-control" id="inputKey" name="key">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="inputSecureCheck">
+                        <label class="form-check-label" for="inputSecureCheck">
+                            Secure
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputValue">Value</label>
+                        <textarea class="form-control" id="inputValue" rows="10"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- New Child Modal Stop -->
+<!-- New Sibling Modal Start -->
+<div class="modal fade" id="newSiblingModal" tabindex="-1" role="dialog" aria-labelledby="newSiblingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newSiblingModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputParentIDSibling">Parent</label>
+                        <input type="text" class="form-control" id="inputParentIDSibling" value="{{.ModalNewSiblingParent}}" readonly>
+                        <input type="hidden" name="parent_id" value="{{.ModalNewSiblingParentID}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputKey">Key</label>
+                        <input type="text" class="form-control" id="inputKey" name="key">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="inputSecureCheckSibling">
+                        <label class="form-check-label" for="inputSecureCheckSibling">
+                            Secure
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputValueSibling">Value</label>
+                        <textarea class="form-control" id="inputValueSibling" rows="10"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- New Sibling Modal Stop -->
+<!-- Edit Reg Modal Start -->
+<div class="modal fade" id="editRegModal" tabindex="-1" role="dialog" aria-labelledby="editRegModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRegModalLabel"><i class="fas fa-book-medical"></i> Edit Entry</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputParentIDSibling">Key</label>
+                        <input type="text" class="form-control" id="inputParentIDSibling" value="{{.ModalNewChildParent}}" readonly>
+                        <input type="hidden" name="reg_id" value="{{.Reg.ID}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputValueSibling">{{if .Reg.Secure}}New {{end}}Value</label>
+                        <textarea class="form-control" id="inputValueSibling" rows="10">{{if not .Reg.Secure}}{{.Reg.Value}}{{end}}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Edit Reg Modal Stop -->
+<!-- Delete Reg Modal Start -->
+<div class="modal fade" id="deleteRegModal" tabindex="-1" role="dialog" aria-labelledby="deleteRegModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteRegModalLabel"><i class="fas fa-eraser"></i> Delete Entry</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputParentIDSibling">Key</label>
+                        <input type="text" class="form-control" id="inputParentIDSibling" value="{{.ModalNewChildParent}}" readonly>
+                        <input type="hidden" name="reg_id" value="{{.Reg.ID}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputValueSibling">Value</label>
+                    {{if .Reg.Secure}}
+                        <h2 class="text-center"><i class="fas fa-lock"></i></h2>
+                    {{else}}
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>{{.Reg.Value}}</textarea>
+                    {{end}}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Delete Reg Modal Stop -->
 <script>
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()

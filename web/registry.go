@@ -15,6 +15,13 @@ type templateVarRegistryIndex struct {
 	Breadcrumbs []TemplateBreadcrumb
 	Siblings    []TemplateListGroup
 
+	ShowAddChild bool
+
+	ModalNewChildParent string
+	ModalNewChildParentID int
+	ModalNewSiblingParent string
+	ModalNewSiblingParentID int
+
 	Reg         *registry.RegistryEntry
 }
 
@@ -36,7 +43,6 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	if val, ok := request.URL.Query()["path"]; ok {
 		path = val[0]
 	}
-	logger.Tracef("got path: %s", path)
 
 	tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
 		Text:   "ROOT",
@@ -64,21 +70,32 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	tmplVars.Reg = reg
 	logger.Tracef("got entry: %v", reg)
 
-	// Get Children
+	// Get Children and some Template Mess
 	getID := reg.ID
+	tmplVars.ShowAddChild = false
 	newPath := fmt.Sprintf("%s/", path)
+	tmplVars.ModalNewSiblingParent = path
 	if path == "/" {
 		newPath = "/"
 	}
 	if reg.ChildCount == 0 {
+		tmplVars.ShowAddChild = true
+
 		pathLen := len(paths)
 		if pathLen == 1 {
 			newPath = "/"
+			tmplVars.ModalNewSiblingParent = "/"
 		} else {
 			newPath = fmt.Sprintf("/%s/", strings.Join(paths[0:pathLen-1], "/"))
+			tmplVars.ModalNewSiblingParent = fmt.Sprintf("/%s", strings.Join(paths[0:pathLen-1], "/"))
 		}
 		getID = reg.ParentID
+		tmplVars.ModalNewSiblingParentID = reg.ParentID
 	}
+
+	tmplVars.ModalNewChildParent = path
+	tmplVars.ModalNewChildParentID = reg.ID
+	tmplVars.ModalNewSiblingParentID = getID
 
 	children, err := registry.GetChildrenByID(getID)
 	logger.Tracef("got children: %v", children)
@@ -92,7 +109,6 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 			Count: child.ChildCount,
 		})
 	}
-
 
 	// Compile Template
 	tmpl, err := compileTemplates("templates/layout.html", "templates/registry_index.html")

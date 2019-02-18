@@ -1,4 +1,4 @@
-{{define "layout"}}
+{{define "layout" -}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +65,7 @@
                     <i class="fas fa-user"></i> {{.Username -}}
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="#"  data-toggle="modal" data-target="#logoutModal"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </li>
         </ul>
@@ -101,7 +101,7 @@
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
-    {{else}}
+    {{- else}}
         <li class="page-item disabled">
             <a class="page-link" href="#" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
@@ -115,21 +115,21 @@
 {{define "breadcrumbs"}}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-    {{range .}}
-    {{if .Active}}
+    {{- range .}}
+    {{- if .Active}}
         <li class="breadcrumb-item active" aria-current="page">{{.Text}}</li>
-    {{else}}
+    {{- else}}
         <li class="breadcrumb-item" aria-current="page"><a href="{{.URL}}">{{.Text}}</a></li>
-    {{end}}
-    {{end}}
+    {{- end}}
+    {{- end}}
     </ol>
 </nav>
 {{end}}
 
 {{define "list-group"}}
 <div class="list-group">
-{{range .}}
+{{- range .}}
     <a href="{{.URL}}" class="list-group-item list-group-item-action{{if .Active}} active{{end}}">{{.Text}}{{if .Count}}<span class="badge badge-pill badge-primary float-right">{{.Count}}</span>{{end}}</a>
-{{end}}
+{{- end}}
 </div>
 {{end}}
