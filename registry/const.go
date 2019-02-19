@@ -9,6 +9,14 @@ const sqlDeleteByID = `
 DELETE FROM registry
 WHERE id = $1`
 
+const sqlGetPathByID = `
+WITH RECURSIVE subdirectories AS (
+SELECT id, parent_id, key
+FROM registry WHERE id = $1
+UNION  SELECT r.id, r.parent_id, r.key
+FROM registry r INNER JOIN subdirectories s ON s.parent_id = r.id
+) SELECT * FROM subdirectories ORDER BY id desc;`
+
 const sqlGetRegistryByID = `
 SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
 sum(case when r2.parent_id = r1.id then 1 else 0 end) as children

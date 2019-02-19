@@ -213,7 +213,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 		})
 		startPath = startPath + key + "/"
 	}
-	if reg.ChildCount != 0 {
+	if reg.ChildCount != 0 && path != "/" {
 		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
 			Text:   "",
 			URL:    "#",
@@ -223,11 +223,17 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Add Children to List
 	for _, child := range children {
+		icon := ""
+		if child.Secure{
+			icon = "lock"
+		}
+
 		tmplVars.Siblings = append(tmplVars.Siblings, TemplateListGroup{
 			Text:   child.Key,
 			URL:    fmt.Sprintf("/web/registry/?path=%s%s", newPath, child.Key),
 			Active: reg.ID == child.ID,
 			Count: child.ChildCount,
+			FAIconR: icon,
 		})
 	}
 

@@ -130,7 +130,7 @@
 {{define "list-group"}}
 <div class="list-group">
 {{- range .}}
-    <a href="{{.URL}}" class="list-group-item list-group-item-action{{if .Active}} active{{end}}">{{.Text}}{{if .Count}}<span class="badge badge-pill badge-primary float-right">{{.Count}}</span>{{end}}</a>
+    <a href="{{.URL}}" class="list-group-item list-group-item-action{{if .Active}} active{{end}}">{{.Text}}{{if .FAIconR}} <i class="fas fa-{{.FAIconR}} float-right"></i>{{end}}{{if .Count}}<span class="badge badge-pill badge-primary float-right">{{.Count}}</span>{{end}}</a>
 {{- end}}
 </div>
 {{end}}

@@ -21,6 +21,7 @@ type TemplateListGroup struct {
 	Text    string
 	URL     string
 	Active  bool
+	FAIconR string
 	Count   int
 }
 
@@ -54,11 +55,11 @@ type TemplatePage struct {
 }
 
 type TemplateVarLayout struct {
-	NavBar     *TemplateNavbar
+	NavBar       *TemplateNavbar
 	AlertSuccess string
-	AlertError string
-	AlertWarn  string
-	Username  string
+	AlertError   string
+	AlertWarn    string
+	Username     string
 }
 
 var logger *loggo.Logger

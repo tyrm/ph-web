@@ -43,7 +43,7 @@ type RegistryEntry struct {
 func (r *RegistryEntry) Delete() (err error) {
 	_, err = db.Exec(sqlDeleteByID, r.ID)
 
-	cPathByID.Delete()
+	//cPathByID.Delete()
 	return
 }
 
@@ -172,25 +172,24 @@ func GetPathByID(id int) (path string, err error) {
 		return
 	}
 
-	regCursor, newErr := getRegistry(id)
-	if newErr != nil {err = newErr; return}
-
-	if regCursor.Key == "{ROOT}" {
-		path = "/"
-		logger.Tracef("GetPathByID(%d) (%s, %s) [MISS]", id, path, err)
-		return
-	}
+	rows, err := db.Query(sqlGetPathByID, id)
+	if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
 
 	newPath := ""
-	for {
-		if regCursor.Key == "{ROOT}" {
-			break
-		} else {
-			newPath = "/" + regCursor.Key + newPath
-			regCursor, newErr = getRegistry(regCursor.ParentID)
+	for rows.Next() {
+		var id int
+		var parentID sql.NullInt64
+		var key string
 
-			if newErr != nil {err = newErr; return}
+		err = rows.Scan(&id, &parentID, &key)
+		if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
+
+		if key != "{ROOT}"  {
+			newPath = "/" + key + newPath
 		}
+	}
+	if newPath == "" {
+		newPath = "/"
 	}
 
 	cPathByID.Set(idStr, newPath, cache.DefaultExpiration)
