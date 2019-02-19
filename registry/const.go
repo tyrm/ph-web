@@ -29,7 +29,8 @@ SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updat
 sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
 FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
 WHERE r1.parent_id = $1
-GROUP BY r1.id;`
+GROUP BY r1.id
+ORDER BY r1.key asc;`
 
 const sqlGetRegistryByKeyParentID = `
 SELECT r1.id, r1.parent_id, r1.key, r1.value, r1.secure, r1.created_at, r1.updated_at,
@@ -44,3 +45,9 @@ sum(case when r2.parent_id = r1.id then 1 else 0 end) as children
 FROM registry r1 LEFT JOIN registry r2 ON r1.id = r2.parent_id
 WHERE r1.key = '{ROOT}' AND r1.parent_id IS NULL
 GROUP BY r1.id;`
+
+const sqlUpdateValue = `
+UPDATE registry
+SET value = $2, updated_at = now()
+WHERE id = $1
+RETURNING value;`

@@ -19,12 +19,12 @@ type templateVarRegistryIndex struct {
 
 	ShowAddChild bool
 
-	ModalNewChildParent string
-	ModalNewChildParentID int
-	ModalNewSiblingParent string
+	ModalNewChildParent     string
+	ModalNewChildParentID   int
+	ModalNewSiblingParent   string
 	ModalNewSiblingParentID int
 
-	Reg         *registry.RegistryEntry
+	Reg *registry.RegistryEntry
 }
 
 func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
@@ -58,7 +58,10 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		formRegID := 0
 		if val, ok := request.Form["reg_id"]; ok {
 			i, err := strconv.Atoi(val[0])
-			if err != nil {MakeErrorResponse(response, 400, fmt.Sprintf("invalid registry id: %s", val[0]), 0); return}
+			if err != nil {
+				MakeErrorResponse(response, 400, fmt.Sprintf("invalid registry id: %s", val[0]), 0)
+				return
+			}
 
 			formRegID = i
 		} else {
@@ -67,14 +70,23 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		}
 
 		entry, err := registry.GetByID(formRegID)
-		if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
 
 		parentID := entry.ParentID
 		parentPath, err := registry.GetPathByID(parentID)
-		if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
 
 		err = entry.Delete()
-		if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
 
 		newPage := fmt.Sprintf("/web/registry/?path=%s", parentPath)
 		response.Header().Set("Location", newPage)
@@ -87,7 +99,10 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		formParentID := 0
 		if val, ok := request.Form["parent_id"]; ok {
 			i, err := strconv.Atoi(val[0])
-			if err != nil {MakeErrorResponse(response, 400, fmt.Sprintf("invalid registry id: %s", val[0]), 0); return}
+			if err != nil {
+				MakeErrorResponse(response, 400, fmt.Sprintf("invalid registry id: %s", val[0]), 0)
+				return
+			}
 
 			formParentID = i
 		} else {
@@ -120,7 +135,10 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 
 		// Create record
 		newRegEntry, err := registry.New(formParentID, formKey, formValue, formSecure)
-		if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0);
+			return
+		}
 
 		// Redirect to new path
 		parentPath, err := registry.GetPathByID(newRegEntry.ID)
@@ -128,6 +146,48 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		response.Header().Set("Location", newPage)
 		response.WriteHeader(http.StatusFound)
 		return
+	} else if formAction == "update" {
+		// Gather form Variables
+		formRegID := 0
+		if val, ok := request.Form["reg_id"]; ok {
+			i, err := strconv.Atoi(val[0])
+			if err != nil {
+				MakeErrorResponse(response, 400, fmt.Sprintf("invalid registry id: %s", val[0]), 0)
+				return
+			}
+			formRegID = i
+		} else {
+			MakeErrorResponse(response, 400, "missing registry id", 0)
+			return
+		}
+
+		formValue := ""
+		if val, ok := request.Form["value"]; ok {
+			formValue = val[0]
+		} else {
+			MakeErrorResponse(response, 400, "missing registry value", 0)
+			return
+		}
+
+		reg, err := registry.GetByID(formRegID)
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
+
+		err = reg.SetValue(formValue)
+		if err != nil {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			return
+		}
+
+		// Redirect to new path
+		parentPath, err := registry.GetPathByID(reg.ID)
+		newPage := fmt.Sprintf("/web/registry/?path=%s", parentPath)
+		response.Header().Set("Location", newPage)
+		response.WriteHeader(http.StatusFound)
+		return
+
 	}
 
 	MakeErrorResponse(response, 400, fmt.Sprintf("unknown action: %s", formAction), 0)
@@ -142,7 +202,10 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0);
+		return
+	}
 
 	tmplVars := &templateVarRegistryIndex{}
 	uid := us.Values["LoggedInUserID"].(string)
@@ -157,7 +220,10 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Get Registry Entry
 	reg, err := registry.Get(path)
-	if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0);
+		return
+	}
 	tmplVars.Reg = reg
 	logger.Tracef("got entry: %v", reg)
 
@@ -189,7 +255,6 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	tmplVars.ModalNewSiblingParentID = getID
 
 	children, err := registry.GetChildrenByID(getID)
-
 
 	// Make Breadcrumbs
 	tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
@@ -224,25 +289,30 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	// Add Children to List
 	for _, child := range children {
 		icon := ""
-		if child.Secure{
+		if child.Secure {
 			icon = "lock"
 		}
 
 		tmplVars.Siblings = append(tmplVars.Siblings, TemplateListGroup{
-			Text:   child.Key,
-			URL:    fmt.Sprintf("/web/registry/?path=%s%s", newPath, child.Key),
-			Active: reg.ID == child.ID,
-			Count: child.ChildCount,
+			Text:    child.Key,
+			URL:     fmt.Sprintf("/web/registry/?path=%s%s", newPath, child.Key),
+			Active:  reg.ID == child.ID,
+			Count:   child.ChildCount,
 			FAIconR: icon,
 		})
 	}
 
 	// Compile Template
-	tmpl, err := compileTemplates("templates/layout.html", "templates/registry_index.html")
-	if err != nil {MakeErrorResponse(response, 500, err.Error(), 0); return}
+	tmpl, err := compileTemplates("templates/layout.html", "templates/registry.html")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
 
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
-	if err != nil {logger.Errorf("HandleUserIndex: Error executing template: %v", err)}
+	if err != nil {
+		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
+	}
 
 	elapsed := time.Since(start)
 	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)

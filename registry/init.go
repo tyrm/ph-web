@@ -66,6 +66,27 @@ func (r *RegistryEntry) GetValue() (v string, err error) {
 	return
 }
 
+func (r *RegistryEntry) SetValue(newValue string) (err error) {
+	newEncodedValue := ""
+	if r.Secure {
+		bEnc := encrypt([]byte(newValue))
+		sEnc := base64.URLEncoding.EncodeToString(bEnc)
+		newEncodedValue = sEnc
+	} else {
+		newEncodedValue = newValue
+	}
+
+	var value sql.NullString
+	err = db.QueryRow(sqlUpdateValue, r.ID, newEncodedValue).Scan(&value)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
+
+	r.Value = value.String
+	return
+}
+
 func (r *RegistryEntry) String() string {
 	return fmt.Sprintf("RegistryItem[%d->%d %s]", r.ID, r.ParentID, r.Key)
 }
