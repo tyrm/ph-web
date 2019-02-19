@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -41,12 +42,13 @@ type RegistryEntry struct {
 
 func (r *RegistryEntry) Delete() (err error) {
 	_, err = db.Exec(sqlDeleteByID, r.ID)
+
+	cPathByID.Delete()
 	return
 }
 
-
-func (r *RegistryEntry) GetPath() (v string, err error) {
-	v, err = GetPathByID(r.ID)
+func (r *RegistryEntry) GetPath() (path string, err error) {
+	path, err = GetPathByID(r.ID)
 	return
 }
 
@@ -64,7 +66,11 @@ func (r *RegistryEntry) GetValue() (v string, err error) {
 	return
 }
 
+func (r *RegistryEntry) String() string {
+	return fmt.Sprintf("RegistryItem[%d->%d %s]", r.ID, r.ParentID, r.Key)
+}
 
+// publics
 func Close() {
 	db.Close()
 	return
@@ -187,6 +193,7 @@ func GetPathByID(id int) (path string, err error) {
 		}
 	}
 
+	cPathByID.Set(idStr, newPath, cache.DefaultExpiration)
 	path = newPath
 	logger.Tracef("GetPathByID(%d) (%s, %s) [MISS]", id, path, err)
 	return
