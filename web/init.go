@@ -2,14 +2,26 @@ package web
 
 import (
 	"html/template"
+	"net/http"
 	"regexp"
 	"strconv"
 	"time"
 
+	"../models"
 	"github.com/antonlindstrom/pgstore"
 	"github.com/gobuffalo/packr/v2"
+	"github.com/gorilla/sessions"
 	"github.com/juju/loggo"
 )
+
+var logger *loggo.Logger
+var templates *packr.Box
+var globalSessions *pgstore.PGStore
+
+type TemplateVars interface {
+	SetUsername(string)
+	SetNavbar(*TemplateNavbar)
+}
 
 type TemplateBreadcrumb struct {
 	Text   string
@@ -62,9 +74,14 @@ type TemplateVarLayout struct {
 	Username     string
 }
 
-var logger *loggo.Logger
-var templates *packr.Box
-var globalSessions *pgstore.PGStore
+func (t *TemplateVarLayout) SetUsername(u string) {
+	t.Username = u
+	return
+}
+func (t *TemplateVarLayout) SetNavbar(n *TemplateNavbar) {
+	t.NavBar = n
+	return
+}
 
 func Close() {
 	globalSessions.Close()
@@ -107,6 +124,26 @@ func Init(db string, box *packr.Box) {
 
 	// Load Templates
 	templates = box
+}
+
+func initSession(response http.ResponseWriter, request *http.Request) (us *sessions.Session) {
+	// Init Session
+	us, err := globalSessions.Get(request, "session-key")
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0);
+		return
+	}
+	return
+}
+
+func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl TemplateVars) (us *sessions.Session) {
+	// Init Session
+	us = initSession(response, request)
+
+	uid := us.Values["LoggedInUserID"].(int)
+	tmpl.SetUsername(models.GetUsernameByID(uid))
+	tmpl.SetNavbar(makeNavbar(request.URL.Path))
+	return
 }
 
 func makeNavbar(path string) (navbar *TemplateNavbar) {

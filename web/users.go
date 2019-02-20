@@ -30,11 +30,8 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
+	tmplVars := &TemplateVarUserView{}
+	initSessionVars(response, request, tmplVars)
 
 	vars := mux.Vars(request)
 	user, err := models.GetUser(vars["id"])
@@ -44,12 +41,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmplVars := &TemplateVarUserView{
-		User: user,
-	}
-	uid := us.Values["LoggedInUserID"].(int)
-	tmplVars.Username = models.GetUsernameByID(uid)
-	tmplVars.NavBar = makeNavbar(request.URL.Path)
+	tmplVars.User = user
 
 	tmpl, err := compileTemplates("templates/layout.html", "templates/users_get.html")
 	if err != nil {
@@ -71,16 +63,8 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(int)
-	tmplVars.Username = models.GetUsernameByID(uid)
-	tmplVars.NavBar = makeNavbar(request.URL.Path)
+	us := initSessionVars(response, request, tmplVars)
 
 	// page stuff
 	var entriesPerPage uint = 10
@@ -151,20 +135,11 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(int)
-	tmplVars.Username = models.GetUsernameByID(uid)
-	tmplVars.NavBar = makeNavbar(request.URL.Path)
+	initSessionVars(response, request, tmplVars)
 
 	if request.Method == "POST" {
-		logger.Errorf("trying to parse form: %v", err)
-		err = request.ParseForm()
+		err := request.ParseForm()
 		if err != nil {
 			logger.Errorf("Error parseing form: %v", err)
 			return

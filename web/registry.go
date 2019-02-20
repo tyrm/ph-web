@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"../models"
 	"../registry"
 )
 
@@ -32,14 +31,10 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
+	us := initSession(response, request)
 	uid := us.Values["LoggedInUserID"].(int)
 
-	err = request.ParseForm()
+	err := request.ParseForm()
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -75,6 +70,11 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			MakeErrorResponse(response, 500, err.Error(), 0)
 			return
+		}
+
+		// don't delete root
+		if entry.Key == "{ROOT}" {
+			MakeErrorResponse(response, 403, "Can't delete root", 0)
 		}
 
 		parentID := entry.ParentID
@@ -203,16 +203,8 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0);
-		return
-	}
-
 	tmplVars := &templateVarRegistryIndex{}
-	uid := us.Values["LoggedInUserID"].(int)
-	tmplVars.Username = models.GetUsernameByID(uid)
-	tmplVars.NavBar = makeNavbar(request.URL.Path)
+	initSessionVars(response, request, tmplVars)
 
 	path := "/"
 	if val, ok := request.URL.Query()["path"]; ok {
@@ -227,7 +219,6 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 	tmplVars.Reg = reg
-	logger.Tracef("got entry: %v", reg)
 
 	// Get Children and some Template Mess
 	getID := reg.ID
