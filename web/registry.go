@@ -17,7 +17,8 @@ type templateVarRegistryIndex struct {
 	Breadcrumbs []TemplateBreadcrumb
 	Siblings    []TemplateListGroup
 
-	ShowAddChild bool
+	DisableAddChild bool
+	DisableDelete bool
 
 	ModalNewChildParent     string
 	ModalNewChildParentID   int
@@ -31,11 +32,12 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	_, err := globalSessions.Get(request, "session-key")
+	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
+	uid := us.Values["LoggedInUserID"].(int)
 
 	err = request.ParseForm()
 	if err != nil {
@@ -134,7 +136,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		}
 
 		// Create record
-		newRegEntry, err := registry.New(formParentID, formKey, formValue, formSecure)
+		newRegEntry, err := registry.New(formParentID, formKey, formValue, formSecure, uid)
 		if err != nil {
 			MakeErrorResponse(response, 500, err.Error(), 0);
 			return
@@ -208,7 +210,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &templateVarRegistryIndex{}
-	uid := us.Values["LoggedInUserID"].(string)
+	uid := us.Values["LoggedInUserID"].(int)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -229,14 +231,15 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Get Children and some Template Mess
 	getID := reg.ID
-	tmplVars.ShowAddChild = false
+	tmplVars.DisableAddChild = true
+	tmplVars.DisableDelete = true
 	newPath := fmt.Sprintf("%s/", path)
 	tmplVars.ModalNewSiblingParent = path
+
 	if path == "/" {
 		newPath = "/"
 	}
 	if reg.ChildCount == 0 {
-		tmplVars.ShowAddChild = true
 
 		pathLen := len(paths)
 		if pathLen == 1 {
@@ -246,13 +249,20 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 			newPath = fmt.Sprintf("/%s/", strings.Join(paths[0:pathLen-1], "/"))
 			tmplVars.ModalNewSiblingParent = fmt.Sprintf("/%s", strings.Join(paths[0:pathLen-1], "/"))
 		}
+		tmplVars.DisableDelete = false
+		tmplVars.DisableAddChild = false
 		getID = reg.ParentID
-		tmplVars.ModalNewSiblingParentID = reg.ParentID
+	}
+	if path == "/" {
+		tmplVars.DisableDelete = true
+		tmplVars.DisableAddChild = true
+		tmplVars.ModalNewSiblingParentID = reg.ID
+	} else {
+		tmplVars.ModalNewSiblingParentID = getID
 	}
 
 	tmplVars.ModalNewChildParent = path
 	tmplVars.ModalNewChildParentID = reg.ID
-	tmplVars.ModalNewSiblingParentID = getID
 
 	children, err := registry.GetChildrenByID(getID)
 

@@ -49,7 +49,7 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 
 		if valid {
 			user.UpdateLastLogin()
-			us.Values["LoggedInUserID"] = user.Token
+			us.Values["LoggedInUserID"] = user.ID
 		} else {
 			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized", Username: formUsername})
 			return

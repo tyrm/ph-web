@@ -28,6 +28,7 @@
     </div>
     <div class="row">
         <div class="col">
+            <div class="table-responsive">
             <table class="table" id="usersListTable">
                 <thead class="thead-dark">
                 <tr>
@@ -54,6 +55,7 @@
 {{- end}}
                 </tbody>
             </table>
+            </div>
 {{- if .Pages}}
 {{- template "pagination" .Pages}}
 {{- end}}

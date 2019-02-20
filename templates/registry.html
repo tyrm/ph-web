@@ -37,18 +37,16 @@
         <div class="col">
             <ul class="nav nav-tabs">
                 <li class="nav-item mr-auto">
-                    <a class="nav-link active" href="#">{{.Reg.GetPath}}</a>
+                    <div class="nav-link active" href="#">{{.Reg.GetPath}}</div>
                 </li>
-                {{- if .ShowAddChild}}
-                <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Add Child">
-                    <a class="nav-link text-success" href="#" data-toggle="modal" data-target="#newChildModal"><i class="fas fa-plus"></i></a>
+                <li class="nav-item"{{if not .DisableAddChild}} data-toggle="tooltip" data-placement="top" title="Add Child"{{end}}>
+                    <a class="nav-link{{if .DisableAddChild}} disabled{{else}} text-success{{end}}" href="#" data-toggle="modal" data-target="#newChildModal"><i class="fas fa-plus"></i></a>
                 </li>
-                {{- end}}
                 <li class="nav-item" data-toggle="tooltip" data-placement="top" title="Edit Value">
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#editRegModal"><i class="fas fa-edit"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link{{if .Reg.ChildCount}} disabled{{else}} text-danger{{end}}" href="#" data-toggle="modal" data-target="#deleteRegModal"><i class="fas fa-trash-alt"></i></a>
+                    <a class="nav-link{{if .DisableDelete}} disabled{{else}} text-danger{{end}}" href="#" data-toggle="modal" data-target="#deleteRegModal"><i class="fas fa-trash-alt"></i></a>
                 </li>
             </ul>
         </div>
@@ -157,7 +155,7 @@
         <div class="modal-content">
             <form action="/web/registry/" method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editRegModalLabel"><i class="fas fa-book-medical"></i> Edit Entry</h5>
+                    <h5 class="modal-title" id="editRegModalLabel"><i class="fas fa-edit"></i> Edit Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

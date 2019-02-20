@@ -12,19 +12,19 @@ FROM pg_stat_all_tables
 WHERE relname = 'users';`
 
 const sqlUserGet = `
-SELECT token, username, password, email, login_count, last_login, created_at, updated_at
+SELECT id, token, username, password, email, login_count, last_login, created_at, updated_at
 FROM users
 WHERE token = $1 AND deleted_at IS NULL;`
 
 const sqlUserGetByUsername = `
-SELECT token, username, password, email, login_count, last_login, created_at, updated_at
+SELECT id, token, username, password, email, login_count, last_login, created_at, updated_at
 FROM users
 WHERE lower(username) = lower($1) AND deleted_at IS NULL;`
 
 const sqlUserGetUsernameByID = `
 SELECT username
 FROM users
-WHERE token = $1 AND deleted_at IS NULL;`
+WHERE id = $1 AND deleted_at IS NULL;`
 
 const sqlUserIdExists = `
 SELECT exists(SELECT 1 FROM users WHERE id=$1);`
@@ -32,7 +32,7 @@ SELECT exists(SELECT 1 FROM users WHERE id=$1);`
 const sqlUserInsert = `
 INSERT INTO "public"."users" (token, username, password, email, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING token;`
+RETURNING id;`
 
 const sqlUserUpdateLastLogin = `
 UPDATE users

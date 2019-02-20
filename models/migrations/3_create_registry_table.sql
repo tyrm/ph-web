@@ -15,13 +15,12 @@ VALUES ('{ROOT}', now(), now())
 ;
 CREATE TABLE "public"."registry_log" (
     id serial NOT NULL UNIQUE,
-    reg_id integer REFERENCES registry(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    reg_id integer REFERENCES registry(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    user_id integer REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+    timestamp timestamp without time zone NOT NULL,
     change_type integer NOT NULL,
     old_value character varying,
     new_value character varying,
-    user_pid integer REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
     PRIMARY KEY ("id")
 )
 ;

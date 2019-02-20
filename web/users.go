@@ -47,7 +47,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	tmplVars := &TemplateVarUserView{
 		User: user,
 	}
-	uid := us.Values["LoggedInUserID"].(string)
+	uid := us.Values["LoggedInUserID"].(int)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -78,7 +78,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(string)
+	uid := us.Values["LoggedInUserID"].(int)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 
@@ -158,7 +158,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars := &TemplateVarUserIndex{}
-	uid := us.Values["LoggedInUserID"].(string)
+	uid := us.Values["LoggedInUserID"].(int)
 	tmplVars.Username = models.GetUsernameByID(uid)
 	tmplVars.NavBar = makeNavbar(request.URL.Path)
 

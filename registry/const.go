@@ -5,6 +5,10 @@ INSERT INTO "public"."registry" (parent_id, key, value, secure, created_at, upda
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING  id, parent_id, key, value, secure, created_at, updated_at;`
 
+const sqlCreateLog = `
+INSERT INTO "public"."registry_log" (reg_id, user_id, change_type, old_value, new_value, timestamp)
+VALUES ($1, $2, $3, $4, $5, now());`
+
 const sqlDeleteByID = `
 DELETE FROM registry
 WHERE id = $1`

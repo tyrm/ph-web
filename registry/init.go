@@ -189,7 +189,7 @@ func GetPathByID(id int) (path string, err error) {
 	idStr := strconv.Itoa(id)
 	if p, found := cPathByID.Get(idStr); found {
 		path = p.(string)
-		logger.Tracef("GetPathByID(%s) (%s, %s) [HIT]", id, path, err)
+		logger.Tracef("GetPathByID(%d) (%s, %s) [HIT]", id, path, err)
 		return
 	}
 
@@ -219,7 +219,7 @@ func GetPathByID(id int) (path string, err error) {
 	return
 }
 
-func New(newPid int, newKey string, newValue string, newSecure bool) (reg *RegistryEntry, err error) {
+func New(newPid int, newKey string, newValue string, newSecure bool, uid int) (reg *RegistryEntry, err error) {
 	newEncodedValue := ""
 	if newSecure {
 		bEnc := encrypt([]byte(newValue))
@@ -244,6 +244,12 @@ func New(newPid int, newKey string, newValue string, newSecure bool) (reg *Regis
 		logger.Errorf(err.Error())
 		logger.Tracef("New(%d, %s, ***, %v) (%v, %v)", newPid, newKey, newSecure, reg, err)
 		return
+	}
+
+	if secure {
+		go logChange(id, uid, LogAddedSecure, "", "")
+	} else {
+		go logChange(id, uid, LogAdded, "", newEncodedValue)
 	}
 
 	reg = &RegistryEntry{

@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/eefret/gravatar"
@@ -11,14 +12,15 @@ import (
 )
 
 type User struct {
+	ID    int
 	Token string
 
-	Username  string
-	Password  string
-	Email     string
+	Username string
+	Password string
+	Email    string
 
 	LoginCount int
-	LastLogin pq.NullTime
+	LastLogin  pq.NullTime
 
 	CreatedAt pq.NullTime
 	UpdatedAt pq.NullTime
@@ -112,6 +114,7 @@ func GetUserCount() (count uint, err error) {
 }
 
 func GetUser(sid string) (user *User, err error) {
+	var id int
 	var token string
 	var username string
 	var password string
@@ -123,13 +126,14 @@ func GetUser(sid string) (user *User, err error) {
 	var createdAt pq.NullTime
 	var updatedAt pq.NullTime
 
-	err = DB.QueryRow(sqlUserGet, sid).Scan(&token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	err = DB.QueryRow(sqlUserGet, sid).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
 	if err != nil {
 		logger.Errorf(err.Error())
 		return
 	}
 
 	user = &User{
+		ID:         id,
 		Token:      token,
 		Username:   username,
 		Password:   password,
@@ -145,6 +149,7 @@ func GetUser(sid string) (user *User, err error) {
 }
 
 func GetUserByUsername(usernameStr string) (user User, err error) {
+	var id int
 	var token string
 	var username string
 	var password string
@@ -156,13 +161,14 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	var createdAt pq.NullTime
 	var updatedAt pq.NullTime
 
-	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
 	if err != nil {
 		logger.Errorf(err.Error())
 		return
 	}
 
 	user = User{
+		ID:         id,
 		Token:      token,
 		Username:   username,
 		Password:   password,
@@ -177,7 +183,7 @@ func GetUserByUsername(usernameStr string) (user User, err error) {
 	return
 }
 
-func GetUserIdExists(id string)(exists bool, err error) {
+func GetUserIdExists(id string) (exists bool, err error) {
 	var newExists bool
 	err = DB.QueryRow(sqlUserIdExists, id).Scan(&newExists)
 	if err != nil {
@@ -189,7 +195,7 @@ func GetUserIdExists(id string)(exists bool, err error) {
 	return
 }
 
-func GetUsernameExists(id string)(exists bool, err error) {
+func GetUsernameExists(id string) (exists bool, err error) {
 	var newExists bool
 
 	err = DB.QueryRow(sqlUsernameExists, id).Scan(&newExists)
@@ -247,10 +253,11 @@ func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
 	return
 }
 
-func GetUsernameByID(uid string) string {
+func GetUsernameByID(uid int) string {
 	var username string
 
-	if u, found := cUsernameByID.Get(uid); found {
+	uisStr := strconv.Itoa(uid)
+	if u, found := cUsernameByID.Get(uisStr); found {
 		username = u.(string)
 		logger.Tracef("GetUsernameByID(%s) (%s) [HIT]", uid, username)
 		return username
@@ -259,17 +266,17 @@ func GetUsernameByID(uid string) string {
 	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
 	if err != nil {
 		logger.Errorf(err.Error())
-		return uid
+		return uisStr
 	}
 
-	cUsernameByID.Set(uid, username, cache.DefaultExpiration)
+	cUsernameByID.Set(uisStr, username, cache.DefaultExpiration)
 	logger.Tracef("GetUsernameByID(%s) (%s) [MISS]", uid, username)
 	return username
 }
 
 func NewUser(username string, password string, email string) (user User, err error) {
 	createdAt := pq.NullTime{
-		Time: time.Now(),
+		Time:  time.Now(),
 		Valid: true,
 	}
 	passHash, err := hashPassword(password)
@@ -279,16 +286,16 @@ func NewUser(username string, password string, email string) (user User, err err
 	}
 
 	newUser := User{
-		Username: username,
-		Password: passHash,
-		Email: email,
+		Username:  username,
+		Password:  passHash,
+		Email:     email,
 		CreatedAt: createdAt,
 		UpdatedAt: createdAt,
 	}
 
 	newUser.Token = RandString(8)
 
-	var newID string
+	var newID int
 	err = DB.QueryRow(sqlUserInsert, newUser.Token, newUser.Username, newUser.Password, newUser.Email, newUser.CreatedAt, newUser.UpdatedAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
@@ -296,12 +303,14 @@ func NewUser(username string, password string, email string) (user User, err err
 		return
 	}
 
+	newUser.ID = newID
+
 	logger.Debugf("New user created: %s", newUser.Token)
 	user = newUser
 	return
 }
 
-func getValidID() (id string, err error){
+func getValidID() (id string, err error) {
 	var exists bool
 
 	err = DB.QueryRow(sqlUserIdExists, id).Scan(&exists)
