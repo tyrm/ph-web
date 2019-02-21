@@ -23,7 +23,7 @@ func CloseDB() {
 	return
 }
 
-func InitDB(connectionString string) {
+func Init(connectionString string) {
 	newLogger := loggo.GetLogger("models")
 	logger = &newLogger
 

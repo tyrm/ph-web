@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -26,6 +27,8 @@ var cPathByID *cache.Cache
 var cRegByID *cache.Cache
 
 var reg_key []byte
+
+var ErrDoesNotExist = errors.New("regisrty entry doesn't exist")
 
 type RegistryEntry struct {
 	ID       int
@@ -121,7 +124,10 @@ func Init(connectionString string, password string) {
 
 func Get(path string) (reg *RegistryEntry, err error) {
 	regCursor, newErr := getRegistryRoot()
-	if newErr != nil {err = newErr; return}
+	if newErr != nil {
+		err = newErr
+		return
+	}
 
 	if path == "/" {
 		reg = regCursor
@@ -129,11 +135,17 @@ func Get(path string) (reg *RegistryEntry, err error) {
 	}
 
 	parts := SplitPath(path)
-	logger.Tracef("Got parts: %v", parts)
 
 	for _, key := range parts {
 		regCursor, newErr = getRegistryByKey(key, regCursor.ID)
-		if newErr != nil {err = newErr; return}
+		if newErr != nil {
+			if newErr == sql.ErrNoRows {
+				err = ErrDoesNotExist
+			} else {
+				err = newErr
+			}
+			return
+		}
 	}
 	reg = regCursor
 	return
@@ -141,7 +153,10 @@ func Get(path string) (reg *RegistryEntry, err error) {
 
 func GetByID(id int) (reg *RegistryEntry, err error) {
 	regNew, newErr := getRegistry(id)
-	if newErr != nil {err = newErr; return}
+	if newErr != nil {
+		err = newErr
+		return
+	}
 
 	reg = regNew
 	logger.Tracef("GetByID(%d) (%v, %v)", id, reg, err)
@@ -152,7 +167,10 @@ func GetChildrenByID(id int) (reg []*RegistryEntry, err error) {
 	var newRegList []*RegistryEntry
 
 	rows, err := db.Query(sqlGetChildrenByParentID, id)
-	if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
+	if err != nil {
+		logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
+		return
+	}
 	for rows.Next() {
 		var id int
 		var parentID int
@@ -164,7 +182,10 @@ func GetChildrenByID(id int) (reg []*RegistryEntry, err error) {
 		var childCount int
 
 		err = rows.Scan(&id, &parentID, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
-		if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
+		if err != nil {
+			logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
+			return
+		}
 
 		newReg := RegistryEntry{
 			ID:         id,
@@ -194,7 +215,10 @@ func GetPathByID(id int) (path string, err error) {
 	}
 
 	rows, err := db.Query(sqlGetPathByID, id)
-	if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
+	if err != nil {
+		logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
+		return
+	}
 
 	newPath := ""
 	for rows.Next() {
@@ -203,9 +227,12 @@ func GetPathByID(id int) (path string, err error) {
 		var key string
 
 		err = rows.Scan(&id, &parentID, &key)
-		if err != nil {logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err); return}
+		if err != nil {
+			logger.Tracef("GetChildrenByID(%d) (%v, %v)", id, nil, err)
+			return
+		}
 
-		if key != "{ROOT}"  {
+		if key != "{ROOT}" {
 			newPath = "/" + key + newPath
 		}
 	}
@@ -332,11 +359,11 @@ func getRegistry(searchId int) (reg *RegistryEntry, err error) {
 	}
 
 	reg = &RegistryEntry{
-		ID:        id,
-		Key:       key,
-		Secure:    secure,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		ID:         id,
+		Key:        key,
+		Secure:     secure,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 		ChildCount: childCount,
 	}
 
@@ -362,14 +389,17 @@ func getRegistryRoot() (reg *RegistryEntry, err error) {
 	var childCount int
 
 	err = db.QueryRow(sqlGetRegistryRoot).Scan(&id, &key, &value, &secure, &createdAt, &updatedAt, &childCount)
-	if err != nil {logger.Errorf(err.Error());	return}
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
 
 	reg = &RegistryEntry{
-		ID:        id,
-		Key:       key,
-		Secure:    secure,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		ID:         id,
+		Key:        key,
+		Secure:     secure,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 		ChildCount: childCount,
 	}
 
@@ -399,12 +429,12 @@ func getRegistryByKey(searchKey string, pID int) (reg *RegistryEntry, err error)
 	}
 
 	reg = &RegistryEntry{
-		ID:        id,
-		ParentID:  parentID,
-		Key:       key,
-		Secure:    secure,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		ID:         id,
+		ParentID:   parentID,
+		Key:        key,
+		Secure:     secure,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
 		ChildCount: childCount,
 	}
 

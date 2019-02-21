@@ -19,8 +19,9 @@ var templates *packr.Box
 var globalSessions *pgstore.PGStore
 
 type TemplateVars interface {
-	SetUsername(string)
+	SetDarkMode(bool)
 	SetNavbar(*TemplateNavbar)
+	SetUsername(string)
 }
 
 type TemplateBreadcrumb struct {
@@ -67,19 +68,27 @@ type TemplatePage struct {
 }
 
 type TemplateVarLayout struct {
-	NavBar       *TemplateNavbar
 	AlertSuccess string
 	AlertError   string
 	AlertWarn    string
+
+	DarkMode     bool
+	NavBar       *TemplateNavbar
 	Username     string
+}
+
+func (t *TemplateVarLayout) SetDarkMode(d bool) {
+	t.DarkMode = d
+	return
+}
+
+func (t *TemplateVarLayout) SetNavbar(n *TemplateNavbar) {
+	t.NavBar = n
+	return
 }
 
 func (t *TemplateVarLayout) SetUsername(u string) {
 	t.Username = u
-	return
-}
-func (t *TemplateVarLayout) SetNavbar(n *TemplateNavbar) {
-	t.NavBar = n
 	return
 }
 
@@ -143,6 +152,13 @@ func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl T
 	uid := us.Values["LoggedInUserID"].(int)
 	tmpl.SetUsername(models.GetUsernameByID(uid))
 	tmpl.SetNavbar(makeNavbar(request.URL.Path))
+
+	darkMode := false
+	if us.Values["TemplateDarkMode"] != nil {
+		darkMode = us.Values["TemplateDarkMode"].(bool)
+	}
+	tmpl.SetDarkMode(darkMode)
+
 	return
 }
 

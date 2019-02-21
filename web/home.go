@@ -2,8 +2,6 @@ package web
 
 import (
 	"net/http"
-
-	"../models"
 )
 
 type TemplateVarHome struct {
@@ -11,16 +9,9 @@ type TemplateVarHome struct {
 }
 
 func HandleHome(response http.ResponseWriter, request *http.Request) {
-	us, err := globalSessions.Get(request, "session-key")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
+	// Init Session
 	tmplVars := &TemplateVarHome{}
-	uid := us.Values["LoggedInUserID"].(int)
-	tmplVars.Username = models.GetUsernameByID(uid)
-	tmplVars.NavBar = makeNavbar(request.URL.Path)
+	initSessionVars(response, request, tmplVars)
 
 	tmpl, err := compileTemplates("templates/layout.html", "templates/home.html")
 	if err != nil {

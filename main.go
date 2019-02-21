@@ -25,7 +25,7 @@ func main() {
 	config := CollectConfig()
 
 	// Connect db
-	models.InitDB(config.DBEngine)
+	models.Init(config.DBEngine)
 	defer models.CloseDB()
 
 	// Open Registry
