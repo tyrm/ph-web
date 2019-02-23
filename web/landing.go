@@ -7,7 +7,7 @@ import (
 )
 
 type TemplateVarLanding struct {
-	UserID  string
+	UserID string
 }
 
 func HandleLanding(response http.ResponseWriter, request *http.Request) {

@@ -62,7 +62,6 @@ func (r *RegistryEntry) GetValue() (v string, err error) {
 	} else {
 		v = string(r.Value)
 	}
-	logger.Criticalf("GetValue(%d): %s", r.ID, v)
 	return
 }
 
@@ -125,7 +124,6 @@ func Get(path string) (reg *RegistryEntry, err error) {
 		return
 	}
 
-	logger.Tracef("Get: Got Root")
 	if path == "/" {
 		reg = regCursor
 		return

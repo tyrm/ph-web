@@ -101,6 +101,20 @@ func InitClient(force bool) {
 	}
 
 	logger.Tracef("got values: %s, %s, %s, %s", endpoint, secretBucket, accessKeyID, secretAccessKey, )
+
+
+	// Initialize minio client object.
+	useSSL := true
+	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
+	if err != nil {
+		logger.Errorf("Problem initializing minio client %s", err.Error())
+		return
+	}
+
+	mc = minioClient
+	mcInitialized = true
+	logger.Infof("File store initialized")
+
 }
 
 func IsInit() (bool) {

@@ -17,7 +17,7 @@ type templateVarRegistryIndex struct {
 	Siblings    []TemplateListGroup
 
 	DisableAddChild bool
-	DisableDelete bool
+	DisableDelete   bool
 
 	ModalNewChildParent     string
 	ModalNewChildParentID   int

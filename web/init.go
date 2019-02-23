@@ -72,9 +72,9 @@ type TemplateVarLayout struct {
 	AlertError   string
 	AlertWarn    string
 
-	DarkMode     bool
-	NavBar       *TemplateNavbar
-	Username     string
+	DarkMode bool
+	NavBar   *TemplateNavbar
+	Username string
 }
 
 func (t *TemplateVarLayout) SetDarkMode(d bool) {
@@ -178,9 +178,9 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 				URL:      "/web/files/",
 			},
 			{
-				Text: "Admin",
-				FAIcon:   "hammer",
-				URL:  "#",
+				Text:   "Admin",
+				FAIcon: "hammer",
+				URL:    "#",
 				Children: []*TempalteNavbarNode{
 					{
 						Text:     "Oauth Clients",

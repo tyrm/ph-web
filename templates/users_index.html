@@ -33,11 +33,11 @@
                 <thead class="thead-dark">
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col" class="d-block">ID</th>
+                    <th scope="col">ID</th>
                     <th scope="col">Username</th>
                     <th scope="col">Email</th>
-                    <th scope="col">Login Count</th>
-                    <th scope="col">Last Login</th>
+                    <th scope="col" class="text-nowrap">Login Count</th>
+                    <th scope="col" class="text-nowrap">Last Login</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -45,7 +45,7 @@
 {{- range .}}
                 <tr>
                     <td><img src="{{.GetGravatar 32}}"></td>
-                    <td scope="row" class="d-block">{{.Token}}</td>
+                    <td>{{.Token}}</td>
                     <td><a href="/web/admin/users/{{.Token}}">{{.Username}}</a></td>
                     <td>{{.Email}}</td>
                     <td>{{.LoginCount}}</td>

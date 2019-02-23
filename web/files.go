@@ -7,8 +7,6 @@ import (
 	"../registry"
 )
 
-
-
 type TemplateVarFiles struct {
 	TemplateVarLayout
 
@@ -20,8 +18,8 @@ type TemplateVarFilesConfig struct {
 
 	S3Endpoint string
 	BucketName string
-	KeyID string
-	AccessKey string
+	KeyID      string
+	AccessKey  string
 
 	IsInit bool
 }
@@ -30,7 +28,6 @@ func HandleFiles(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarFiles{}
 	initSessionVars(response, request, tmplVars)
-
 
 	tmplVars.IsInit = files.IsInit()
 	tmpl, err := compileTemplates("templates/layout.html", "templates/files.html")
@@ -196,7 +193,6 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			MakeErrorResponse(response, 500, err.Error(), 0)
 			return
 		}
-		logger.Tracef("HandleFilesConfig: access_key value [%s]", regAccessKey.Value)
 		err = regAccessKey.SetValue(formAccessKey)
 		if err != nil {
 			logger.Errorf("Could not set /system/files/access_key: %s", err.Error())
@@ -204,12 +200,8 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		//regEndpoint, err := registry.New()
-		logger.Tracef("Parents %v", regParent)
-		logger.Tracef("%s, %s, %s, %s", formEndpoint, formBucket, formKeyID, formAccessKey)
+		files.InitClient(false)
 	}
-
-
 
 	logger.Tracef("HandleFilesConfig: Retrieving registry items")
 	// Get Registry Entries
@@ -249,8 +241,6 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			tmplVars.AccessKey = value
 		}
 	}
-
-	logger.Tracef("HandleFilesConfig: Got all values")
 
 	tmplVars.IsInit = files.IsInit()
 	tmpl, err := compileTemplates("templates/layout.html", "templates/files_config.html")

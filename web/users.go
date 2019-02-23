@@ -13,8 +13,8 @@ import (
 type TemplateVarUserIndex struct {
 	TemplateVarLayout
 
-	Users     []*models.User
-	Pages     *TemplatePages
+	Users []*models.User
+	Pages *TemplatePages
 }
 
 type TemplateVarUserNew struct {
