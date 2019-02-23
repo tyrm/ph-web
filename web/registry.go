@@ -90,7 +90,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		newPage := fmt.Sprintf("/web/registry/?path=%s", parentPath)
+		newPage := fmt.Sprintf("/web/admin/registry/?path=%s", parentPath)
 		response.Header().Set("Location", newPage)
 		response.WriteHeader(http.StatusFound)
 		return
@@ -144,7 +144,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 
 		// Redirect to new path
 		parentPath, err := registry.GetPathByID(newRegEntry.ID)
-		newPage := fmt.Sprintf("/web/registry/?path=%s", parentPath)
+		newPage := fmt.Sprintf("/web/admin/registry/?path=%s", parentPath)
 		response.Header().Set("Location", newPage)
 		response.WriteHeader(http.StatusFound)
 		return
@@ -185,7 +185,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 
 		// Redirect to new path
 		parentPath, err := registry.GetPathByID(reg.ID)
-		newPage := fmt.Sprintf("/web/registry/?path=%s", parentPath)
+		newPage := fmt.Sprintf("/web/admin/registry/?path=%s", parentPath)
 		response.Header().Set("Location", newPage)
 		response.WriteHeader(http.StatusFound)
 		return
@@ -260,7 +260,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	// Make Breadcrumbs
 	tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
 		Text:   "ROOT",
-		URL:    "/web/registry/?path=/",
+		URL:    "/web/admin/registry/?path=/",
 		Active: path == "/",
 	})
 
@@ -274,7 +274,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
 			Text:   newKey,
-			URL:    fmt.Sprintf("/web/registry/?path=%s%s", startPath, key),
+			URL:    fmt.Sprintf("/web/admin/registry/?path=%s%s", startPath, key),
 			Active: index == activeIndex,
 		})
 		startPath = startPath + key + "/"
@@ -296,7 +296,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 		tmplVars.Siblings = append(tmplVars.Siblings, TemplateListGroup{
 			Text:    child.Key,
-			URL:     fmt.Sprintf("/web/registry/?path=%s%s", newPath, child.Key),
+			URL:     fmt.Sprintf("/web/admin/registry/?path=%s%s", newPath, child.Key),
 			Active:  reg.ID == child.ID,
 			Count:   child.ChildCount,
 			FAIconR: icon,

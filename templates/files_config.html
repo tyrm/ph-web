@@ -1,0 +1,85 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+{{- if .AlertWarn}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+            {{.AlertWarn}}
+            </div>
+        </div>
+    </div>
+{{- end}}
+    <div class="row">
+        <div class="col">
+            <h1>Files Config</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4><i class="fas fa-signal"></i> Init Status</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+        {{if .IsInit -}}
+            <div class="alert alert-success" role="alert">
+                A simple success alert—check it out!
+                <
+            </div>
+        {{else -}}
+            <div class="alert alert-danger align-middle" role="alert">
+                <form>
+                    <span class="align-middle">Not initialized </span>
+                    <button type="submit" class="alert-link btn btn-link btn-sm">Retry Init</button>
+                    <input type="hidden" name="_action" value="retry">
+                </form>
+            </div>
+        {{end -}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h4><i class="fab fa-aws"></i> S3 Config</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+
+            <form method="post">
+                <div class="form-group form-row">
+                    <label for="s3Endpoint" class="col-sm-3 col-md-2 col-form-label text-nowrap" >S3 Endpoint</label>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" id="s3Endpoint" name="endpoint" placeholder="https://example.com/" value="{{.S3Endpoint}}" required>
+                    </div>
+                </div>
+                <div class="form-group form-row">
+                    <label for="bucketName" class="col-sm-3 col-md-2 col-form-label text-nowrap">Bucket Name</label>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" id="bucketName" name="bucket" placeholder="Enter Bucket Name" value="{{.BucketName}}" required>
+                    </div>
+                </div>
+                <div class="form-group form-row">
+                    <label for="keyID" class="col-sm-3 col-md-2 col-form-label text-nowrap">Key ID</label>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="text" class="form-control" id="keyID" name="key_id" placeholder="Enter Key ID" value="{{.KeyID}}" required>
+                    </div>
+                </div>
+                <div class="form-group form-row">
+                    <label for="accessKey" class="col-sm-3 col-md-2 col-form-label text-nowrap">Access Key</label>
+                    <div class="col-sm-9 col-md-10">
+                        <input type="password" class="form-control" id="accessKey" name="access_key" placeholder="Enter Access Key" value="{{.AccessKey}}" required>
+                    </div>
+                </div>
+                <div class="form-group form-row">
+                    <div class="col text-right">
+                        <a class="btn btn-secondary mr-1" href="/web/files/">Close</a>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

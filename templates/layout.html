@@ -5,20 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{template "title" . }}</title>
-    <link rel="icon" type="image/png" href="https://o.pup.haus/public/img/wolf.png">
-    {{if .DarkMode}}
+    <link rel="icon" type="image/png" href="https://o.pup.haus/public/img/pup_32.png">
+    {{if .DarkMode -}}
         <link rel="stylesheet" href="https://o.pup.haus/public/bootstrap-4.3.1-dist/css/bootstrap-darkly.min.css">
-    {{else}}
+    {{else -}}
         <link rel="stylesheet" href="https://o.pup.haus/public/bootstrap-4.3.1-dist/css/bootstrap-flatly.min.css">
-    {{end}}
+    {{end -}}
     <link href="https://o.pup.haus/public/fontawesome-free-5.7.2-web/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/default.css">
     <script src="https://o.pup.haus/public/jquery-3.3.1.min.js"></script>
     <script src="https://o.pup.haus/public/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <span class="navbar-brand"><img src="https://o.pup.haus/public/img/pup{{if .DarkMode}}_white{{end}}.svg" height="30" /><img src="https://o.pup.haus/public/img/haus{{if .DarkMode}}_white{{end}}.svg" height="30" /></span>
+<nav class="navbar navbar-expand-sm navbar-dark bg-primary">
+    <span class="navbar-brand"><img src="https://o.pup.haus/public/img/pup_white.svg" height="30" /><img src="https://o.pup.haus/public/img/haus_white.svg" height="30" /></span>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -28,7 +28,7 @@
     {{- if .Children -}}
         <li class="nav-item dropdown{{if .Active}} active{{end}}{{if .Disabled}} disabled{{end}}">
             <a class="nav-link dropdown-toggle" href="{{.URL}}" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {{- .Text -}}
+            {{if .FAIcon}}<i class="fas fa-{{.FAIcon}}"></i> {{end}}{{- .Text -}}
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
         {{- range .Children -}}
@@ -38,7 +38,7 @@
         </li>
     {{- else -}}
         <li class="nav-item{{if .Active}} active{{end}}{{if .Disabled}} disabled{{end}}">
-            <a class="nav-link" href="{{.URL}}">{{.Text}}{{if .Active}} <span class="sr-only">(current)</span>{{end}}</a>
+            <a class="nav-link" href="{{.URL}}">{{if .FAIcon}}<i class="fas fa-{{.FAIcon}}"></i> {{end}}{{.Text}}{{if .Active}} <span class="sr-only">(current)</span>{{end}}</a>
         </li>
     {{- end -}}
 {{- end -}}
@@ -46,14 +46,14 @@
         <ul class="navbar-nav" id="navbarUsername">
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-user"></i> {{.Username -}}
+                    <i class="fas fa-user"></i> {{.Username}}
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                {{if .DarkMode}}
-                    <a class="dropdown-item" href="?dark_mode=false"><i class="fas fa-toggle-on"></i> Dark Mode</a>
-                {{else}}
-                    <a class="dropdown-item" href="?dark_mode=true"><i class="fas fa-toggle-off"></i> Dark Mode</a>
-                {{end}}
+                    {{if .DarkMode -}}
+                        <a class="dropdown-item" href="?dark_mode=false"><i class="fas fa-toggle-on"></i> Dark Mode</a>
+                    {{else -}}
+                        <a class="dropdown-item" href="?dark_mode=true"><i class="fas fa-toggle-off"></i> Dark Mode</a>
+                    {{end -}}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
@@ -61,9 +61,19 @@
         </ul>
     </div>
 </nav>
-{{- template "body" .}}
-<!-- Logout Modal Start -->
-<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+{{- template "body" . -}}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="d-block d-sm-none">xs</div>
+            <div class="d-none d-sm-block d-md-none">sm</div>
+            <div class="d-none d-md-block d-lg-none">md</div>
+            <div class="d-none d-lg-block d-xl-none">lg</div>
+            <div class="d-none d-xl-block">xl</div>
+        </div>
+    </div>
+</div>
+<!-- Logout Modal Start --><div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -81,8 +91,7 @@
             </div>
         </div>
     </div>
-</div>
-<!-- Logout Modal Stop -->
+</div><!-- Logout Modal Stop -->
 </body>
 </html>
 {{ end }}

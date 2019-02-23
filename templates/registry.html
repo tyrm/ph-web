@@ -53,23 +53,22 @@
     </div>
     <div class="row">
         <div class="col">
-            {{template "breadcrumbs" .Breadcrumbs}}
+            {{- template "breadcrumbs" .Breadcrumbs -}}
             <div class="list-group">{{template "list-group" .Siblings}}</div>
         </div>
         <div class="col">
         {{if .Reg.Secure}}
             <h2 class="text-center"><i class="fas fa-lock"></i></h2>
         {{else}}
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>{{.Reg.Value}}</textarea>
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>{{.Reg.GetValue}}</textarea>
         {{end}}
         </div>
     </div>
 </div>
-<!-- New Child Modal Start -->
-<div class="modal fade" id="newChildModal" tabindex="-1" role="dialog" aria-labelledby="newChildModalLabel" aria-hidden="true">
+<!-- New Child Modal Start --><div class="modal fade" id="newChildModal" tabindex="-1" role="dialog" aria-labelledby="newChildModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form action="/web/registry/" method="post">
+            <form action="/web/admin/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newChildModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -105,13 +104,11 @@
             </form>
         </div>
     </div>
-</div>
-<!-- New Child Modal Stop -->
-<!-- New Sibling Modal Start -->
-<div class="modal fade" id="newSiblingModal" tabindex="-1" role="dialog" aria-labelledby="newSiblingModalLabel" aria-hidden="true">
+</div><!-- New Child Modal Stop -->
+<!-- New Sibling Modal Start --><div class="modal fade" id="newSiblingModal" tabindex="-1" role="dialog" aria-labelledby="newSiblingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form action="/web/registry/" method="post">
+            <form action="/web/admin/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newSiblingModalLabel"><i class="fas fa-book-medical"></i> Add Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -147,13 +144,11 @@
             </form>
         </div>
     </div>
-</div>
-<!-- New Sibling Modal Stop -->
-<!-- Edit Reg Modal Start -->
-<div class="modal fade" id="editRegModal" tabindex="-1" role="dialog" aria-labelledby="editRegModalLabel" aria-hidden="true">
+</div><!-- New Sibling Modal Stop -->
+<!-- Edit Reg Modal Start --><div class="modal fade" id="editRegModal" tabindex="-1" role="dialog" aria-labelledby="editRegModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form action="/web/registry/" method="post">
+            <form action="/web/admin/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editRegModalLabel"><i class="fas fa-edit"></i> Edit Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -168,7 +163,7 @@
                     </div>
                     <div class="form-group">
                         <label for="inputValueSibling">{{if .Reg.Secure}}New {{end}}Value</label>
-                        <textarea class="form-control" id="inputValueSibling" rows="10" name="value">{{if not .Reg.Secure}}{{.Reg.Value}}{{end}}</textarea>
+                        <textarea class="form-control" id="inputValueSibling" rows="10" name="value">{{if not .Reg.Secure}}{{.Reg.GetValue}}{{end}}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -179,13 +174,11 @@
             </form>
         </div>
     </div>
-</div>
-<!-- Edit Reg Modal Stop -->
-<!-- Delete Reg Modal Start -->
-<div class="modal fade" id="deleteRegModal" tabindex="-1" role="dialog" aria-labelledby="deleteRegModalLabel" aria-hidden="true">
+</div><!-- Edit Reg Modal Stop -->
+<!-- Delete Reg Modal Start --><div class="modal fade" id="deleteRegModal" tabindex="-1" role="dialog" aria-labelledby="deleteRegModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form action="/web/registry/" method="post">
+            <form action="/web/admin/registry/" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteRegModalLabel"><i class="fas fa-eraser"></i> Delete Entry</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -203,7 +196,7 @@
                     {{if .Reg.Secure}}
                         <h2 class="text-center"><i class="fas fa-lock"></i></h2>
                     {{else}}
-                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" disabled>{{.Reg.Value}}</textarea>
+                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="10" readonly>{{.Reg.Value}}</textarea>
                     {{end}}
                     </div>
                 </div>
@@ -215,8 +208,7 @@
             </form>
         </div>
     </div>
-</div>
-<!-- Delete Reg Modal Stop -->
+</div><!-- Delete Reg Modal Stop -->
 <script>
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()

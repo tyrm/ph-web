@@ -18,10 +18,10 @@
         <div class="col">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/web/users/">List</a>
+                    <a class="nav-link active" href="/web/admin/users/">List</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/web/users/new">New</a>
+                    <a class="nav-link" href="/web/admin/users/new">New</a>
                 </li>
             </ul>
         </div>
@@ -33,7 +33,7 @@
                 <thead class="thead-dark">
                 <tr>
                     <th scope="col"></th>
-                    <th scope="col">ID</th>
+                    <th scope="col" class="d-block">ID</th>
                     <th scope="col">Username</th>
                     <th scope="col">Email</th>
                     <th scope="col">Login Count</th>
@@ -45,11 +45,11 @@
 {{- range .}}
                 <tr>
                     <td><img src="{{.GetGravatar 32}}"></td>
-                    <th scope="row">{{.Token}}</th>
-                    <td><a href="/web/users/{{.Token}}">{{.Username}}</a></td>
+                    <td scope="row" class="d-block">{{.Token}}</td>
+                    <td><a href="/web/admin/users/{{.Token}}">{{.Username}}</a></td>
                     <td>{{.Email}}</td>
                     <td>{{.LoginCount}}</td>
-                    <td>{{.GetLastLogin}}</td>
+                    <td class="text-nowrap">{{.GetLastLogin}}</td>
                 </tr>
 {{- end}}
 {{- end}}

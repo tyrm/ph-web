@@ -168,29 +168,37 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 			{
 				Text:     "Home",
 				MatchStr: "^/web/$",
+				FAIcon:   "home",
 				URL:      "/web/",
 			},
 			{
+				Text:     "Files",
+				MatchStr: "^/web/files/.*$",
+				FAIcon:   "file",
+				URL:      "/web/files/",
+			},
+			{
 				Text: "Admin",
+				FAIcon:   "hammer",
 				URL:  "#",
 				Children: []*TempalteNavbarNode{
 					{
 						Text:     "Oauth Clients",
-						MatchStr: "^/web/oauth-clients/.*$",
+						MatchStr: "^/web/admin/oauth-clients/.*$",
 						FAIcon:   "desktop",
-						URL:      "/web/oauth-clients/",
+						URL:      "/web/admin/oauth-clients/",
 					},
 					{
 						Text:     "Registry",
-						MatchStr: "^/web/registry/.*$",
+						MatchStr: "^/web/admin/registry/.*$",
 						FAIcon:   "book",
-						URL:      "/web/registry/",
+						URL:      "/web/admin/registry/",
 					},
 					{
 						Text:     "Users",
-						MatchStr: "^/web/users/.*$",
+						MatchStr: "^/web/admin/users/.*$",
 						FAIcon:   "user",
-						URL:      "/web/users/",
+						URL:      "/web/admin/users/",
 					},
 					{
 						Text:     "Something else here",

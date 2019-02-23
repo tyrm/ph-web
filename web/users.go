@@ -98,7 +98,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Add Pagination if needed
 	if pageCount > 1 {
-		tmplVars.Pages = makePagination("/web/users/", page, pageCount, 5)
+		tmplVars.Pages = makePagination("/web/admin/users/", page, pageCount, 5)
 	}
 
 	// Get Users
@@ -144,7 +144,6 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 			logger.Errorf("Error parseing form: %v", err)
 			return
 		}
-		logger.Tracef("%v", request.Form)
 
 		formUsername := ""
 		if val, ok := request.Form["username"]; ok {
@@ -186,15 +185,13 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				tmplVars.AlertError = err.Error()
 			} else {
-				newPage := fmt.Sprintf("/web/users/%s", newUser.Token)
+				newPage := fmt.Sprintf("/web/admin/users/%s", newUser.Token)
 
 				response.Header().Set("Location", newPage)
 				response.WriteHeader(http.StatusFound)
 				return
-
 			}
 		}
-
 	}
 
 	tmpl, err := compileTemplates("templates/layout.html", "templates/users_new.html")

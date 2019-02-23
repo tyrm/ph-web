@@ -2,6 +2,20 @@ div.container div.row {
     padding-top: 15px;
 }
 
-table#usersListTable td,table#usersListTable th  {
+table#usersListTable td,table#usersListTable th {
     vertical-align: middle;
+}
+
+.fa-aws {
+    color: #FF9900;
+}
+
+.nav-link {
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
+.navbar {
+    padding-top: 8px;
+    padding-bottom: 8px;
 }

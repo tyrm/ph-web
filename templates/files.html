@@ -1,0 +1,30 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+{{- if .AlertWarn}}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+            {{.AlertWarn}}
+            </div>
+        </div>
+    </div>
+{{- end}}
+    <div class="row">
+        <div class="col">
+            <a href="/web/files/config" class="btn btn-primary float-right"><i class="fas fa-cogs"></i></a>
+            <h1>File Browser</h1>
+        </div>
+    </div>
+    {{if .IsInit -}}
+    {{else -}}
+        <div class="row">
+            <div class="col text-center">
+                <h3 class="d-none d-md-block"><i class="fas fa-exclamation-circle text-warning"></i> S3 Connection Not Initialized</h3>
+                <h4 class="d-sm-block d-md-none"><i class="fas fa-exclamation-circle text-warning"></i> S3 Connection Not Initialized</h4>
+            </div>
+        </div>
+    {{end -}}
+</div>
+{{end}}

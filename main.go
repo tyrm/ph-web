@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"./files"
 	"./models"
 	"./registry"
 	"./web"
@@ -32,8 +33,6 @@ func main() {
 	registry.Init(config.DBEngine, config.AESSecret)
 	defer registry.Close()
 
-	registry.GetPathByID(5)
-
 	// Create Admin if no Users exist
 	count, err := models.EstimateCountUsers()
 	if err != nil {
@@ -47,6 +46,9 @@ func main() {
 		}
 	}
 
+	// Init Files
+	files.InitClient(false)
+
 	// Create Top Router
 	web.Init(config.DBEngine, packr.New("templates", "./templates"))
 	defer web.Close()
@@ -59,18 +61,24 @@ func main() {
 	rWeb := r.PathPrefix("/web").Subrouter()
 	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
 	rWeb.HandleFunc("/", web.HandleHome).Methods("GET")
-	rWeb.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
-	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
-	rWeb.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
-	rWeb.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")
-	rWeb.HandleFunc("/registry/", web.HandleRegistryIndex).Methods("GET")
-	rWeb.HandleFunc("/registry/", web.HandleRegistryPost).Methods("POST")
+	rWeb.HandleFunc("/files/", web.HandleFiles).Methods("GET")
+	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("GET")
+	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("POST")
+
+	rAdmin := rWeb.PathPrefix("/admin").Subrouter()
+	rAdmin.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
+	rAdmin.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
+	rAdmin.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
+	rAdmin.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")
+	rAdmin.HandleFunc("/registry/", web.HandleRegistryIndex).Methods("GET")
+	rAdmin.HandleFunc("/registry/", web.HandleRegistryPost).Methods("POST")
 
 	// Serve static files
 	box := packr.New("staticAssets", "./static")
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
 
 	// Serve 404
+	rAdmin.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 	rWeb.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 	r.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 
