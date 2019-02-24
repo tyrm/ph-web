@@ -90,191 +90,8 @@ func (u *User) UpdateLastLogin() (err error) {
 	return
 }
 
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func EstimateCountUsers() (count uint, err error) {
-	err = DB.QueryRow(sqlUserEstimateCount).Scan(&count)
-	if err != nil {
-		logger.Errorf("Error estimating user count: %s", err.Error())
-	}
-	logger.Tracef("EstimateCountUsers() (%d, %v)", count, err)
-	return
-}
-
-func GetUserCount() (count uint, err error) {
-	err = DB.QueryRow(sqlUserCount).Scan(&count)
-	if err != nil {
-		logger.Errorf("Error estimating user count: %s", err.Error())
-	}
-	logger.Tracef("GetUserCount() (%d, %v)", count, err)
-	return
-}
-
-func GetUser(sid string) (user *User, err error) {
-	var id int
-	var token string
-	var username string
-	var password string
-	var email string
-
-	var loginCount int
-	var lastLogin pq.NullTime
-
-	var createdAt pq.NullTime
-	var updatedAt pq.NullTime
-
-	err = DB.QueryRow(sqlUserGet, sid).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
-	if err != nil {
-		logger.Errorf(err.Error())
-		return
-	}
-
-	user = &User{
-		ID:         id,
-		Token:      token,
-		Username:   username,
-		Password:   password,
-		Email:      email,
-		LoginCount: loginCount,
-		LastLogin:  lastLogin,
-		CreatedAt:  createdAt,
-		UpdatedAt:  updatedAt,
-	}
-
-	logger.Tracef("GetUserByUsername(%s) (%v, %v)", sid, user, err)
-	return
-}
-
-func GetUserByUsername(usernameStr string) (user User, err error) {
-	var id int
-	var token string
-	var username string
-	var password string
-	var email string
-
-	var loginCount int
-	var lastLogin pq.NullTime
-
-	var createdAt pq.NullTime
-	var updatedAt pq.NullTime
-
-	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
-	if err != nil {
-		logger.Errorf(err.Error())
-		return
-	}
-
-	user = User{
-		ID:         id,
-		Token:      token,
-		Username:   username,
-		Password:   password,
-		Email:      email,
-		LoginCount: loginCount,
-		LastLogin:  lastLogin,
-		CreatedAt:  createdAt,
-		UpdatedAt:  updatedAt,
-	}
-
-	logger.Tracef("GetUserByUsername(%s) (%v, %v)", usernameStr, user, err)
-	return
-}
-
-func GetUserIdExists(id string) (exists bool, err error) {
-	var newExists bool
-	err = DB.QueryRow(sqlUserIdExists, id).Scan(&newExists)
-	if err != nil {
-		logger.Errorf("Error checking is user id exists: %s", err.Error())
-		return
-	}
-	exists = newExists
-	logger.Tracef("GetUserIdExists(%s) (%v, %v)", id, newExists, err)
-	return
-}
-
-func GetUsernameExists(id string) (exists bool, err error) {
-	var newExists bool
-
-	err = DB.QueryRow(sqlUsernameExists, id).Scan(&newExists)
-	if err != nil {
-		logger.Errorf("Error checking is user id exists: %s", err.Error())
-		return
-	}
-	exists = newExists
-	logger.Tracef("GetUsernameExists(%s) (%v, %v)", id, newExists, err)
-	return
-}
-
-func GetUsersPage(limit uint, page uint) (userList []*User, err error) {
-	offset := limit * page
-	var newUserList []*User
-
-	rows, err := DB.Query(sqlUsersGetPage, limit, offset)
-	if err != nil {
-		logger.Tracef("GetUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
-		return
-	}
-	for rows.Next() {
-		var token string
-		var username string
-		var email string
-
-		var loginCount int
-		var lastLogin pq.NullTime
-
-		var createdAt pq.NullTime
-		var updatedAt pq.NullTime
-
-		err = rows.Scan(&token, &username, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
-		if err != nil {
-			logger.Tracef("GetUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
-			return
-		}
-
-		newUser := User{
-			Token:      token,
-			Username:   username,
-			Email:      email,
-			LoginCount: loginCount,
-			LastLogin:  lastLogin,
-			CreatedAt:  createdAt,
-			UpdatedAt:  updatedAt,
-		}
-
-		newUserList = append(newUserList, &newUser)
-	}
-
-	userList = newUserList
-	logger.Tracef("GetUsersPage(%d, %d) ([%d]User, %v)", limit, page, len(userList), nil)
-
-	return
-}
-
-func GetUsernameByID(uid int) string {
-	var username string
-
-	uisStr := strconv.Itoa(uid)
-	if u, found := cUsernameByID.Get(uisStr); found {
-		username = u.(string)
-		logger.Tracef("GetUsernameByID(%s) (%s) [HIT]", uid, username)
-		return username
-	}
-
-	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
-	if err != nil {
-		logger.Errorf(err.Error())
-		return uisStr
-	}
-
-	cUsernameByID.Set(uisStr, username, cache.DefaultExpiration)
-	logger.Tracef("GetUsernameByID(%s) (%s) [MISS]", uid, username)
-	return username
-}
-
-func NewUser(username string, password string, email string) (user User, err error) {
+// publics
+func CreateUser(username string, password string, email string) (user User, err error) {
 	createdAt := pq.NullTime{
 		Time:  time.Now(),
 		Valid: true,
@@ -310,6 +127,186 @@ func NewUser(username string, password string, email string) (user User, err err
 	return
 }
 
+func EstimateCountUsers() (count uint, err error) {
+	err = DB.QueryRow(sqlUserEstimateCount).Scan(&count)
+	if err != nil {
+		logger.Errorf("Error estimating user count: %s", err.Error())
+	}
+	logger.Tracef("EstimateCountUsers() (%d, %v)", count, err)
+	return
+}
+
+func GetUserCount() (count uint, err error) {
+	err = DB.QueryRow(sqlUserCount).Scan(&count)
+	if err != nil {
+		logger.Errorf("Error estimating user count: %s", err.Error())
+	}
+	logger.Tracef("GetUserCount() (%d, %v)", count, err)
+	return
+}
+
+func GetUserIdExists(id string) (exists bool, err error) {
+	var newExists bool
+	err = DB.QueryRow(sqlUserIdExists, id).Scan(&newExists)
+	if err != nil {
+		logger.Errorf("Error checking is user id exists: %s", err.Error())
+		return
+	}
+	exists = newExists
+	logger.Tracef("GetUserIdExists(%s) (%v, %v)", id, newExists, err)
+	return
+}
+
+func GetUsernameByID(uid int) string {
+	var username string
+
+	uisStr := strconv.Itoa(uid)
+	if u, found := cUsernameByID.Get(uisStr); found {
+		username = u.(string)
+		logger.Tracef("GetUsernameByID(%d) (%s) [HIT]", uid, username)
+		return username
+	}
+
+	err := DB.QueryRow(sqlUserGetUsernameByID, uid).Scan(&username)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return uisStr
+	}
+
+	cUsernameByID.Set(uisStr, username, cache.DefaultExpiration)
+	logger.Tracef("GetUsernameByID(%d) (%s) [MISS]", uid, username)
+	return username
+}
+
+func GetUsernameExists(id string) (exists bool, err error) {
+	var newExists bool
+
+	err = DB.QueryRow(sqlUsernameExists, id).Scan(&newExists)
+	if err != nil {
+		logger.Errorf("Error checking is user id exists: %s", err.Error())
+		return
+	}
+	exists = newExists
+	logger.Tracef("GetUsernameExists(%s) (%v, %v)", id, newExists, err)
+	return
+}
+
+func ReadUser(sid string) (user *User, err error) {
+	var id int
+	var token string
+	var username string
+	var password string
+	var email string
+
+	var loginCount int
+	var lastLogin pq.NullTime
+
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+
+	err = DB.QueryRow(sqlUserGet, sid).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
+
+	user = &User{
+		ID:         id,
+		Token:      token,
+		Username:   username,
+		Password:   password,
+		Email:      email,
+		LoginCount: loginCount,
+		LastLogin:  lastLogin,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
+	}
+
+	logger.Tracef("ReadUserByUsername(%s) (%v, %v)", sid, user, err)
+	return
+}
+
+func ReadUserByUsername(usernameStr string) (user User, err error) {
+	var id int
+	var token string
+	var username string
+	var password string
+	var email string
+
+	var loginCount int
+	var lastLogin pq.NullTime
+
+	var createdAt pq.NullTime
+	var updatedAt pq.NullTime
+
+	err = DB.QueryRow(sqlUserGetByUsername, usernameStr).Scan(&id, &token, &username, &password, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return
+	}
+
+	user = User{
+		ID:         id,
+		Token:      token,
+		Username:   username,
+		Password:   password,
+		Email:      email,
+		LoginCount: loginCount,
+		LastLogin:  lastLogin,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
+	}
+
+	logger.Tracef("ReadUserByUsername(%s) (%v, %v)", usernameStr, user, err)
+	return
+}
+
+func ReadUsersPage(limit uint, page uint) (userList []*User, err error) {
+	offset := limit * page
+	var newUserList []*User
+
+	rows, err := DB.Query(sqlUsersGetPage, limit, offset)
+	if err != nil {
+		logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
+		return
+	}
+	for rows.Next() {
+		var token string
+		var username string
+		var email string
+
+		var loginCount int
+		var lastLogin pq.NullTime
+
+		var createdAt pq.NullTime
+		var updatedAt pq.NullTime
+
+		err = rows.Scan(&token, &username, &email, &loginCount, &lastLogin, &createdAt, &updatedAt)
+		if err != nil {
+			logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
+			return
+		}
+
+		newUser := User{
+			Token:      token,
+			Username:   username,
+			Email:      email,
+			LoginCount: loginCount,
+			LastLogin:  lastLogin,
+			CreatedAt:  createdAt,
+			UpdatedAt:  updatedAt,
+		}
+
+		newUserList = append(newUserList, &newUser)
+	}
+
+	userList = newUserList
+	logger.Tracef("ReadUsersPage(%d, %d) ([%d]User, %v)", limit, page, len(userList), nil)
+
+	return
+}
+
+// privates
 func getValidID() (id string, err error) {
 	var exists bool
 
@@ -319,4 +316,9 @@ func getValidID() (id string, err error) {
 		return
 	}
 	return
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }

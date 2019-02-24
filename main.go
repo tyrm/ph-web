@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"./chatbot"
 	"./files"
 	"./models"
 	"./registry"
@@ -40,14 +41,12 @@ func main() {
 	}
 	if count == 0 {
 		logger.Infof("Creating admin user")
-		_, err := models.NewUser("admin", "admin", "admin@admin.com")
+		_, err := models.CreateUser("admin", "admin", "admin@admin.com")
 		if err != nil {
 			logger.Errorf("Error creating admin user")
 		}
 	}
 
-	// Init Files
-	files.InitClient(false)
 
 	// Create Top Router
 	web.Init(config.DBEngine, packr.New("templates", "./templates"))
@@ -83,6 +82,10 @@ func main() {
 	r.PathPrefix("/").HandlerFunc(web.HandleNotFound)
 
 	go http.ListenAndServe(":8080", r)
+
+	// Init Files
+	go files.InitClient(false)
+	go chatbot.InitClients()
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
 	nch := make(chan os.Signal)

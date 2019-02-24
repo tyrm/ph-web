@@ -235,7 +235,6 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 	var regAccessKey *registry.RegistryEntry
 	regAccessKey, err = registry.Get("/system/files/access_key")
 	if err == nil {
-		logger.Tracef("HandleFilesConfig: access_key: %s", regAccessKey.Value)
 		value, err := regAccessKey.GetValue()
 		if err == nil {
 			tmplVars.AccessKey = value

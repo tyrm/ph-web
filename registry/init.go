@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -238,13 +237,12 @@ func GetPathByID(id int) (path string, err error) {
 }
 
 func New(newPid int, newKey string, newValue string, newSecure bool, uid int) (reg *RegistryEntry, err error) {
-	newEncodedValue := ""
+	var newEncodedValue []byte
 	if newSecure {
 		bEnc := encrypt([]byte(newValue))
-		sEnc := base64.URLEncoding.EncodeToString(bEnc)
-		newEncodedValue = sEnc
+		newEncodedValue = bEnc
 	} else {
-		newEncodedValue = newValue
+		newEncodedValue = []byte(newValue)
 	}
 
 	var id int
@@ -262,12 +260,6 @@ func New(newPid int, newKey string, newValue string, newSecure bool, uid int) (r
 		logger.Errorf(err.Error())
 		logger.Tracef("New(%d, %s, ***, %v) (%v, %v)", newPid, newKey, newSecure, reg, err)
 		return
-	}
-
-	if secure {
-		go logChange(id, uid, LogAddedSecure, "", "")
-	} else {
-		go logChange(id, uid, LogAdded, "", newEncodedValue)
 	}
 
 	reg = &RegistryEntry{

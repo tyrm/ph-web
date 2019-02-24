@@ -34,7 +34,7 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 		formUsername := request.Form["username"][0]
 		logger.Tracef("Trying login for: %s", formUsername)
 
-		user, err := models.GetUserByUsername(formUsername)
+		user, err := models.ReadUserByUsername(formUsername)
 		if err == sql.ErrNoRows {
 			tmpl.Execute(response, &TemplateVarLogin{Error: "username/password not recognized", Username: formUsername})
 			return

@@ -172,6 +172,12 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 				URL:      "/web/",
 			},
 			{
+				Text:     "Chat Bot",
+				MatchStr: "^/web/chatbot/.*$",
+				FAIcon:   "robot",
+				URL:      "/web/chatbot/",
+			},
+			{
 				Text:     "Files",
 				MatchStr: "^/web/files/.*$",
 				FAIcon:   "file",

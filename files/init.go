@@ -10,24 +10,11 @@ var logger *loggo.Logger
 var mc *minio.Client
 var mcInitialized = false
 
+var bucket = ""
+
 func init() {
-	newLogger := loggo.GetLogger("models")
+	newLogger := loggo.GetLogger("files")
 	logger = &newLogger
-
-	/*endpoint := "play.minio.io:9000"
-	accessKeyID := "Q3AM3UQ867SPQQA43P2F"
-	secretAccessKey := "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"
-	useSSL := true
-
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	mc = minioClient
-
-	log.Printf("%#v\n", minioClient) // minioClient is now setup*/
 }
 
 func InitClient(force bool) {
@@ -100,9 +87,6 @@ func InitClient(force bool) {
 		return
 	}
 
-	logger.Tracef("got values: %s, %s, %s, %s", endpoint, secretBucket, accessKeyID, secretAccessKey, )
-
-
 	// Initialize minio client object.
 	useSSL := true
 	minioClient, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
@@ -110,6 +94,7 @@ func InitClient(force bool) {
 		logger.Errorf("Problem initializing minio client %s", err.Error())
 		return
 	}
+	bucket = secretBucket
 
 	mc = minioClient
 	mcInitialized = true

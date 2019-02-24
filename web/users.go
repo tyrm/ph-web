@@ -34,7 +34,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	initSessionVars(response, request, tmplVars)
 
 	vars := mux.Vars(request)
-	user, err := models.GetUser(vars["id"])
+	user, err := models.ReadUser(vars["id"])
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		logger.Errorf("HandleUserGet: Error getting user: %v", err)
@@ -102,7 +102,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get Users
-	users, err := models.GetUsersPage(entriesPerPage, page-1)
+	users, err := models.ReadUsersPage(entriesPerPage, page-1)
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -181,7 +181,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		} else if formPassword1 != formPassword2 {
 			tmplVars.AlertError = "Passwords don't match."
 		} else {
-			newUser, err := models.NewUser(formUsername, formPassword1, formEmail)
+			newUser, err := models.CreateUser(formUsername, formPassword1, formEmail)
 			if err != nil {
 				tmplVars.AlertError = err.Error()
 			} else {
