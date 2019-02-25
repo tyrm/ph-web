@@ -65,6 +65,7 @@ func main() {
 	rWeb := r.PathPrefix("/web").Subrouter()
 	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
 	rWeb.HandleFunc("/", web.HandleHome).Methods("GET")
+	rWeb.HandleFunc("/chatbot/", web.HandleChatbot).Methods("GET")
 	rWeb.HandleFunc("/files/", web.HandleFiles).Methods("GET")
 	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("GET")
 	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("POST")

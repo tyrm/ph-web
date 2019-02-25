@@ -52,3 +52,8 @@ func InitClient(force bool) {
 	}
 
 }
+
+// IsInit returns true if telegram client is initialized
+func IsInit() bool {
+	return botConnected
+}
