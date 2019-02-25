@@ -25,17 +25,11 @@ func HandleChatbot(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	tmplVars := &TemplateVarChatbot{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/chatbot.html")
 
-	tmpl, err := compileTemplates("templates/layout.html", "templates/chatbot.html")
+	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
-	if err != nil {
-		logger.Warningf("Error executing template: %s", err)
+		logger.Warningf("HandleChatbot: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)

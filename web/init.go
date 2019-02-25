@@ -138,29 +138,34 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func initSession(response http.ResponseWriter, request *http.Request) (us *sessions.Session) {
+func initSession(response http.ResponseWriter, request *http.Request, filenames ...string) (tmpl *template.Template, us *sessions.Session) {
 	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0);
 		return
 	}
+	tmpl, err = compileTemplates(filenames...)
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
 	return
 }
 
-func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl templateVars) (us *sessions.Session) {
+func initSessionVars(response http.ResponseWriter, request *http.Request, tmplVars templateVars, filenames ...string) (tmpl *template.Template, us *sessions.Session) {
 	// Init Session
-	us = initSession(response, request)
+	tmpl, us = initSession(response, request, filenames...)
 
 	uid := us.Values["LoggedInUserID"].(int)
-	tmpl.SetUsername(models.GetUsernameByID(uid))
-	tmpl.SetNavbar(makeNavbar(request.URL.Path))
+	tmplVars.SetUsername(models.GetUsernameByID(uid))
+	tmplVars.SetNavbar(makeNavbar(request.URL.Path))
 
 	darkMode := false
 	if us.Values["TemplateDarkMode"] != nil {
 		darkMode = us.Values["TemplateDarkMode"].(bool)
 	}
-	tmpl.SetDarkMode(darkMode)
+	tmplVars.SetDarkMode(darkMode)
 
 	return
 }

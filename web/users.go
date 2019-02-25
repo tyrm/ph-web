@@ -35,7 +35,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	tmplVars := &TemplateVarUserView{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/users_get.html")
 
 	vars := mux.Vars(request)
 	user, err := models.ReadUser(vars["id"])
@@ -47,15 +47,9 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 
 	tmplVars.User = user
 
-	tmpl, err := compileTemplates("templates/layout.html", "templates/users_get.html")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		logger.Errorf("HandleUserGet: Error executing template: %v", err)
+		logger.Warningf("HandleUserGet: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)
@@ -69,7 +63,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	tmplVars := &TemplateVarUserIndex{}
-	us := initSessionVars(response, request, tmplVars)
+	tmpl, us := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/users_index.html")
 
 	// page stuff
 	var entriesPerPage uint = 10
@@ -120,15 +114,9 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl, err := compileTemplates("templates/layout.html", "templates/users_index.html")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
+		logger.Warningf("HandleUserIndex: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)
@@ -142,7 +130,7 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	tmplVars := &TemplateVarUserIndex{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/users_new.html")
 
 	if request.Method == "POST" {
 		err := request.ParseForm()
@@ -200,15 +188,9 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	tmpl, err := compileTemplates("templates/layout.html", "templates/users_new.html")
+	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
-	if err != nil {
-		logger.Errorf("HandleUserNew: Error executing template: %v", err)
+		logger.Warningf("HandleUserNew: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)

@@ -33,7 +33,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
-	us := initSession(response, request)
+	_, us := initSession(response, request)
 	uid := us.Values["LoggedInUserID"].(int)
 
 	err := request.ParseForm()
@@ -207,7 +207,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 
 	// Init Session
 	tmplVars := &templateVarRegistryIndex{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/registry.html")
 
 	path := "/"
 	if val, ok := request.URL.Query()["path"]; ok {
@@ -306,16 +306,9 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 		})
 	}
 
-	// Compile Template
-	tmpl, err := compileTemplates("templates/layout.html", "templates/registry.html")
-	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
-	}
-
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		logger.Errorf("HandleUserIndex: Error executing template: %v", err)
+		logger.Warningf("HandleRegistryIndex: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)

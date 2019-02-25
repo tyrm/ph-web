@@ -38,6 +38,9 @@ func HandleLanding(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tmpl.Execute(response, templateVars)
+	err = tmpl.Execute(response, templateVars)
+	if err != nil {
+		logger.Warningf("HandleLanding: template error: %s", err.Error())
+	}
 	return
 }

@@ -241,7 +241,7 @@ func ReadUser(sid string) (user *User, err error) {
 		UpdatedAt:  updatedAt,
 	}
 
-	logger.Tracef("ReadUserByUsername(%s) (%v, %v)", sid, user, err)
+	logger.Tracef("ReadUserByUsername(%s) (%v, %v)", sid, user.ID, err)
 	return
 }
 

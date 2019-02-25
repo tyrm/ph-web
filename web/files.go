@@ -30,23 +30,20 @@ type TemplateVarFilesConfig struct {
 func HandleFiles(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarFiles{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/files.html")
 
 	tmplVars.IsInit = files.IsInit()
-	tmpl, err := compileTemplates("templates/layout.html", "templates/files.html")
+	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
+		logger.Warningf("HandleFiles: template error: %s", err.Error())
 	}
-
-	tmpl.ExecuteTemplate(response, "layout", tmplVars)
 }
 
 // HandleFilesConfig displays files config page
 func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarFilesConfig{}
-	us := initSessionVars(response, request, tmplVars)
+	tmpl, us := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/files_config.html")
 
 	if request.Method == "POST" {
 		err := request.ParseForm()
@@ -207,7 +204,6 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		files.InitClient(false)
 	}
 
-	logger.Tracef("HandleFilesConfig: Retrieving registry items")
 	// Get Registry Entries
 	var regEndpoint *registry.Entry
 	regEndpoint, err := registry.Get("/system/files/endpoint")
@@ -246,11 +242,8 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 	}
 
 	tmplVars.IsInit = files.IsInit()
-	tmpl, err := compileTemplates("templates/layout.html", "templates/files_config.html")
+	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
+		logger.Warningf("HandleFilesConfig: template error: %s", err.Error())
 	}
-
-	tmpl.ExecuteTemplate(response, "layout", tmplVars)
 }

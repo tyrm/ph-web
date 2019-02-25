@@ -13,13 +13,11 @@ type TemplateVarHome struct {
 func HandleHome(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarHome{}
-	initSessionVars(response, request, tmplVars)
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/home.html")
 
-	tmpl, err := compileTemplates("templates/layout.html", "templates/home.html")
+	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		MakeErrorResponse(response, 500, err.Error(), 0)
-		return
+		logger.Warningf("HandleHome: template error: %s", err.Error())
 	}
-
-	tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	return
 }
