@@ -2,6 +2,7 @@ package web
 
 import "net/http"
 
+// ProtectMiddleware redirects users who aren't logged in to the login page
 func ProtectMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		us, err := globalSessions.Get(r, "session-key")

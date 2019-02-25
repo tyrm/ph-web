@@ -17,6 +17,7 @@ func init() {
 	logger = &newLogger
 }
 
+// InitClient attempts to initialize the Minio Client
 func InitClient(force bool) {
 	if mcInitialized && !force {
 		return
@@ -102,6 +103,7 @@ func InitClient(force bool) {
 
 }
 
+// IsInit returns true if Minio client is initialized
 func IsInit() (bool) {
 	return mcInitialized
 }

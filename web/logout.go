@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// HandleLogout destroys the current session and logs out the user
 func HandleLogout(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 

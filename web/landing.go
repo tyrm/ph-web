@@ -6,10 +6,12 @@ import (
 	"../models"
 )
 
+// TemplateVarLanding holds template variables for HandleLanding
 type TemplateVarLanding struct {
 	UserID string
 }
 
+// HandleLanding displays the landing page
 func HandleLanding(response http.ResponseWriter, request *http.Request) {
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {

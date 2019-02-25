@@ -4,10 +4,12 @@ import (
 	"net/http"
 )
 
+// TemplateVarHome holds template variables for HandleHome
 type TemplateVarHome struct {
-	TemplateVarLayout
+	templateVarLayout
 }
 
+// HandleHome displays the home dashboard
 func HandleHome(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarHome{}

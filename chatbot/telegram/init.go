@@ -17,6 +17,7 @@ func init() {
 	logger = &newLogger
 }
 
+// InitClient for telegram
 func InitClient(force bool) {
 	if botConnected && !force {
 		return

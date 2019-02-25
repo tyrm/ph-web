@@ -6,11 +6,14 @@ import (
 	"os"
 )
 
+// Config represents configuration variables collected from system environment
 type Config struct {
-	AESSecret string
-	DBEngine string
+	AESSecret    string
+	DBEngine     string
+	LoggerConfig string
 }
 
+// CollectConfig collects configuration variables from system environment
 func CollectConfig() (config Config) {
 	var missingEnv []string
 
@@ -48,9 +51,18 @@ func CollectConfig() (config Config) {
 		}
 	}
 
+	// REDIS_ADDR
+	var envLoggerLevel = os.Getenv("LOGGER_LEVEL")
+
+	if envLoggerLevel == "" {
+		config.LoggerConfig = "<root>=INFO"
+	} else {
+		config.LoggerConfig = fmt.Sprintf("<root>=%s", envLoggerLevel)
+	}
+
 	// Validation
 	if len(missingEnv) > 0 {
-		var msg string = fmt.Sprintf("Environment variables missing: %v", missingEnv)
+		var msg = fmt.Sprintf("Environment variables missing: %v", missingEnv)
 		logger.Criticalf(msg)
 		panic(fmt.Sprint(msg))
 	}

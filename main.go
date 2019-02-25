@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,23 +20,28 @@ import (
 var logger *loggo.Logger
 
 func main() {
-	loggo.ConfigureLoggers("<root>=TRACE")
 
 	newLogger := loggo.GetLogger("main")
 	logger = &newLogger
 
 	config := CollectConfig()
 
+	err := loggo.ConfigureLoggers(config.LoggerConfig)
+	if err != nil {
+		fmt.Printf("Error configurting Logger: %s", err.Error())
+		return
+	}
+
 	// Connect db
 	models.Init(config.DBEngine)
-	defer models.CloseDB()
+	defer models.Close()
 
 	// Open Registry
 	registry.Init(config.DBEngine, config.AESSecret)
 	defer registry.Close()
 
 	// Create Admin if no Users exist
-	count, err := models.EstimateCountUsers()
+	count, err := models.GetUserCount()
 	if err != nil {
 		return
 	}
@@ -46,7 +52,6 @@ func main() {
 			logger.Errorf("Error creating admin user")
 		}
 	}
-
 
 	// Create Top Router
 	web.Init(config.DBEngine, packr.New("templates", "./templates"))

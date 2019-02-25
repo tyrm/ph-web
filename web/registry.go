@@ -10,11 +10,12 @@ import (
 	"../registry"
 )
 
+// templateVarRegistryIndex holds template variables for HandleRegistryIndex
 type templateVarRegistryIndex struct {
-	TemplateVarLayout
+	templateVarLayout
 
-	Breadcrumbs []TemplateBreadcrumb
-	Siblings    []TemplateListGroup
+	Breadcrumbs []templateBreadcrumb
+	Siblings    []templateListGroup
 
 	DisableAddChild bool
 	DisableDelete   bool
@@ -24,9 +25,10 @@ type templateVarRegistryIndex struct {
 	ModalNewSiblingParent   string
 	ModalNewSiblingParentID int
 
-	Reg *registry.RegistryEntry
+	Reg *registry.Entry
 }
 
+// HandleRegistryPost handles registry change requests
 func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -199,6 +201,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 	return
 }
 
+// HandleRegistryIndex displays registry tree
 func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -258,7 +261,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 	children, err := registry.GetChildrenByID(getID)
 
 	// Make Breadcrumbs
-	tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
+	tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, templateBreadcrumb{
 		Text:   "ROOT",
 		URL:    "/web/admin/registry/?path=/",
 		Active: path == "/",
@@ -272,7 +275,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 			newKey = ""
 		}
 
-		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
+		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, templateBreadcrumb{
 			Text:   newKey,
 			URL:    fmt.Sprintf("/web/admin/registry/?path=%s%s", startPath, key),
 			Active: index == activeIndex,
@@ -280,7 +283,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 		startPath = startPath + key + "/"
 	}
 	if reg.ChildCount != 0 && path != "/" {
-		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, TemplateBreadcrumb{
+		tmplVars.Breadcrumbs = append(tmplVars.Breadcrumbs, templateBreadcrumb{
 			Text:   "",
 			URL:    "#",
 			Active: true,
@@ -294,7 +297,7 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 			icon = "lock"
 		}
 
-		tmplVars.Siblings = append(tmplVars.Siblings, TemplateListGroup{
+		tmplVars.Siblings = append(tmplVars.Siblings, templateListGroup{
 			Text:    child.Key,
 			URL:     fmt.Sprintf("/web/admin/registry/?path=%s%s", newPath, child.Key),
 			Active:  reg.ID == child.ID,

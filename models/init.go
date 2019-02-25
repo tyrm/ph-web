@@ -7,22 +7,24 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/juju/loggo"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // include for sql
 	"github.com/patrickmn/go-cache"
 	"github.com/rubenv/sql-migrate"
 )
 
-var DB *sql.DB
+var db *sql.DB
 var logger *loggo.Logger
 
 var cUsernameByID *cache.Cache
 
-func CloseDB() {
-	DB.Close()
+// Close cleans up open connections inside models
+func Close() {
+	db.Close()
 
 	return
 }
 
+// Init models
 func Init(connectionString string) {
 	newLogger := loggo.GetLogger("models")
 	logger = &newLogger
@@ -33,9 +35,9 @@ func Init(connectionString string) {
 		logger.Criticalf("Coud not connect to database: %s", err)
 		panic(err)
 	}
-	DB = dbClient
+	db = dbClient
 
-	DB.SetMaxIdleConns(5)
+	db.SetMaxIdleConns(5)
 
 	// Do Migration
 	logger.Debugf("Loading Migrations")
@@ -45,7 +47,7 @@ func Init(connectionString string) {
 	}
 
 	logger.Debugf("Applying Migrations")
-	n, err := migrate.Exec(DB, "postgres", migrations, migrate.Up)
+	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
 	if n > 0 {
 		logger.Infof("Applied %d migrations!\n", n)
 	}
@@ -68,6 +70,8 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 var randStringSrc = rand.NewSource(time.Now().UnixNano())
+
+// RandString creates a random string of requested length
 func RandString(n int) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!

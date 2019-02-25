@@ -7,14 +7,16 @@ import (
 	"../registry"
 )
 
+// TemplateVarFiles holds template variables for HandleFiles
 type TemplateVarFiles struct {
-	TemplateVarLayout
+	templateVarLayout
 
 	IsInit bool
 }
 
+// TemplateVarFilesConfig holds template variables for HandleFilesConfig
 type TemplateVarFilesConfig struct {
-	TemplateVarLayout
+	templateVarLayout
 
 	S3Endpoint string
 	BucketName string
@@ -24,6 +26,7 @@ type TemplateVarFilesConfig struct {
 	IsInit bool
 }
 
+// HandleFiles displays files home
 func HandleFiles(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarFiles{}
@@ -39,6 +42,7 @@ func HandleFiles(response http.ResponseWriter, request *http.Request) {
 	tmpl.ExecuteTemplate(response, "layout", tmplVars)
 }
 
+// HandleFilesConfig displays files config page
 func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarFilesConfig{}
@@ -71,18 +75,18 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		uid := us.Values["LoggedInUserID"].(int)
 
 		// Get Parent or Create
-		var regParent *registry.RegistryEntry
+		var regParent *registry.Entry
 		regParent, err = registry.Get("/system/files")
 		if err != nil {
 			logger.Errorf("Error getting /system/files: %s", err.Error())
 			if err == registry.ErrDoesNotExist {
 				logger.Infof("Could not get /system/files, creating")
-				var regSystem *registry.RegistryEntry
+				var regSystem *registry.Entry
 				regSystem, err2 := registry.Get("/system")
 				if err2 != nil {
 					if err == registry.ErrDoesNotExist {
 						logger.Infof("Could not get /system, creating")
-						var regRoot *registry.RegistryEntry
+						var regRoot *registry.Entry
 						regRoot, err3 := registry.Get("/")
 						if err3 != nil {
 							logger.Errorf("Could not get root: %s", err3.Error())
@@ -118,7 +122,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		}
 
 		// Get Registry Entries or Create
-		var regEndpoint *registry.RegistryEntry
+		var regEndpoint *registry.Entry
 		regEndpoint, err = registry.Get("/system/files/endpoint")
 		if err != nil {
 			if err == registry.ErrDoesNotExist {
@@ -132,7 +136,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			}
 		}
 
-		var regBucket *registry.RegistryEntry
+		var regBucket *registry.Entry
 		regBucket, err = registry.Get("/system/files/bucket")
 		if err != nil {
 			if err == registry.ErrDoesNotExist {
@@ -146,7 +150,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			}
 		}
 
-		var regKeyID *registry.RegistryEntry
+		var regKeyID *registry.Entry
 		regKeyID, err = registry.Get("/system/files/key_id")
 		if err != nil {
 			if err == registry.ErrDoesNotExist {
@@ -160,7 +164,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			}
 		}
 
-		var regAccessKey *registry.RegistryEntry
+		var regAccessKey *registry.Entry
 		regAccessKey, err = registry.Get("/system/files/access_key")
 		if err != nil {
 			if err == registry.ErrDoesNotExist {
@@ -205,7 +209,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 
 	logger.Tracef("HandleFilesConfig: Retrieving registry items")
 	// Get Registry Entries
-	var regEndpoint *registry.RegistryEntry
+	var regEndpoint *registry.Entry
 	regEndpoint, err := registry.Get("/system/files/endpoint")
 	if err == nil {
 		value, err := regEndpoint.GetValue()
@@ -214,7 +218,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	var regBucket *registry.RegistryEntry
+	var regBucket *registry.Entry
 	regBucket, err = registry.Get("/system/files/bucket")
 	if err == nil {
 		value, err := regBucket.GetValue()
@@ -223,7 +227,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	var regKeyID *registry.RegistryEntry
+	var regKeyID *registry.Entry
 	regKeyID, err = registry.Get("/system/files/key_id")
 	if err == nil {
 		value, err := regKeyID.GetValue()
@@ -232,7 +236,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	var regAccessKey *registry.RegistryEntry
+	var regAccessKey *registry.Entry
 	regAccessKey, err = registry.Get("/system/files/access_key")
 	if err == nil {
 		value, err := regAccessKey.GetValue()

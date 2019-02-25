@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// TemplateVarError holds template variables for MakeErrorResponse
 type TemplateVarError struct {
 	ErrNum  string
 	CodeNum string
@@ -18,11 +19,13 @@ var codeTitle = map[int]string{
 	2202: "Requested Relationship Not Found",
 }
 
+// HandleNotFound displays a 404 page
 func HandleNotFound(response http.ResponseWriter, request *http.Request) {
 	MakeErrorResponse(response, http.StatusNotFound, request.URL.Path, 0)
 	return
 }
 
+// MakeErrorResponse creates and displays an error page
 func MakeErrorResponse(response http.ResponseWriter, status int, detail string, code int) {
 	templateVars := &TemplateVarError{
 		ErrNum: strconv.Itoa(status),

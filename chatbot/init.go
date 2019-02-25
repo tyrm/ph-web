@@ -12,6 +12,7 @@ func init() {
 	logger = &newLogger
 }
 
+// InitClients tries to init bot clients
 func InitClients() {
 	telegram.InitClient(false)
 }

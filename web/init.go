@@ -18,19 +18,19 @@ var logger *loggo.Logger
 var templates *packr.Box
 var globalSessions *pgstore.PGStore
 
-type TemplateVars interface {
+type templateVars interface {
 	SetDarkMode(bool)
-	SetNavbar(*TemplateNavbar)
+	SetNavbar(*templateNavbar)
 	SetUsername(string)
 }
 
-type TemplateBreadcrumb struct {
+type templateBreadcrumb struct {
 	Text   string
 	URL    string
 	Active bool
 }
 
-type TemplateListGroup struct {
+type templateListGroup struct {
 	Text    string
 	URL     string
 	Active  bool
@@ -38,12 +38,12 @@ type TemplateListGroup struct {
 	Count   int
 }
 
-type TemplateNavbar struct {
-	Nodes    []*TempalteNavbarNode
+type templateNavbar struct {
+	Nodes    []*tempalteNavbarNode
 	Username string
 }
 
-type TempalteNavbarNode struct {
+type tempalteNavbarNode struct {
 	Text     string
 	URL      string
 	MatchStr string
@@ -52,50 +52,68 @@ type TempalteNavbarNode struct {
 	Active   bool
 	Disabled bool
 
-	Children []*TempalteNavbarNode
+	Children []*tempalteNavbarNode
 }
 
-type TemplatePages struct {
+type templatePages struct {
 	PrevURI string
 	NextURI string
 
-	Pages []*TemplatePage
+	Pages []*templatePage
 }
-type TemplatePage struct {
+type templatePage struct {
 	PageNum string
 	PageURI string
 	Active  bool
 }
 
-type TemplateVarLayout struct {
+type templateVarLayout struct {
 	AlertSuccess string
 	AlertError   string
 	AlertWarn    string
 
 	DarkMode bool
-	NavBar   *TemplateNavbar
+	NavBar   *templateNavbar
 	Username string
 }
 
-func (t *TemplateVarLayout) SetDarkMode(d bool) {
+func (t *templateVarLayout) SetDarkMode(d bool) {
 	t.DarkMode = d
 	return
 }
 
-func (t *TemplateVarLayout) SetNavbar(n *TemplateNavbar) {
+func (t *templateVarLayout) SetNavbar(n *templateNavbar) {
 	t.NavBar = n
 	return
 }
 
-func (t *TemplateVarLayout) SetUsername(u string) {
+func (t *templateVarLayout) SetUsername(u string) {
 	t.Username = u
 	return
 }
 
+// Close cleans up database connections for the session manager
 func Close() {
 	globalSessions.Close()
 }
 
+// Init connects session manager to database
+func Init(db string, box *packr.Box) {
+	newLogger := loggo.GetLogger("web")
+	logger = &newLogger
+
+	gs, err := pgstore.NewPGStore(db, []byte("secret-key"))
+	if err != nil {
+		logger.Errorf(err.Error())
+	}
+	globalSessions = gs
+	defer globalSessions.StopCleanup(globalSessions.Cleanup(time.Minute * 5))
+
+	// Load Templates
+	templates = box
+}
+
+// privates
 func compileTemplates(filenames ...string) (*template.Template, error) {
 	start := time.Now()
 	var tmpl *template.Template
@@ -120,21 +138,6 @@ func compileTemplates(filenames ...string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func Init(db string, box *packr.Box) {
-	newLogger := loggo.GetLogger("web")
-	logger = &newLogger
-
-	gs, err := pgstore.NewPGStore(db, []byte("secret-key"))
-	if err != nil {
-		logger.Errorf(err.Error())
-	}
-	globalSessions = gs
-	defer globalSessions.StopCleanup(globalSessions.Cleanup(time.Minute * 5))
-
-	// Load Templates
-	templates = box
-}
-
 func initSession(response http.ResponseWriter, request *http.Request) (us *sessions.Session) {
 	// Init Session
 	us, err := globalSessions.Get(request, "session-key")
@@ -145,7 +148,7 @@ func initSession(response http.ResponseWriter, request *http.Request) (us *sessi
 	return
 }
 
-func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl TemplateVars) (us *sessions.Session) {
+func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl templateVars) (us *sessions.Session) {
 	// Init Session
 	us = initSession(response, request)
 
@@ -162,9 +165,9 @@ func initSessionVars(response http.ResponseWriter, request *http.Request, tmpl T
 	return
 }
 
-func makeNavbar(path string) (navbar *TemplateNavbar) {
-	newNavbar := &TemplateNavbar{
-		Nodes: []*TempalteNavbarNode{
+func makeNavbar(path string) (navbar *templateNavbar) {
+	newNavbar := &templateNavbar{
+		Nodes: []*tempalteNavbarNode{
 			{
 				Text:     "Home",
 				MatchStr: "^/web/$",
@@ -187,7 +190,7 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 				Text:   "Admin",
 				FAIcon: "hammer",
 				URL:    "#",
-				Children: []*TempalteNavbarNode{
+				Children: []*tempalteNavbarNode{
 					{
 						Text:     "Oauth Clients",
 						MatchStr: "^/web/admin/oauth-clients/.*$",
@@ -252,8 +255,8 @@ func makeNavbar(path string) (navbar *TemplateNavbar) {
 	return newNavbar
 }
 
-func makePagination(path string, curPage uint, maxPage uint, displayPages uint) (pages *TemplatePages) {
-	newPages := &TemplatePages{}
+func makePagination(path string, curPage uint, maxPage uint, displayPages uint) (pages *templatePages) {
+	newPages := &templatePages{}
 	halfPages := displayPages / 2
 
 	if curPage > 1 {
@@ -269,9 +272,9 @@ func makePagination(path string, curPage uint, maxPage uint, displayPages uint) 
 			}
 
 			pageStr := strconv.Itoa(int(i))
-			pageUri := path + "?page=" + pageStr
+			pageURI := path + "?page=" + pageStr
 
-			newPages.Pages = append(newPages.Pages, &TemplatePage{pageStr, pageUri, active})
+			newPages.Pages = append(newPages.Pages, &templatePage{pageStr, pageURI, active})
 		}
 	} else {
 		var startingPage uint
@@ -290,9 +293,9 @@ func makePagination(path string, curPage uint, maxPage uint, displayPages uint) 
 			}
 
 			pageStr := strconv.Itoa(int(newPage))
-			pageUri := path + "?page=" + pageStr
+			pageURI := path + "?page=" + pageStr
 
-			newPages.Pages = append(newPages.Pages, &TemplatePage{pageStr, pageUri, active})
+			newPages.Pages = append(newPages.Pages, &templatePage{pageStr, pageURI, active})
 		}
 	}
 

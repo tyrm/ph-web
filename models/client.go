@@ -6,6 +6,7 @@ import (
 	"github.com/lib/pq"
 )
 
+// Client represents an OAuth 2.0 client
 type Client struct {
 	Name string
 

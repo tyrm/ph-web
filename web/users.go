@@ -10,22 +10,26 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// TemplateVarUserIndex holds template variables for HandleUserIndex
 type TemplateVarUserIndex struct {
-	TemplateVarLayout
+	templateVarLayout
 
 	Users []*models.User
-	Pages *TemplatePages
+	Pages *templatePages
 }
 
+// TemplateVarUserNew holds template variables for HandleUserNew
 type TemplateVarUserNew struct {
-	TemplateVarLayout
+	templateVarLayout
 }
 
+// TemplateVarUserView holds template variables for HandleUserGet
 type TemplateVarUserView struct {
 	User *models.User
-	TemplateVarLayout
+	templateVarLayout
 }
 
+// HandleUserGet displays information about a user
 func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -59,6 +63,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 	return
 }
 
+// HandleUserIndex displays a list of users
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -131,6 +136,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	return
 }
 
+// HandleUserNew handles creating a new user
 func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 

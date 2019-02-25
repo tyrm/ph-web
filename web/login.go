@@ -8,11 +8,13 @@ import (
 	"../models"
 )
 
+// TemplateVarLogin holds template variables for HandleLogin
 type TemplateVarLogin struct {
 	Error     string
 	Username  string
 }
 
+// HandleLogin handles logging in a user
 func HandleLogin(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
