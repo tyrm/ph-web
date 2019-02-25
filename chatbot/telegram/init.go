@@ -1,8 +1,6 @@
 package telegram
 
 import (
-	"log"
-
 	"../../registry"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/juju/loggo"
@@ -28,7 +26,7 @@ func InitClient(force bool) {
 	regToken, err := registry.Get("/system/chatbot/telegram/token")
 	if err != nil {
 		if err == registry.ErrDoesNotExist {
-			missingReg = append(missingReg, "endpoint")
+			missingReg = append(missingReg, "token")
 		} else {
 			logger.Errorf("Problem getting [token]: %s", err.Error())
 			return
@@ -48,12 +46,45 @@ func InitClient(force bool) {
 
 	bot, err = tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Panic(err)
+		logger.Errorf("Problem starting telegram bot: %s", err.Error())
+		return
 	}
 
+	logger.Infof("Telegram connected as %s", bot.Self.UserName)
+	go workerMessageHander()
 }
 
 // IsInit returns true if telegram client is initialized
 func IsInit() bool {
 	return botConnected
+}
+
+// privates
+func workerMessageHander() {
+
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		logger.Errorf("Problem starting telegram bot: %s", err.Error())
+		return
+	}
+
+	botConnected = true
+
+	for update := range updates {
+		if update.Message == nil { // ignore any non-Message Updates
+			continue
+		}
+
+		logger.Tracef("%v", update)
+		logger.Tracef("%v", update.Message)
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		msg.ReplyToMessageID = update.Message.MessageID
+
+		bot.Send(msg)
+	}
+
+	botConnected = false
 }

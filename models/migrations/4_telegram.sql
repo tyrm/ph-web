@@ -42,18 +42,6 @@ CREATE TABLE "public"."tg_chats_history" (
 )
 ;
 
-CREATE TABLE "public"."tg_message_entities" (
-    id serial NOT NULL UNIQUE,
-    tgc_id integer NOT NULL REFERENCES tg_chats(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    type integer NOT NULL,
-    "offset" integer,
-    length integer,
-    url character varying,
-    "user" integer REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    created_at timestamp without time zone NOT NULL,
-    PRIMARY KEY ("id")
-)
-;
 CREATE TABLE "public"."tg_messages" (
     id serial NOT NULL UNIQUE,
     message_id integer NOT NULL,
@@ -73,20 +61,24 @@ CREATE TABLE "public"."tg_messages" (
     created_at timestamp without time zone NOT NULL,
     PRIMARY KEY ("id")
 );
-CREATE TABLE "public"."tg_messages_message_entities" (
+CREATE TABLE "public"."tg_message_entities" (
     id serial NOT NULL UNIQUE,
     tgm_id integer NOT NULL REFERENCES tg_messages(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    tgme_id integer NOT NULL REFERENCES tg_message_entities(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    type integer NOT NULL,
+    "offset" integer,
+    length integer,
+    url character varying,
+    "user" integer REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    created_at timestamp without time zone NOT NULL,
     PRIMARY KEY ("id")
 )
 ;
 
 -- +migrate Down
-DROP TABLE "public"."tg_message_message_entity";
-DROP TABLE "public"."tg_message";
-DROP TABLE "public"."tg_message_entity";
-DROP TABLE "public"."tg_chat_history";
-DROP TABLE "public"."tg_chat";
-DROP TABLE "public"."tg_user_history";
-DROP TABLE "public"."tg_user";
+DROP TABLE "public"."tg_message_entities";
+DROP TABLE "public"."tg_messages";
+DROP TABLE "public"."tg_chats_history";
+DROP TABLE "public"."tg_chats";
+DROP TABLE "public"."tg_users_history";
+DROP TABLE "public"."tg_users";
 
