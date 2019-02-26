@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"math/rand"
 	"time"
 
@@ -16,6 +17,10 @@ var db *sql.DB
 var logger *loggo.Logger
 
 var cUsernameByID *cache.Cache
+
+var (
+	ErrDoesNotExist = errors.New("does not exist")
+)
 
 // Close cleans up open connections inside models
 func Close() {

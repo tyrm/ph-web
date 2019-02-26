@@ -9,10 +9,16 @@ import (
 var bot *tgbotapi.BotAPI
 var botConnected = false
 var logger *loggo.Logger
+var messageChan chan *tgbotapi.Message
 
 func init() {
 	newLogger := loggo.GetLogger("telegram")
 	logger = &newLogger
+
+	messageChan = make(chan *tgbotapi.Message, 100)
+	for w := 1; w <= 3; w++ {
+		go workerMessageHandler(w)
+	}
 }
 
 // InitClient for telegram
@@ -51,7 +57,7 @@ func InitClient(force bool) {
 	}
 
 	logger.Infof("Telegram connected as %s", bot.Self.UserName)
-	go workerMessageHander()
+	go workerUpdateHandler()
 }
 
 // IsInit returns true if telegram client is initialized
@@ -60,8 +66,20 @@ func IsInit() bool {
 }
 
 // privates
-func workerMessageHander() {
+func workerMessageHandler(id int) {
+	logger.Debugf("Starting telegram message worker %v.", id)
+	for message := range messageChan {
 
+		logger.Tracef("%v", message)
+		_, err := seeUser(message.From)
+		if err != nil {
+			logger.Errorf("Error seeing user: %s", err.Error())
+		}
+	}
+	logger.Debugf("Closing telegram message worker %v.", id)
+}
+
+func workerUpdateHandler() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates, err := bot.GetUpdatesChan(u)
@@ -78,7 +96,8 @@ func workerMessageHander() {
 		}
 
 		logger.Tracef("%v", update)
-		logger.Tracef("%v", update.Message)
+
+		messageChan <- update.Message
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID

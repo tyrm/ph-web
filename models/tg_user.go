@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/lib/pq"
 )
 
@@ -15,16 +16,69 @@ type TGUser struct {
 	CreatedAt time.Time
 }
 
+func (tgu *TGUser) ReadLatestHistory() (*TGUserHistory, error) {
+	return readLatestTGUserHistoryByTguID(tgu.ID)
+}
+
 // TGUserHistory represents the varying data of a telegram user
 type TGUserHistory struct {
-	ID              int
-	TGUserID        int
-	FirstName       string
-	LastName        sql.NullString
-	Username        sql.NullString
-	LanguageCode    sql.NullString
-	CreatedAt       time.Time
-	CreatedLastSeen time.Time
+	ID           int
+	TGUserID     int
+	FirstName    string
+	LastName     sql.NullString
+	Username     sql.NullString
+	LanguageCode sql.NullString
+	CreatedAt    time.Time
+	LastSeen     time.Time
+}
+
+func (tgu *TGUserHistory) Matches(apiUser *tgbotapi.User) bool {
+	if tgu.FirstName != apiUser.FirstName {
+		logger.Tracef("Matches() false [FirstName]")
+		return false
+	}
+
+	if apiUser.LastName != "" || tgu.LastName.Valid != false {
+		if apiUser.LastName != tgu.LastName.String {
+			logger.Tracef("Matches() false [LastName]")
+			return false
+		}
+	}
+
+	if apiUser.UserName != "" || tgu.Username.Valid != false {
+		if apiUser.UserName != tgu.Username.String {
+			logger.Tracef("Matches() false [Username]")
+			return false
+		}
+	}
+
+	if apiUser.LanguageCode != "" || tgu.LanguageCode.Valid != false {
+		if apiUser.LanguageCode != tgu.LanguageCode.String {
+			logger.Tracef("Matches() false [LanguageCode]")
+			return false
+		}
+	}
+
+	return true
+}
+
+const sqlUpdateTGUserHistoryLastSeen = `
+UPDATE tg_users_history
+SET last_seen = now()
+WHERE id = $1
+RETURNING last_seen;`
+
+// UpdateLastLogin updates the LastSeen field in the database to now.
+func (tgu *TGUserHistory) UpdateLastSeen() error {
+	var newLastSeen time.Time
+
+	err := db.QueryRow(sqlUpdateTGUserHistoryLastSeen, tgu.ID).Scan(&newLastSeen)
+	if err != nil {
+		return err
+	}
+
+	tgu.LastSeen = newLastSeen
+	return nil
 }
 
 const sqlCreateTGUser = `
@@ -60,11 +114,11 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id;`
 
 // CreateTGUserHistory creates a new instance of telegram user history in the database.
-func CreateTGUserHistory(tguID int, firstName string, lastName sql.NullString, username sql.NullString, languageCode sql.NullString) (tguh *TGUserHistory, err error) {
+func CreateTGUserHistory(tgu *TGUser, firstName string, lastName sql.NullString, username sql.NullString, languageCode sql.NullString) (tguh *TGUserHistory, err error) {
 	createdAt := time.Now()
 
 	var newID int
-	err = db.QueryRow(sqlCreateTGUser, tguID, firstName, lastName, username, languageCode, createdAt, createdAt).Scan(&newID)
+	err = db.QueryRow(sqlCreateTGUserHistory, tgu.ID, firstName, lastName, username, languageCode, createdAt, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreateTGUser error %d: %s", sqlErr.Code, sqlErr.Code.Name())
@@ -73,13 +127,13 @@ func CreateTGUserHistory(tguID int, firstName string, lastName sql.NullString, u
 
 	TGUserHistory := &TGUserHistory{
 		ID:              newID,
-		TGUserID:        tguID,
+		TGUserID:        tgu.ID,
 		FirstName:       firstName,
 		LastName:        lastName,
 		Username:        username,
 		LanguageCode:    languageCode,
 		CreatedAt:       createdAt,
-		CreatedLastSeen: createdAt,
+		LastSeen: createdAt,
 	}
 	tguh = TGUserHistory
 	return
@@ -92,16 +146,16 @@ WHERE api_id = $1;`
 
 // ReadTGUserByAPIID returns an instance of a telegram user by api_id from the database.
 func ReadTGUserByAPIID(apiID int) (tgu *TGUser, err error) {
-
 	var newID int
 	var newAPIID int
 	var newIsBot bool
 	var newCreatedAt time.Time
 
 	err = db.QueryRow(sqlReadTGUserByAPIID, apiID).Scan(&newID, &newAPIID, &newIsBot, &newCreatedAt)
-	if sqlErr, ok := err.(*pq.Error); ok {
-		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("ReadTGUserByAPIID error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrDoesNotExist
+		}
 		return
 	}
 
@@ -118,25 +172,27 @@ func ReadTGUserByAPIID(apiID int) (tgu *TGUser, err error) {
 const sqlReadLatestTGUserHistoryByTguID = `
 SELECT id, tgu_id, first_name, last_name, username, language_code, created_at, last_seen
 FROM tg_users_history
-WHERE tgu_id = $1;`
+WHERE tgu_id = $1
+ORDER BY created_at DESC
+LIMIT 1;`
 
 // ReadTGUserHistory returns an instance of a telegram user by all fields from the database.
-func ReadLatestTGUserHistoryByTguID(tguID int) (tguh *TGUserHistory, err error) {
-
-	var newID              int
-	var newTGUserID        int
-	var newFirstName       string
-	var newLastName        sql.NullString
-	var newUsername        sql.NullString
-	var newLanguageCode    sql.NullString
-	var newCreatedAt       time.Time
-	var newCreatedLastSeen time.Time
+func readLatestTGUserHistoryByTguID(tguID int) (tguh *TGUserHistory, err error) {
+	var newID int
+	var newTGUserID int
+	var newFirstName string
+	var newLastName sql.NullString
+	var newUsername sql.NullString
+	var newLanguageCode sql.NullString
+	var newCreatedAt time.Time
+	var newLastSeen time.Time
 
 	err = db.QueryRow(sqlReadLatestTGUserHistoryByTguID, tguID).
-		Scan(&newID, &newTGUserID, &newFirstName, &newLastName, &newUsername, &newLanguageCode, &newCreatedAt, &newCreatedLastSeen)
-	if sqlErr, ok := err.(*pq.Error); ok {
-		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+		Scan(&newID, &newTGUserID, &newFirstName, &newLastName, &newUsername, &newLanguageCode, &newCreatedAt, &newLastSeen)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrDoesNotExist
+		}
 		return
 	}
 
@@ -148,7 +204,7 @@ func ReadLatestTGUserHistoryByTguID(tguID int) (tguh *TGUserHistory, err error) 
 		Username:        newUsername,
 		LanguageCode:    newLanguageCode,
 		CreatedAt:       newCreatedAt,
-		CreatedLastSeen: newCreatedLastSeen,
+		LastSeen: newLastSeen,
 	}
 	tguh = TGUserHistory
 	return

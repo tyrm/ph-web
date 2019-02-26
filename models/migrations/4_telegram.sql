@@ -81,4 +81,3 @@ DROP TABLE "public"."tg_chats_history";
 DROP TABLE "public"."tg_chats";
 DROP TABLE "public"."tg_users_history";
 DROP TABLE "public"."tg_users";
-
