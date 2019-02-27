@@ -70,11 +70,19 @@ func workerMessageHandler(id int) {
 	logger.Debugf("Starting telegram message worker %v.", id)
 	for message := range messageChan {
 
+		// See Message Parts
 		logger.Tracef("%v", message)
 		_, err := seeUser(message.From)
 		if err != nil {
-			logger.Errorf("Error seeing user: %s", err.Error())
+			logger.Errorf("Error seeing from: %s", err.Error())
 		}
+
+		_, err = seeChat(message.Chat)
+		if err != nil {
+			logger.Errorf("Error seeing chat: %s", err.Error())
+		}
+		logger.Tracef("%v", message.Entities)
+
 	}
 	logger.Debugf("Closing telegram message worker %v.", id)
 }
@@ -95,14 +103,9 @@ func workerUpdateHandler() {
 			continue
 		}
 
-		logger.Tracef("%v", update)
+		logger.Tracef("Got update: %v", update)
 
 		messageChan <- update.Message
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		msg.ReplyToMessageID = update.Message.MessageID
-
-		bot.Send(msg)
 	}
 
 	botConnected = false

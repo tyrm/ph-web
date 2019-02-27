@@ -114,7 +114,9 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id;`
 
 // CreateTGUserHistory creates a new instance of telegram user history in the database.
-func CreateTGUserHistory(tgu *TGUser, firstName string, lastName sql.NullString, username sql.NullString, languageCode sql.NullString) (tguh *TGUserHistory, err error) {
+func CreateTGUserHistory(tgu *TGUser, firstName string, lastName sql.NullString, username sql.NullString,
+	languageCode sql.NullString) (tguh *TGUserHistory, err error) {
+
 	createdAt := time.Now()
 
 	var newID int
@@ -137,6 +139,36 @@ func CreateTGUserHistory(tgu *TGUser, firstName string, lastName sql.NullString,
 	}
 	tguh = TGUserHistory
 	return
+}
+
+func CreateTGUserHistoryFromAPI (tgUser *TGUser, apiUser *tgbotapi.User) (*TGUserHistory, error) {
+	firstName := apiUser.FirstName
+
+	lastName := &sql.NullString{Valid: false}
+	if apiUser.LastName != "" {
+		lastName = &sql.NullString{
+			String: apiUser.LastName,
+			Valid: true,
+		}
+	}
+
+	username := &sql.NullString{Valid: false}
+	if apiUser.UserName != "" {
+		username = &sql.NullString{
+			String: apiUser.UserName,
+			Valid: true,
+		}
+	}
+
+	languageCode := &sql.NullString{Valid: false}
+	if apiUser.LanguageCode != "" {
+		languageCode = &sql.NullString{
+			String: apiUser.LanguageCode,
+			Valid: true,
+		}
+	}
+
+	return CreateTGUserHistory(tgUser, firstName, *lastName, *username, *languageCode)
 }
 
 const sqlReadTGUserByAPIID = `
