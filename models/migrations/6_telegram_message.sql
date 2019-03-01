@@ -12,8 +12,6 @@ CREATE TABLE "public"."tg_messages" (
     forward_date timestamp without time zone,
     reply_to_message integer REFERENCES tg_messages(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     edit_date timestamp without time zone,
-    media_group_id character varying,
-    author_signature character varying,
     text character varying,
     audio_id integer REFERENCES tg_audios(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     document_id integer REFERENCES tg_documents(id) ON DELETE RESTRICT ON UPDATE RESTRICT,

@@ -69,20 +69,11 @@ func IsInit() bool {
 func workerMessageHandler(id int) {
 	logger.Debugf("Starting telegram message worker %v.", id)
 	for message := range messageChan {
-
-		// See Message Parts
-		logger.Tracef("%v", message)
-		_, err := seeUser(message.From)
+		// See Message P
+		_, err := seeMessage(message)
 		if err != nil {
 			logger.Errorf("Error seeing from: %s", err.Error())
 		}
-
-		_, err = seeChat(message.Chat)
-		if err != nil {
-			logger.Errorf("Error seeing chat: %s", err.Error())
-		}
-		logger.Tracef("%v", message.Entities)
-
 	}
 	logger.Debugf("Closing telegram message worker %v.", id)
 }

@@ -222,7 +222,7 @@ func ReadTGChatByAPIID(apiID int64) (tgu *TGChat, err error) {
 }
 
 const sqlReadLatestTGChatHistoryByTguID = `
-SELECT id, tgc_id, "type", title, username, first_name, last_name, username, all_members_are_admins, created_at, last_seen
+SELECT id, tgc_id, "type", title, username, first_name, last_name, all_members_are_admins, created_at, last_seen
 FROM tg_chats_history
 WHERE tgc_id = $1
 ORDER BY created_at DESC
