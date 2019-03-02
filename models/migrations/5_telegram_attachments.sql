@@ -6,6 +6,7 @@ CREATE TABLE "public"."tg_photo_sizes" (
   height integer NOT NULL,
   file_size integer,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;
@@ -107,23 +108,24 @@ CREATE TABLE "public"."tg_stickers" (
   file_id character varying NOT NULL UNIQUE,
   width integer NOT NULL,
   height integer NOT NULL,
-  thumbnail integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  thumbnail_id integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   emoji character varying,
   file_size integer,
   set_name character varying,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;
 
 CREATE TABLE "public"."tg_venues" (
-id serial NOT NULL UNIQUE,
-location_id integer NOT NULL REFERENCES tg_locations(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-title character varying NOT NULL,
-address character varying NOT NULL,
-foursquare_id character varying,
-created_at timestamp without time zone NOT NULL,
-PRIMARY KEY ("id")
+  id serial NOT NULL UNIQUE,
+  location_id integer NOT NULL REFERENCES tg_locations(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  title character varying NOT NULL,
+  address character varying NOT NULL,
+  foursquare_id character varying,
+  created_at timestamp without time zone NOT NULL,
+  PRIMARY KEY ("id")
 )
 ;
 
