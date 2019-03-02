@@ -66,6 +66,7 @@ func main() {
 	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
 	rWeb.HandleFunc("/", web.HandleHome).Methods("GET")
 	rWeb.HandleFunc("/chatbot/", web.HandleChatbot).Methods("GET")
+	rWeb.HandleFunc("/chatbot/tg/chats/", web.HandleChatbotTGChatList).Methods("GET")
 	rWeb.HandleFunc("/files/", web.HandleFiles).Methods("GET")
 	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("GET")
 	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("POST")

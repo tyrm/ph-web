@@ -1,0 +1,58 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+    {{- if .AlertWarn}}
+        <div class="row">
+            <div class="col">
+                <div class="alert alert-warning" role="alert">
+                    {{.AlertWarn}}
+                </div>
+            </div>
+        </div>
+    {{- end}}
+    <div class="row">
+        <div class="col">
+            <h1>Chat Bot</h1>
+            <h3><i class="fab fa-telegram fa-colored"></i> Telegram Chats</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table class="table" id="usersListTable">
+                <thead class="thead-dark">
+                <tr>
+                    <th></th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Title/User</th>
+                    <th scope="col" class="text-nowrap">Last Seen</th>
+                </tr>
+                </thead>
+                {{- with .Chats}}
+                    {{- range .}}
+                        <tr>
+                            <td><span data-toggle="tooltip" data-placement="right" title="{{.Type}}">
+                        {{- if eq .Type "private"}}<i class="fas fa-user"></i>
+                        {{- else if eq .Type "group"}}<i class="fas fa-user-friends"></i>
+                        {{- else if eq .Type "supergroup"}}<i class="fas fa-users"></i>
+                        {{- else if eq .Type "channel"}}<i class="fas fa-bullhorn"></i>
+                        {{- end -}}
+                            </span></td>
+                            <td>{{.APIID}}</td>
+                            <td><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetFormatedName}}</a></td>
+                            <td><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormated}}">{{.GetLastSeenHuman}}</span></td>
+                        </tr>
+                    {{- end}}
+                {{- end}}
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+{{end}}
