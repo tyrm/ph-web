@@ -20,6 +20,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		err = err2
 		return
 	}
+	logger.Tracef("(%v", err2)
 
 	// See Relationships
 	from, err2 := seeUser(apiMessage.From)
@@ -37,6 +38,9 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		err = err2
 		return
 	}
+
+
+	logger.Tracef("For (%v|%v|%v|%v)", apiMessage.ForwardFrom, apiMessage.ForwardFromChat, apiMessage.ForwardFromMessageID, apiMessage.ForwardDate)
 
 	var forwardedFrom *models.TGUser
 	if apiMessage.ForwardFrom != nil {
@@ -61,7 +65,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	forwardedFromMessageID := sql.NullInt64{Valid: false}
 	if apiMessage.ForwardFromMessageID != 0 {
 		forwardedFromMessageID = sql.NullInt64{
-			Int64: int64(forwardedFromChat.ID),
+			Int64: int64(apiMessage.ForwardFromMessageID),
 			Valid: true,
 		}
 	}
@@ -110,12 +114,54 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	logger.Tracef("For (%v|%v|%v|%v)", forwardedFrom, forwardedFromChat, forwardedFromMessageID, forwardDate)
+
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, sticker)
 	if err2 != nil {
 		err = err2
 		return
 	}
+
+	if apiMessage.Entities != nil {
+		for _, entity := range *apiMessage.Entities {
+
+			var user *models.TGUser
+			if entity.User != nil {
+				user, err2 = seeUser(entity.User)
+				if err2 != nil {
+					logger.Errorf("seeMessage: error seeing forwarded from user: %s", err2)
+					err = err2
+					return
+				}
+			}
+
+			_, err2 = tgm.CreateMessageEntityFromAPI(&entity, user)
+			if err2 != nil {
+				err = err2
+				return
+			}
+		}
+	}
+
+	if apiMessage.Photo != nil {
+		for _, photo := range *apiMessage.Photo {
+
+			ps, err2 := seePhotoSize(&photo)
+			if err2 != nil {
+				logger.Errorf("seeMessage: error seeing forwarded from user: %s", err2)
+				err = err2
+				return
+			}
+
+			err2 = tgm.CreatePhoto(ps)
+			if err2 != nil {
+				err = err2
+				return
+			}
+		}
+	}
+
 	tgMessage = tgm
 	return
 }

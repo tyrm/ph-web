@@ -41,14 +41,12 @@ func seeChat(apiChat *tgbotapi.Chat) (tgChat *models.TGChat, err error) {
 	}
 
 	if tgch.Matches(apiChat) {
-		logger.Tracef("seeChat: chat's value match history. updating last seen.")
 		err2 = nil
 		err2 = tgch.UpdateLastSeen()
 		if err2 != nil {
 			logger.Errorf("Error updating last seen for $d.", tgc.ID)
 		}
 	} else {
-		logger.Tracef("seeChat: chat has changed value. creating.")
 		err2 = nil
 		tgch, err2 = models.CreateTGChatHistoryFromAPI(tgc, apiChat)
 		if err2 != nil {

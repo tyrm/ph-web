@@ -41,7 +41,7 @@ CREATE TABLE "public"."tg_messages" (
 CREATE TABLE "public"."tg_message_entities" (
     id serial NOT NULL UNIQUE,
     tgm_id integer NOT NULL REFERENCES tg_messages(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    type integer NOT NULL,
+    type character varying NOT NULL,
     "offset" integer,
     length integer,
     url character varying,
