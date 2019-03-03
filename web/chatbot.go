@@ -20,7 +20,7 @@ type TemplateVarChatbot struct {
 type TemplateVarChatbotTGChatList struct {
 	templateVarLayout
 
-	Chats []*models.TGChatPage
+	Chats []*models.TGChat
 	Pages *templatePages
 }
 
