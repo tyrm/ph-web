@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"time"
 
 	"../../files"
 	"../../models"
@@ -12,6 +13,23 @@ import (
 )
 
 func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
+	start := time.Now()
+
+	// Check if we've retrieved file already
+	if tgPhotoSize.FileLocation.Valid {
+		b, err2 := files.GetBytes(tgPhotoSize.FileLocation.String)
+		if err2 != nil {
+			logger.Errorf("GetFile: error getting file config: %v", err)
+			err = err2
+			return
+		}
+		body = *b
+		
+		elapsed := time.Since(start)
+		logger.Tracef("GetFile() [%s][HIT]", elapsed)
+		return
+	}
+
 	// Get File Location
 	fileConfig := tgbotapi.FileConfig{
 		FileID: tgPhotoSize.FileID,
@@ -51,5 +69,7 @@ func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
 		logger.Errorf("Error updated record: %s", err)
 	}
 
+	elapsed := time.Since(start)
+	logger.Tracef("GetFile() [%s][MISS]", elapsed)
 	return
 }
