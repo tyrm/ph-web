@@ -18,16 +18,15 @@ func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
 	// Check if we've retrieved file already
 	if tgPhotoSize.FileLocation.Valid {
 		b, err2 := files.GetBytes(tgPhotoSize.FileLocation.String)
-		if err2 != nil {
-			logger.Errorf("GetFile: error getting file config: %v", err)
-			err = err2
+		if err2 == nil {
+			body = *b
+
+			elapsed := time.Since(start)
+			logger.Tracef("GetFile() [%s][HIT]", elapsed)
 			return
 		}
-		body = *b
-		
-		elapsed := time.Since(start)
-		logger.Tracef("GetFile() [%s][HIT]", elapsed)
-		return
+		logger.Errorf("GetFile: error getting file bytes: %v", err)
+
 	}
 
 	// Get File Location
