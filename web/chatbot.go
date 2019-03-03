@@ -24,6 +24,15 @@ type TemplateVarChatbotTGChatList struct {
 	Pages *templatePages
 }
 
+type TemplateVarChatbotTGChatView struct {
+	templateVarLayout
+
+	TGChat *models.TGChat
+	TGChatHistory *models.TGChatHistory
+
+	IsInit bool
+}
+
 // TelegramIsInit returns true if telegram is connected
 func (_ *TemplateVarChatbot) TelegramIsInit() bool {
 	return telegram.IsInit()
@@ -119,11 +128,11 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 
 	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
-		logger.Warningf("HandleChatbot: template error: %s", err.Error())
+		logger.Warningf("HandleChatbotTGChatView: template error: %s", err.Error())
 	}
 
 	elapsed := time.Since(start)
-	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
+	logger.Tracef("HandleChatbotTGChatView() [%s]", elapsed)
 	return
 }
 

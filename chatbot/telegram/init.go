@@ -1,15 +1,21 @@
 package telegram
 
 import (
+	"time"
+
 	"../../registry"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/juju/loggo"
+	"github.com/patrickmn/go-cache"
 )
 
 var bot *tgbotapi.BotAPI
 var botConnected = false
 var logger *loggo.Logger
 var messageChan chan *tgbotapi.Message
+
+// Caches
+var cUserProfilePhotos *cache.Cache
 
 func init() {
 	newLogger := loggo.GetLogger("telegram")
@@ -19,6 +25,9 @@ func init() {
 	for w := 1; w <= 3; w++ {
 		go workerMessageHandler(w)
 	}
+
+	// init cache
+	cUserProfilePhotos = cache.New(5*time.Minute, 10*time.Minute)
 }
 
 // InitClient for telegram

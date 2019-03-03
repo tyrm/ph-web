@@ -53,6 +53,7 @@ func (u *User) GetGravatar(size int) string {
 		logger.Errorf("Error making gravatar client: %s", err.Error())
 		return ""
 	}
+
 	g.SetSize(uint(size))
 	return g.URLParse(u.Email)
 }
