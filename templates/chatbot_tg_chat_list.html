@@ -19,11 +19,12 @@
     </div>
     <div class="row">
         <div class="col">
+            <div class="table-responsive">
             <table class="table" id="usersListTable">
                 <thead class="thead-dark">
                 <tr>
                     <th></th>
-                    <th scope="col">ID</th>
+                    <th scope="col" class="d-none d-lg-table-cell">ID</th>
                     <th scope="col">Title/User</th>
                     <th scope="col" class="text-nowrap">Last Seen</th>
                 </tr>
@@ -38,15 +39,16 @@
                         {{- else if eq .Type "channel"}}<i class="fas fa-bullhorn"></i>
                         {{- end -}}
                             </span></td>
-                            <td>{{.APIID}}</td>
-                            <td><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetFormatedName}}</a></td>
-                            <td><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormated}}">{{.GetLastSeenHuman}}</span></td>
+                            <td class="d-none d-lg-table-cell">{{.APIID}}</td>
+                            <td class="text-nowrap"><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetFormatedName}}</a></td>
+                            <td class="text-nowrap"><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormated}}">{{.GetLastSeenHuman}}</span></td>
                         </tr>
                     {{- end}}
                 {{- end}}
                 <tbody>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

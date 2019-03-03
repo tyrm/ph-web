@@ -57,6 +57,11 @@ func InitClient(force bool) {
 	}
 
 	logger.Infof("Telegram connected as %s", bot.Self.UserName)
+	_, err = seeUser(&bot.Self)
+	if err != nil {
+		logger.Errorf("Problem seeing telegram bot: %s", err.Error())
+	}
+
 	go workerUpdateHandler()
 }
 

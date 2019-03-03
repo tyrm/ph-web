@@ -8,6 +8,7 @@ import (
 
 	"../chatbot/telegram"
 	"../models"
+	"github.com/gorilla/mux"
 )
 
 // TemplateVarFiles holds template variables for HandleFiles
@@ -104,5 +105,61 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 
 	elapsed := time.Since(start)
 	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
+	return
+}
+
+
+// HandleChatbot displays files home
+func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
+	tmplVars := &TemplateVarChatbot{}
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/chatbot_tg_chat_view.html")
+
+	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if err != nil {
+		logger.Warningf("HandleChatbot: template error: %s", err.Error())
+	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
+	return
+}
+
+// HandleChatbotTGPhotoSizeView displays files home
+func HandleChatbotTGPhotoSizeView(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
+	tmplVars := &TemplateVarChatbot{}
+	_, _ = initSessionVars(response, request, tmplVars)
+
+	vars := mux.Vars(request)
+	fileID, err := models.ReadTGPhotoSizeByFileID(vars["id"])
+	if err != nil {
+		if err == models.ErrDoesNotExist {
+			MakeErrorResponse(response, 404, vars["id"], 0)
+			return
+		}
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
+		return
+	}
+
+	body, err := telegram.GetFile(fileID)
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
+		return
+	}
+
+
+	response.Write(body)
+
+	//_ , _ = fmt.Fprintf(response, "Hello %v", fileID)
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleChatbotTGPhotoSizeView() [%s]", elapsed)
 	return
 }

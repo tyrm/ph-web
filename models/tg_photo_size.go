@@ -9,13 +9,35 @@ import (
 )
 
 type TGPhotoSize struct {
-	ID        int
-	FileID    string
-	Width     int
-	Height    int
-	FileSize  sql.NullInt64
-	CreatedAt time.Time
-	LastSeen  time.Time
+	ID              int
+	FileID          string
+	Width           int
+	Height          int
+	FileSize        sql.NullInt64
+	FileLocation    sql.NullString
+	FileSuffix      sql.NullString
+	FileRetrievedAt pq.NullTime
+	CreatedAt       time.Time
+	LastSeen        time.Time
+}
+
+const sqlUpdateFileRetrieved = `
+UPDATE tg_photo_sizes
+SET file_location = $2, file_suffix = $3, file_retrieved_at = now()
+WHERE id = $1
+RETURNING file_retrieved_at;`
+
+// UpdateLastSeen updates the LastSeen field in the database to now.
+func (tgc *TGPhotoSize) UpdateFileRetrieved(fileLocation string, fileSuffix string) error {
+	var newRetrievedAt pq.NullTime
+
+	err := db.QueryRow(sqlUpdateFileRetrieved, tgc.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
+	if err != nil {
+		return err
+	}
+
+	tgc.FileRetrievedAt = newRetrievedAt
+	return nil
 }
 
 const sqlUpdateTGPhotoSizeLastSeen = `
@@ -80,7 +102,7 @@ func CreateTGPhotoSizeFromAPI(apiPhotoSize *tgbotapi.PhotoSize) (*TGPhotoSize, e
 }
 
 const sqlReadTGPhotoSizeByFileID = `
-SELECT id, file_id, width, height, file_size, created_at, last_seen
+SELECT id, file_id, width, height, file_size, file_location, file_suffix, file_retrieved_at, created_at, last_seen
 FROM tg_photo_sizes
 WHERE file_id = $1;`
 
@@ -91,11 +113,14 @@ func ReadTGPhotoSizeByFileID(fileID string) (tgps *TGPhotoSize, err error) {
 	var newWidth int
 	var newHeight int
 	var newFileSize sql.NullInt64
+	var newFileLocation sql.NullString
+	var newFileSuffix sql.NullString
+	var newFileRetrievedAt pq.NullTime
 	var newCreatedAt time.Time
 	var newLastSeen time.Time
 
 	err = db.QueryRow(sqlReadTGPhotoSizeByFileID, fileID).Scan(&newID, &newFileID, &newWidth, &newHeight, &newFileSize,
-		&newCreatedAt, &newLastSeen)
+		&newFileLocation, &newFileSuffix, &newFileRetrievedAt, &newCreatedAt, &newLastSeen)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrDoesNotExist
@@ -104,13 +129,16 @@ func ReadTGPhotoSizeByFileID(fileID string) (tgps *TGPhotoSize, err error) {
 	}
 
 	newPhotoSize := &TGPhotoSize{
-		ID:        newID,
-		FileID:    newFileID,
-		Width:     newWidth,
-		Height:    newHeight,
-		FileSize:  newFileSize,
-		CreatedAt: newCreatedAt,
-		LastSeen:  newLastSeen,
+		ID:              newID,
+		FileID:          newFileID,
+		Width:           newWidth,
+		Height:          newHeight,
+		FileSize:        newFileSize,
+		FileLocation:    newFileLocation,
+		FileSuffix:      newFileSuffix,
+		FileRetrievedAt: newFileRetrievedAt,
+		CreatedAt:       newCreatedAt,
+		LastSeen:        newLastSeen,
 	}
 	tgps = newPhotoSize
 	return

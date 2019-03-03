@@ -97,6 +97,22 @@ func InitClient(force bool) {
 	}
 	bucket = secretBucket
 
+	// Create Bucket if exists
+	exists, err := minioClient.BucketExists(bucket)
+	if err == nil && exists {
+		logger.Debugf("Bucket %s exists", bucket)
+	} else if err == nil && !exists {
+		err = minioClient.MakeBucket(bucket, "us-east-1")
+		logger.Infof("Created bucket %s", bucket)
+		if err != nil {
+			logger.Errorf("Error creating bucket: %v", err)
+			return
+		}
+	} else {
+		logger.Errorf("Error checking bucket: %v", err)
+		return
+	}
+
 	mc = minioClient
 	mcInitialized = true
 	logger.Infof("File store initialized")

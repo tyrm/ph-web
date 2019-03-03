@@ -201,7 +201,7 @@ func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		files.InitClient(false)
+		files.InitClient(true)
 	}
 
 	// Get Registry Entries
