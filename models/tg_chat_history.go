@@ -90,7 +90,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;`
 
 // CreateTGChatHistory creates a new instance of telegram user history in the database.
-func CreateTGChatHistory(tgc *TGChat, newType string, title sql.NullString, username sql.NullString,
+func CreateTGChatHistory(tgc *TGChatMeta, newType string, title sql.NullString, username sql.NullString,
 	firstName sql.NullString, lastName sql.NullString, allMembersAreAdmin bool) (tgch *TGChatHistory, err error) {
 
 	createdAt := time.Now()
@@ -120,7 +120,7 @@ func CreateTGChatHistory(tgc *TGChat, newType string, title sql.NullString, user
 	return
 }
 
-func CreateTGChatHistoryFromAPI(tgChat *TGChat, apiChat *tgbotapi.Chat) (*TGChatHistory, error) {
+func CreateTGChatHistoryFromAPI(tgChat *TGChatMeta, apiChat *tgbotapi.Chat) (*TGChatHistory, error) {
 	title := &sql.NullString{Valid: false}
 	if apiChat.Title != "" {
 		title = &sql.NullString{

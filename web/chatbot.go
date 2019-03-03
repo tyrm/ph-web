@@ -27,7 +27,7 @@ type TemplateVarChatbotTGChatList struct {
 type TemplateVarChatbotTGChatView struct {
 	templateVarLayout
 
-	TGChat *models.TGChat
+	TGChat *models.TGChatMeta
 	TGChatHistory *models.TGChatHistory
 
 	IsInit bool

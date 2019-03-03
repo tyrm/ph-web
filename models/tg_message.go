@@ -131,8 +131,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 RETURNING id;`
 
 // CreateTGMessage
-func CreateTGMessage(messageID int, from *TGUser, date time.Time, chat *TGChat, forwardedFrom *TGUser,
-	forwardedFromChat *TGChat, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
+func CreateTGMessage(messageID int, from *TGUser, date time.Time, chat *TGChatMeta, forwardedFrom *TGUser,
+	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
 	editDate pq.NullTime, text sql.NullString, sticker *TGSticker) (tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()

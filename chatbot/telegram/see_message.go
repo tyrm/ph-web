@@ -52,7 +52,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
-	var forwardedFromChat *models.TGChat
+	var forwardedFromChat *models.TGChatMeta
 	if apiMessage.ForwardFromChat != nil {
 		forwardedFromChat, err2 = seeChat(apiMessage.ForwardFromChat)
 		if err2 != nil {
