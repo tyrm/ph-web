@@ -24,7 +24,6 @@ func seeUser(apiUser *tgbotapi.User) (tgUser *models.TGUserMeta, err error) {
 	err2 = nil
 	tguh, err2 := tgu.ReadLatestHistory()
 	if err2 == models.ErrDoesNotExist {
-		logger.Tracef("seeUser: user has no history. creating.")
 		var err3 error
 		tguh, err3 = models.CreateTGUserHistoryFromAPI(tgu, apiUser)
 		if err3 != nil {
@@ -40,14 +39,12 @@ func seeUser(apiUser *tgbotapi.User) (tgUser *models.TGUserMeta, err error) {
 	}
 
 	if tguh.Matches(apiUser) {
-		logger.Tracef("seeUser: user's value match history. updating last seen.")
 		err2 = nil
 		err2 = tguh.UpdateLastSeen()
 		if err2 != nil {
 			logger.Errorf("Error updating last seen for $d.", tgUser.ID)
 		}
 	} else {
-		logger.Tracef("seeUser: user has changed value. creating.")
 		err2 = nil
 		tguh, err2 = models.CreateTGUserHistoryFromAPI(tgu, apiUser)
 		if err2 != nil {

@@ -120,8 +120,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
-	logger.Tracef("For (%v|%v|%v|%v)", forwardedFrom, forwardedFromChat, forwardedFromMessageID, forwardDate)
-
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker)
 	if err2 != nil {

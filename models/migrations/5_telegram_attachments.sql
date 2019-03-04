@@ -121,6 +121,7 @@ CREATE TABLE "public"."tg_locations" (
   longitude double precision,
   latitude double precision,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
 PRIMARY KEY ("id")
 )
 ;
