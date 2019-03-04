@@ -9,16 +9,38 @@ import (
 )
 
 type TGSticker struct {
-	ID          int
-	FileID      string
-	Width       int
-	Height      int
-	ThumbnailID sql.NullInt64
-	Emoji       sql.NullString
-	FileSize    sql.NullInt64
-	SetName     sql.NullString
-	CreatedAt   time.Time
-	LastSeen    time.Time
+	ID              int
+	FileID          string
+	Width           int
+	Height          int
+	ThumbnailID     sql.NullInt64
+	Emoji           sql.NullString
+	FileSize        sql.NullInt64
+	FileLocation    sql.NullString
+	FileSuffix      sql.NullString
+	FileRetrievedAt pq.NullTime
+	SetName         sql.NullString
+	CreatedAt       time.Time
+	LastSeen        time.Time
+}
+
+const sqlTGStickerUpdateFileRetrieved = `
+UPDATE tg_stickers
+SET file_location = $2, file_suffix = $3, file_retrieved_at = now()
+WHERE id = $1
+RETURNING file_retrieved_at;`
+
+// UpdateLastSeen updates the LastSeen field in the database to now.
+func (tgc *TGSticker) UpdateFileRetrieved(fileLocation string, fileSuffix string) error {
+	var newRetrievedAt pq.NullTime
+
+	err := db.QueryRow(sqlTGStickerUpdateFileRetrieved, tgc.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
+	if err != nil {
+		return err
+	}
+
+	tgc.FileRetrievedAt = newRetrievedAt
+	return nil
 }
 
 const sqlCreateTGSticker = `
@@ -64,13 +86,12 @@ func CreateTGSticker(fileID string, width int, height int, thumbnail *TGPhotoSiz
 	return
 }
 
-
 func CreateTGStickerFromAPI(apiSticker *tgbotapi.Sticker, thumbnail *TGPhotoSize) (*TGSticker, error) {
 	emoji := sql.NullString{Valid: false}
 	if apiSticker.Emoji != "" {
 		emoji = sql.NullString{
 			String: apiSticker.Emoji,
-			Valid: true,
+			Valid:  true,
 		}
 	}
 
@@ -86,7 +107,7 @@ func CreateTGStickerFromAPI(apiSticker *tgbotapi.Sticker, thumbnail *TGPhotoSize
 	if apiSticker.SetName != "" {
 		setName = sql.NullString{
 			String: apiSticker.SetName,
-			Valid: true,
+			Valid:  true,
 		}
 	}
 
@@ -94,7 +115,7 @@ func CreateTGStickerFromAPI(apiSticker *tgbotapi.Sticker, thumbnail *TGPhotoSize
 }
 
 const sqlReadTGStickerByFileID = `
-SELECT id, file_id, width, height, thumbnail_id, emoji, file_size, set_name, created_at, last_seen
+SELECT id, file_id, width, height, thumbnail_id, emoji, file_size, file_location, file_suffix, file_retrieved_at, set_name, created_at, last_seen
 FROM tg_stickers
 WHERE file_id = $1;`
 
@@ -107,12 +128,16 @@ func ReadTGStickerByFileID(fileID string) (tgs *TGSticker, err error) {
 	var newThumbnailID sql.NullInt64
 	var newEmoji sql.NullString
 	var newFileSize sql.NullInt64
+	var newFileLocation sql.NullString
+	var newFileSuffix sql.NullString
+	var newFileRetrievedAt pq.NullTime
 	var newSetName sql.NullString
 	var newCreatedAt time.Time
 	var newLastSeen time.Time
 
 	err = db.QueryRow(sqlReadTGStickerByFileID, fileID).Scan(&newID, &newFileID, &newWidth, &newHeight,
-		&newThumbnailID, &newEmoji, &newFileSize, &newSetName, &newCreatedAt, &newLastSeen)
+		&newThumbnailID, &newEmoji, &newFileSize, &newFileLocation, &newFileSuffix, &newFileRetrievedAt, &newSetName,
+		&newCreatedAt, &newLastSeen)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrDoesNotExist
@@ -121,16 +146,19 @@ func ReadTGStickerByFileID(fileID string) (tgs *TGSticker, err error) {
 	}
 
 	newSticker := &TGSticker{
-		ID:          newID,
-		FileID:      newFileID,
-		Width:       newWidth,
-		Height:      newHeight,
-		ThumbnailID: newThumbnailID,
-		Emoji:       newEmoji,
-		FileSize:    newFileSize,
-		SetName:     newSetName,
-		CreatedAt:   newCreatedAt,
-		LastSeen:    newLastSeen,
+		ID:              newID,
+		FileID:          newFileID,
+		Width:           newWidth,
+		Height:          newHeight,
+		ThumbnailID:     newThumbnailID,
+		Emoji:           newEmoji,
+		FileSize:        newFileSize,
+		FileLocation:    newFileLocation,
+		FileSuffix:      newFileSuffix,
+		FileRetrievedAt: newFileRetrievedAt,
+		SetName:         newSetName,
+		CreatedAt:       newCreatedAt,
+		LastSeen:        newLastSeen,
 	}
 	tgs = newSticker
 	return

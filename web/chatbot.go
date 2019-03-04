@@ -177,7 +177,7 @@ func HandleChatbotTGPhotoSizeView(response http.ResponseWriter, request *http.Re
 		return
 	}
 
-	body, err := telegram.GetFile(fileID)
+	body, err := telegram.GetPhotoFile(fileID)
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
@@ -188,6 +188,37 @@ func HandleChatbotTGPhotoSizeView(response http.ResponseWriter, request *http.Re
 	response.Write(body)
 
 	//_ , _ = fmt.Fprintf(response, "Hello %v", fileID)
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleChatbotTGPhotoSizeView() [%s]", elapsed)
+	return
+}
+
+
+// HandleChatbotTGPhotoSizeView displays files home
+func HandleChatbotTGStickerViewFile(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	vars := mux.Vars(request)
+	sticker, err := models.ReadTGStickerByFileID(vars["id"])
+	if err != nil {
+		if err == models.ErrDoesNotExist {
+			MakeErrorResponse(response, 404, vars["id"], 0)
+			return
+		}
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting Stioker: %v", err)
+		return
+	}
+
+	body, err := telegram.GetStickerFile(sticker)
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting Stioker: %v", err)
+		return
+	}
+
+	response.Write(body)
 
 	elapsed := time.Since(start)
 	logger.Tracef("HandleChatbotTGPhotoSizeView() [%s]", elapsed)

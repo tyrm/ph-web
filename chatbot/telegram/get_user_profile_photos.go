@@ -26,6 +26,12 @@ func GetUserProfilePhotos(u *models.TGUser) (up *tgbotapi.UserProfilePhotos, err
 	// update cache
 	cUserProfilePhotos.Set(apiidStr, &newUPP, cache.DefaultExpiration)
 
+	// See Photos
+	err2 := seeUserProfilePhotos(&newUPP)
+	if err2 != nil {
+		logger.Errorf("error seeing UserProfilePhotos: %S", err2)
+	}
+
 	// return value
 	up = &newUPP
 	logger.Tracef("GetUserProfilePhotos(%s) [MISS]", apiidStr)

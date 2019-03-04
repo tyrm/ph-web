@@ -13,12 +13,24 @@
     {{- end}}
     <div class="row">
         <div class="col">
-            <h1>Chat Bot</h1>
-            <h3><i class="fab fa-telegram fa-colored"></i> Telegram Chats</h3>
+            <h1><i class="fas fa-robot"></i> Chat Bot</h1>
         </div>
     </div>
     <div class="row">
         <div class="col">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="/web/chatbot/">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/web/chatbot/tg/chats/"><i class="fab fa-telegram fa-colored"></i> Chats</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h3><i class="fab fa-telegram fa-colored"></i> Telegram Chats</h3>
             <div class="table-responsive">
             <table class="table" id="usersListTable">
                 <thead class="thead-dark">

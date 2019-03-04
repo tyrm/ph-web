@@ -12,30 +12,30 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
+func GetStickerFile(tgSticker *models.TGSticker) (body []byte, err error) {
 	start := time.Now()
 
 	// Check if we've retrieved file already
-	if tgPhotoSize.FileLocation.Valid {
-		b, err2 := files.GetBytes(tgPhotoSize.FileLocation.String)
+	if tgSticker.FileLocation.Valid {
+		b, err2 := files.GetBytes(fmt.Sprintf("chatbot/telegram/%s", tgSticker.FileLocation.String))
 		if err2 == nil {
 			body = *b
 
 			elapsed := time.Since(start)
-			logger.Tracef("GetFile() [%s][HIT]", elapsed)
+			logger.Tracef("GetPhotoFile() [%s][HIT]", elapsed)
 			return
 		}
-		logger.Errorf("GetFile: error getting file bytes: %v", err)
+		logger.Errorf("GetPhotoFile: error getting file bytes: %v", err)
 
 	}
 
 	// Get File Location
 	fileConfig := tgbotapi.FileConfig{
-		FileID: tgPhotoSize.FileID,
+		FileID: tgSticker.FileID,
 	}
 	file, err := bot.GetFile(fileConfig)
 	if err != nil {
-		logger.Errorf("GetFile: error getting file config: %v", err)
+		logger.Errorf("GetPhotoFile: error getting file config: %v", err)
 		return
 	}
 	logger.Tracef("%v", file)
@@ -46,7 +46,7 @@ func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
 	// Get File from Telegram API
 	resp, err := http.Get(getURL)
 	if err != nil {
-		logger.Errorf("GetFile: error getting file: %v", err)
+		logger.Errorf("GetPhotoFile: error getting file: %v", err)
 		return
 	}
 
@@ -56,19 +56,19 @@ func GetFile(tgPhotoSize *models.TGPhotoSize) (body []byte, err error) {
 	// Put in files
 	r := regexp.MustCompile(`([[:word:]]+/)[[:word:]]+\.([[:alnum:]]+)`)
 	urlPieces := r.FindStringSubmatch(file.FilePath)
-	filesLocation := fmt.Sprintf("%s%s.%s", urlPieces[1], tgPhotoSize.FileID, urlPieces[2])
+	filesLocation := fmt.Sprintf("%s%s.%s", urlPieces[1], tgSticker.FileID, urlPieces[2])
 
-	_, err = files.PutBytes(filesLocation, &body)
+	_, err = files.PutBytes(fmt.Sprintf("chatbot/telegram/%s", filesLocation), &body)
 	if err != nil {
 		logger.Errorf("Error putting file: %s", err)
 	}
 
-	err = tgPhotoSize.UpdateFileRetrieved(filesLocation, urlPieces[2])
+	err = tgSticker.UpdateFileRetrieved(filesLocation, urlPieces[2])
 	if err != nil {
 		logger.Errorf("Error updated record: %s", err)
 	}
 
 	elapsed := time.Since(start)
-	logger.Tracef("GetFile() [%s][MISS]", elapsed)
+	logger.Tracef("GetPhotoFile() [%s][MISS]", elapsed)
 	return
 }

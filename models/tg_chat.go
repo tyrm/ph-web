@@ -55,6 +55,25 @@ func (u *TGChat) GetLastSeenFormatted() string {
 	return timeStr
 }
 
+// GetLastSeen returns formatted string of LastSeen
+func (u *TGChat) GetLongFormattedName() string {
+	if u.Title.Valid {
+		return u.Title.String
+	}
+
+	var nameStr []string
+	nameStr = append(nameStr, u.FirstName.String)
+
+	if u.LastName.Valid {
+		nameStr = append(nameStr, u.LastName.String)
+	}
+	if u.Username.Valid {
+		nameStr = append(nameStr, fmt.Sprintf("(@%s)", u.Username.String))
+	}
+
+	return strings.Join(nameStr, " ")
+}
+
 // GetName returns long formatted
 func (u *TGChat) GetName() string {
 	var nameStr []string

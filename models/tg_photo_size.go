@@ -21,7 +21,7 @@ type TGPhotoSize struct {
 	LastSeen        time.Time
 }
 
-const sqlUpdateFileRetrieved = `
+const sqlTGPhotoSizeUpdateFileRetrieved = `
 UPDATE tg_photo_sizes
 SET file_location = $2, file_suffix = $3, file_retrieved_at = now()
 WHERE id = $1
@@ -31,7 +31,7 @@ RETURNING file_retrieved_at;`
 func (tgc *TGPhotoSize) UpdateFileRetrieved(fileLocation string, fileSuffix string) error {
 	var newRetrievedAt pq.NullTime
 
-	err := db.QueryRow(sqlUpdateFileRetrieved, tgc.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
+	err := db.QueryRow(sqlTGPhotoSizeUpdateFileRetrieved, tgc.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
 	if err != nil {
 		return err
 	}

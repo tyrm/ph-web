@@ -26,11 +26,3 @@ func seePhotoSize(apiPhotoSize *tgbotapi.PhotoSize) (tgPhotoSize *models.TGPhoto
 	tgPhotoSize = tgps
 	return
 }
-
-
-func seeUserProfilePhotos(apiPhotoSize *tgbotapi.UserProfilePhotos) (err error) {
-
-
-
-	return
-}
