@@ -3,14 +3,14 @@ package telegram
 import (
 	"../../models"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-)
+	)
 
-func seeSticker(apiSticker *tgbotapi.Sticker) (tgSticker *models.TGSticker, err error) {
+func seeChatAnimation(apiChatAnimation *tgbotapi.ChatAnimation) (tgAnimation *models.TGChatAnimation, err error) {
 	// Get TGMessage entry, return if exists
-	tgps, err2 := models.ReadTGStickerByFileID(apiSticker.FileID)
+	tgani, err2 := models.ReadTGChatAnimationByFileID(apiChatAnimation.FileID)
 	if err2 == nil {
-		tgps.UpdateLastSeen()
-		tgSticker = tgps
+		tgani.UpdateLastSeen()
+		tgAnimation = tgani
 		return
 	} else if err2 != nil && err2 != models.ErrDoesNotExist {
 		logger.Errorf("seeSticker: error reading message from db: %s", err2)
@@ -19,8 +19,8 @@ func seeSticker(apiSticker *tgbotapi.Sticker) (tgSticker *models.TGSticker, err 
 	}
 
 	var thumbnail *models.TGPhotoSize
-	if apiSticker.Thumbnail != nil {
-		thumbnail, err2 = seePhotoSize(apiSticker.Thumbnail)
+	if &apiChatAnimation.Thumbnail != nil {
+		thumbnail, err2 = seePhotoSize(apiChatAnimation.Thumbnail)
 		if err2 != nil {
 			logger.Errorf("seeSticker: error seeing thumbnail: %s", err2)
 			err = err2
@@ -29,12 +29,12 @@ func seeSticker(apiSticker *tgbotapi.Sticker) (tgSticker *models.TGSticker, err 
 	}
 
 	err2 = nil
-	tgps, err2 = models.CreateTGStickerFromAPI(apiSticker, thumbnail)
+	tgani, err2 = models.CreateTGChatAnimationFromAPI(apiChatAnimation, thumbnail)
 	if err2 != nil {
 		err = err2
 		return
 	}
-	go GetStickerFile(tgps)
-	tgSticker = tgps
+	go GetChatAnimationFile(tgani)
+	tgAnimation = tgani
 	return
 }

@@ -20,7 +20,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		err = err2
 		return
 	}
-	logger.Tracef("(%v", err2)
 
 	// See Relationships
 	from, err2 := seeUser(apiMessage.From)
@@ -101,6 +100,16 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var animation *models.TGChatAnimation
+	if apiMessage.Animation != nil {
+		animation, err2 = seeChatAnimation(apiMessage.Animation)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	var sticker *models.TGSticker
 	if apiMessage.Sticker != nil {
 		sticker, err2 = seeSticker(apiMessage.Sticker)
@@ -114,7 +123,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	logger.Tracef("For (%v|%v|%v|%v)", forwardedFrom, forwardedFromChat, forwardedFromMessageID, forwardDate)
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
-		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, sticker)
+		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker)
 	if err2 != nil {
 		err = err2
 		return

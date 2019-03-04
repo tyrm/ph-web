@@ -21,6 +21,7 @@ type TGMessage struct {
 	ReplyToMessage         sql.NullInt64
 	EditDate               pq.NullTime
 	Text                   sql.NullString
+	AnimationID         sql.NullInt64
 	EntityIDs              []int
 	PhotoIDs               []int
 	StickerID              sql.NullInt64
@@ -56,7 +57,7 @@ RETURNING id;`
 // CreateTGMessage
 func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGChatMeta, forwardedFrom *TGUserMeta,
 	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
-	editDate pq.NullTime, text sql.NullString, sticker *TGSticker) (tgMessage *TGMessage, err error) {
+	editDate pq.NullTime, text sql.NullString, animation *TGChatAnimation, sticker *TGSticker) (tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
 

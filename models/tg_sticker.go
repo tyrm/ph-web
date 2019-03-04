@@ -43,6 +43,25 @@ func (tgc *TGSticker) UpdateFileRetrieved(fileLocation string, fileSuffix string
 	return nil
 }
 
+const sqlUpdateTGStickerLastSeen = `
+UPDATE tg_stickers
+SET last_seen = now()
+WHERE id = $1
+RETURNING last_seen;`
+
+// UpdateLastSeen updates the LastSeen field in the database to now.
+func (tgc *TGSticker) UpdateLastSeen() error {
+	var newLastSeen time.Time
+
+	err := db.QueryRow(sqlUpdateTGStickerLastSeen, tgc.ID).Scan(&newLastSeen)
+	if err != nil {
+		return err
+	}
+
+	tgc.LastSeen = newLastSeen
+	return nil
+}
+
 const sqlCreateTGSticker = `
 INSERT INTO "public"."tg_stickers" (file_id, width, height, thumbnail_id, emoji, file_size, set_name, created_at, last_seen)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
