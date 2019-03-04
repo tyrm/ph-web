@@ -3,14 +3,13 @@ package telegram
 import (
 	"strconv"
 
-	"../../models"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/patrickmn/go-cache"
 )
 
-func GetUserProfilePhotos(u *models.TGUserMeta) (up *tgbotapi.UserProfilePhotos, err error) {
+func GetUserProfilePhotos(apiid int) (up *tgbotapi.UserProfilePhotos, err error) {
 	// check cache
-	apiidStr := strconv.Itoa(u.APIID)
+	apiidStr := strconv.Itoa(apiid)
 	if u, found := cUserProfilePhotos.Get(apiidStr); found {
 		up = u.(*tgbotapi.UserProfilePhotos)
 		logger.Tracef("GetUserProfilePhotos(%s) [HIT]", apiidStr)
@@ -19,7 +18,7 @@ func GetUserProfilePhotos(u *models.TGUserMeta) (up *tgbotapi.UserProfilePhotos,
 
 	// Get from API
 	config := tgbotapi.UserProfilePhotosConfig{
-		UserID: u.APIID,
+		UserID: apiid,
 	}
 	newUPP, err := bot.GetUserProfilePhotos(config)
 

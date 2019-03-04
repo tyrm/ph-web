@@ -6,13 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"../chatbot/telegram"
 	"../models"
 )
 
 type TemplateVarChatbotTGUserList struct {
 	templateVarLayout
 
-	Users []*models.TGUser
+	Users []models.TGUser
 	Pages *templatePages
 }
 
@@ -66,7 +67,7 @@ func HandleChatbotTGUserList(response http.ResponseWriter, request *http.Request
 		return
 	}
 
-	tmplVars.Users = users
+	tmplVars.Users = telegram.PopulateProfilePhotos(*users, 32)
 
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {

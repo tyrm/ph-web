@@ -46,7 +46,7 @@
                 </thead>
                 {{- range .Users}}
                     <tr>
-                        <td></td>
+                        <td><img src="{{.ProfilePhotoURL}}" class="rounded-circle" style="max-height: 32px;max-width: 32px;"></td>
                         <td class="d-none d-lg-table-cell">{{.APIID}}</td>
                         <td class="text-nowrap">
                             <a href="/web/chatbot/tg/users/{{.APIID}}">

@@ -19,6 +19,9 @@ type TGUser struct {
 	LanguageCode sql.NullString
 	CreatedAt    time.Time
 	LastSeen     time.Time
+
+	// NonDB
+	ProfilePhotoURL string
 }
 
 // GetCreatedAtHuman returns humanized string of CreatedAt
@@ -129,9 +132,9 @@ FROM tg_users LEFT JOIN tg_users_history
 ON tg_users."id" = tg_users_history.tgu_id
 ORDER BY tg_users.id ASC, tg_users_history.last_seen DESC LIMIT $1 OFFSET $2;`
 
-func ReadTGUserPage(limit uint, page uint) (userList []*TGUser, err error) {
+func ReadTGUserPage(limit uint, page uint) (userList *[]TGUser, err error) {
 	offset := limit * page
-	var newUserList []*TGUser
+	var newUserList []TGUser
 
 	rows, err := db.Query(sqlReadTGUserPage, limit, offset)
 	if err != nil {
@@ -156,7 +159,7 @@ func ReadTGUserPage(limit uint, page uint) (userList []*TGUser, err error) {
 			return
 		}
 
-		user := &TGUser{
+		user := TGUser{
 			ID:           newID,
 			APIID:        newAPIID,
 			IsBot:        newIsBot,
@@ -171,7 +174,7 @@ func ReadTGUserPage(limit uint, page uint) (userList []*TGUser, err error) {
 		newUserList = append(newUserList, user)
 	}
 
-	userList = newUserList
+	userList = &newUserList
 	return
 
 }
