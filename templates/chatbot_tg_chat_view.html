@@ -28,24 +28,33 @@
             </ul>
         </div>
     </div>
+{{- if .TGChat -}}
     <div class="row">
         <div class="col">
-            <h3><i class="fas fa-user"></i> Tyr Mactire</h3>
+            <h3>
+                {{- if eq .TGChat.Type "private"}}<i class="fas fa-user"></i>
+                {{- else if eq .TGChat.Type "group"}}<i class="fas fa-user-friends"></i>
+                {{- else if eq .TGChat.Type "supergroup"}}<i class="fas fa-users"></i>
+                {{- else if eq .TGChat.Type "channel"}}<i class="fas fa-bullhorn"></i>
+                {{- end -}}
+                &nbsp;{{.TGChat.GetLongFormattedName}}
+            </h3>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-6 pb-4">
+            {{- if eq .TGChat.Type "private"}}
             <div class="row pt-0">
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">First Name</h4>
-                        <div class="p-1">Tyr</div>
+                        <div class="p-1">{{if .TGChat.FirstName.Valid}}{{.TGChat.FirstName.String}}{{end}}</div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">Last Name</h4>
-                        <div class="p-1">Mactire</div>
+                        <div class="p-1">{{if .TGChat.LastName.Valid}}{{.TGChat.LastName.String}}{{end}}</div>
                     </div>
                 </div>
             </div>
@@ -53,27 +62,37 @@
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">Username</h4>
-                        <div class="p-1">@TyrMactire</div>
+                        <div class="p-1">{{if .TGChat.Username.Valid}}{{.TGChat.Username.String}}{{end}}</div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">All are Admins</h4>
-                        <div class="p-1">false</div>
+                        <div class="p-1">{{.TGChat.AllMembersAreAdmins}}</div>
                     </div>
                 </div>
             </div>
+            {{- else}}
+                <div class="row pt-0">
+                    <div class="col">
+                        <div class="bg-light border border-primary rounded">
+                            <h4 class="text-white bg-primary mb-0 p-1">Title</h4>
+                            <div class="p-1">{{if .TGChat.Title.Valid}}{{.TGChat.Title.String}}{{end}}</div>
+                        </div>
+                    </div>
+                </div>
+            {{- end}}
             <div class="row pt-4">
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">First Seen</h4>
-                        <div class="p-1">12/25/1986 10:00</div>
+                        <div class="p-1"><span data-toggle="tooltip" data-placement="top" title="{{.TGChat.GetCreatedAtFormatted}}">{{.TGChat.GetCreatedAtHuman}}</span></div>
                     </div>
                 </div>
                 <div class="col">
                     <div class="bg-light border border-primary rounded">
                         <h4 class="text-white bg-primary mb-0 p-1">Last Seen</h4>
-                        <div class="p-1">12/25/1986 10:00</div>
+                        <div class="p-1"><span data-toggle="tooltip" data-placement="top" title="{{.TGChat.GetLastSeenFormatted}}">{{.TGChat.GetLastSeenHuman}}</span></div>
                     </div>
                 </div>
             </div>
@@ -147,5 +166,11 @@
             </div>
         </div>
     </div>
+{{- end}}
 </div>
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
 {{end}}

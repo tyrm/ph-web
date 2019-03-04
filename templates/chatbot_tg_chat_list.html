@@ -40,8 +40,8 @@
                         {{- end -}}
                             </span></td>
                             <td class="d-none d-lg-table-cell">{{.APIID}}</td>
-                            <td class="text-nowrap"><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetFormatedName}}</a></td>
-                            <td class="text-nowrap"><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormated}}">{{.GetLastSeenHuman}}</span></td>
+                            <td class="text-nowrap"><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetLongFormattedName}}</a></td>
+                            <td class="text-nowrap"><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormatted}}">{{.GetLastSeenHuman}}</span></td>
                         </tr>
                     {{- end}}
                 {{- end}}

@@ -7,10 +7,10 @@ import (
 
 func seeChat(apiChat *tgbotapi.Chat) (tgChat *models.TGChatMeta, err error) {
 	// Get TGUser entry, create if not exists
-	tgc, err2 := models.ReadTGChatByAPIID(apiChat.ID)
+	tgc, err2 := models.ReadTGChatMetaByAPIID(apiChat.ID)
 	if err2 == models.ErrDoesNotExist {
 		var err3 error
-		tgc, err3 = models.CreateTGChat(apiChat.ID)
+		tgc, err3 = models.CreateTGChatMeta(apiChat.ID)
 		if err3 != nil {
 			err = err3
 			return

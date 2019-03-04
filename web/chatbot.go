@@ -27,8 +27,7 @@ type TemplateVarChatbotTGChatList struct {
 type TemplateVarChatbotTGChatView struct {
 	templateVarLayout
 
-	TGChat *models.TGChatMeta
-	TGChatHistory *models.TGChatHistory
+	TGChat *models.TGChat
 
 	IsInit bool
 }
@@ -123,11 +122,33 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 	start := time.Now()
 
 	// Init Session
-	tmplVars := &TemplateVarChatbot{}
+	tmplVars := &TemplateVarChatbotTGChatView{}
 	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/chatbot_tg_chat_view.html")
 
-	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	vars := mux.Vars(request)
+	n, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleChatbotTGChatView: Error getting chat: %v", err)
+		return
+	}
+
+	chat, err := models.ReadTGChatByAPIID(n)
+	if err != nil {
+		if err == models.ErrDoesNotExist {
+			tmplVars.AlertWarn = fmt.Sprintf("Chat [%s] doesn't exist.", vars["id"])
+		} else {
+			MakeErrorResponse(response, 500, err.Error(), 0)
+			logger.Errorf("HandleChatbotTGChatView: Error getting chat: %v", err)
+			return
+
+		}
+	} else {
+		tmplVars.TGChat = chat
+	}
+
+	tmplErr := tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if tmplErr != nil {
 		logger.Warningf("HandleChatbotTGChatView: template error: %s", err.Error())
 	}
 
