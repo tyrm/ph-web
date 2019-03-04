@@ -79,6 +79,10 @@ func IsInit() bool {
 	return botConnected
 }
 
+func MyApiID() int {
+	return bot.Self.ID
+}
+
 // privates
 func workerMessageHandler(id int) {
 	logger.Debugf("Starting telegram message worker %v.", id)

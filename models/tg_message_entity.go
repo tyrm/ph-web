@@ -24,7 +24,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id;`
 
 func (m *TGMessage) CreateMessageEntity(nType string, offset sql.NullInt64, length sql.NullInt64,
-	url sql.NullString, user *TGUser) (tgme *TGMessageEntity, err error) {
+	url sql.NullString, user *TGUserMeta) (tgme *TGMessageEntity, err error) {
 
 	createdAt := time.Now()
 
@@ -58,7 +58,7 @@ func (m *TGMessage) CreateMessageEntity(nType string, offset sql.NullInt64, leng
 
 }
 
-func (m *TGMessage) CreateMessageEntityFromAPI(apiMessageEntity *tgbotapi.MessageEntity, user *TGUser) (tgme *TGMessageEntity, err error) {
+func (m *TGMessage) CreateMessageEntityFromAPI(apiMessageEntity *tgbotapi.MessageEntity, user *TGUserMeta) (tgme *TGMessageEntity, err error) {
 
 	offset := sql.NullInt64{
 		Int64: int64(apiMessageEntity.Offset),

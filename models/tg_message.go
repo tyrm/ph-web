@@ -54,7 +54,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 RETURNING id;`
 
 // CreateTGMessage
-func CreateTGMessage(messageID int, from *TGUser, date time.Time, chat *TGChatMeta, forwardedFrom *TGUser,
+func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGChatMeta, forwardedFrom *TGUserMeta,
 	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
 	editDate pq.NullTime, text sql.NullString, sticker *TGSticker) (tgMessage *TGMessage, err error) {
 
@@ -97,7 +97,7 @@ func CreateTGMessage(messageID int, from *TGUser, date time.Time, chat *TGChatMe
 		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, stickerID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %s: %s", sqlErr.Code, sqlErr.Code.Name())
+		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 

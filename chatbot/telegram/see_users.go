@@ -5,12 +5,12 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func seeUser(apiUser *tgbotapi.User) (tgUser *models.TGUser, err error) {
-	// Get TGUser entry, create if not exists
-	tgu, err2 := models.ReadTGUserByAPIID(apiUser.ID)
+func seeUser(apiUser *tgbotapi.User) (tgUser *models.TGUserMeta, err error) {
+	// Get TGUserMeta entry, create if not exists
+	tgu, err2 := models.ReadTGUserMetaByAPIID(apiUser.ID)
 	if err2 == models.ErrDoesNotExist {
 		var err3 error
-		tgu, err3 = models.CreateTGUser(apiUser.ID, apiUser.IsBot)
+		tgu, err3 = models.CreateTGUserMeta(apiUser.ID, apiUser.IsBot)
 		if err3 != nil {
 			err = err3
 			return

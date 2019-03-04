@@ -86,6 +86,20 @@ func (u *TGChat) GetName() string {
 	return strings.Join(nameStr, " ")
 }
 
+const sqlTGChatCount = `
+SELECT count(*)
+FROM tg_chats;`
+
+// GetUserCount returns number of users in the database.
+func GetTGChatCount() (count uint, err error) {
+	err = db.QueryRow(sqlTGChatCount).Scan(&count)
+	if err != nil {
+		logger.Errorf("Error getting tg_user count: %s", err.Error())
+	}
+	logger.Tracef("GetTGUserCount() (%d, %v)", count, err)
+	return
+}
+
 const sqlReadTGChat = `
 SELECT DISTINCT ON (tg_chats.id) tg_chats.id, tg_chats.api_id, tg_chats_history."type", tg_chats_history.title, 
 	tg_chats_history.username, tg_chats_history.first_name, tg_chats_history.last_name, 

@@ -42,7 +42,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	logger.Tracef("For (%v|%v|%v|%v)", apiMessage.ForwardFrom, apiMessage.ForwardFromChat, apiMessage.ForwardFromMessageID, apiMessage.ForwardDate)
 
-	var forwardedFrom *models.TGUser
+	var forwardedFrom *models.TGUserMeta
 	if apiMessage.ForwardFrom != nil {
 		forwardedFrom, err2 = seeUser(apiMessage.ForwardFrom)
 		if err2 != nil {
@@ -126,7 +126,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	if apiMessage.Entities != nil {
 		for _, entity := range *apiMessage.Entities {
 
-			var user *models.TGUser
+			var user *models.TGUserMeta
 			if entity.User != nil {
 				user, err2 = seeUser(entity.User)
 				if err2 != nil {

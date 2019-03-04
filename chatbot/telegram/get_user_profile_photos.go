@@ -8,7 +8,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func GetUserProfilePhotos(u *models.TGUser) (up *tgbotapi.UserProfilePhotos, err error) {
+func GetUserProfilePhotos(u *models.TGUserMeta) (up *tgbotapi.UserProfilePhotos, err error) {
 	// check cache
 	apiidStr := strconv.Itoa(u.APIID)
 	if u, found := cUserProfilePhotos.Get(apiidStr); found {

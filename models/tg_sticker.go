@@ -48,7 +48,7 @@ INSERT INTO "public"."tg_stickers" (file_id, width, height, thumbnail_id, emoji,
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id;`
 
-// CreateTGUser creates a new instance of a telegram user in the database.
+// CreateTGUserMeta creates a new instance of a telegram user in the database.
 func CreateTGSticker(fileID string, width int, height int, thumbnail *TGPhotoSize, emoji sql.NullString,
 	fileSize sql.NullInt64, setName sql.NullString) (tgs *TGSticker, err error) {
 	createdAt := time.Now()
@@ -66,7 +66,7 @@ func CreateTGSticker(fileID string, width int, height int, thumbnail *TGPhotoSiz
 		createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+		logger.Errorf("CreateTGUserMeta error %d: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 

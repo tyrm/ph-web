@@ -23,42 +23,39 @@
                     <a class="nav-link" href="/web/chatbot/">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="/web/chatbot/tg/chats/"><i class="fab fa-telegram fa-colored"></i> Chats</a>
+                    <a class="nav-link" href="/web/chatbot/tg/chats/"><i class="fab fa-telegram fa-colored"></i> Chats</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/web/chatbot/tg/users/"><i class="fab fa-telegram fa-colored"></i> Users</a>
+                    <a class="nav-link active" href="/web/chatbot/tg/users/"><i class="fab fa-telegram fa-colored"></i> Users</a>
                 </li>
             </ul>
         </div>
     </div>
     <div class="row">
         <div class="col">
-            <h3><i class="fab fa-telegram fa-colored"></i> Telegram Chats</h3>
+            <h3><i class="fab fa-telegram fa-colored"></i> Telegram Users</h3>
             <div class="table-responsive">
             <table class="table" id="usersListTable">
                 <thead class="thead-dark">
                 <tr>
                     <th></th>
                     <th scope="col" class="d-none d-lg-table-cell">ID</th>
-                    <th scope="col">Title/User</th>
+                    <th scope="col">User</th>
                     <th scope="col" class="text-nowrap">Last Seen</th>
                 </tr>
                 </thead>
-                {{- with .Chats}}
-                    {{- range .}}
-                        <tr>
-                            <td><span data-toggle="tooltip" data-placement="right" title="{{.Type}}">
-                        {{- if eq .Type "private"}}<i class="fas fa-user"></i>
-                        {{- else if eq .Type "group"}}<i class="fas fa-user-friends"></i>
-                        {{- else if eq .Type "supergroup"}}<i class="fas fa-users"></i>
-                        {{- else if eq .Type "channel"}}<i class="fas fa-bullhorn"></i>
-                        {{- end -}}
-                            </span></td>
-                            <td class="d-none d-lg-table-cell">{{.APIID}}</td>
-                            <td class="text-nowrap"><a href="/web/chatbot/tg/chats/{{.APIID}}">{{.GetLongFormattedName}}</a></td>
-                            <td class="text-nowrap"><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormatted}}">{{.GetLastSeenHuman}}</span></td>
-                        </tr>
-                    {{- end}}
+                {{- range .Users}}
+                    <tr>
+                        <td></td>
+                        <td class="d-none d-lg-table-cell">{{.APIID}}</td>
+                        <td class="text-nowrap">
+                            <a href="/web/chatbot/tg/users/{{.APIID}}">
+                                {{.GetName}}
+                                {{if .IsBot}}&nbsp;<span class="badge badge-info">Bot</span>{{end}}
+                            </a>
+                        </td>
+                        <td class="text-nowrap"><span data-toggle="tooltip" data-placement="right" title="{{.GetLastSeenFormatted}}">{{.GetLastSeenHuman}}</span></td>
+                    </tr>
                 {{- end}}
                 <tbody>
                 </tbody>

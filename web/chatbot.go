@@ -17,6 +17,7 @@ type TemplateVarChatbot struct {
 
 	IsInit bool
 }
+
 type TemplateVarChatbotTGChatList struct {
 	templateVarLayout
 
@@ -30,6 +31,14 @@ type TemplateVarChatbotTGChatView struct {
 	TGChat *models.TGChat
 
 	IsInit bool
+}
+type TemplateVarChatbotTGUserList struct {
+	templateVarLayout
+
+	BotAPIID int
+
+	Users []*models.TGUser
+	Pages *templatePages
 }
 
 // TelegramIsInit returns true if telegram is connected
@@ -68,7 +77,7 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 
 	// get Page Count
 	var pageCount uint = 1
-	userCount, err := models.GetUserCount()
+	userCount, err := models.GetTGChatCount()
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
@@ -116,7 +125,6 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 	return
 }
 
-
 // HandleChatbot displays files home
 func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
@@ -157,8 +165,8 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 	return
 }
 
-// HandleChatbotTGPhotoSizeView displays files home
-func HandleChatbotTGPhotoSizeView(response http.ResponseWriter, request *http.Request) {
+// HandleChatbotTGPhotoSizeViewFile displays files home
+func HandleChatbotTGPhotoSizeViewFile(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
 	// Init Session
@@ -190,12 +198,12 @@ func HandleChatbotTGPhotoSizeView(response http.ResponseWriter, request *http.Re
 	//_ , _ = fmt.Fprintf(response, "Hello %v", fileID)
 
 	elapsed := time.Since(start)
-	logger.Tracef("HandleChatbotTGPhotoSizeView() [%s]", elapsed)
+	logger.Tracef("HandleChatbotTGPhotoSizeViewFile() [%s]", elapsed)
 	return
 }
 
 
-// HandleChatbotTGPhotoSizeView displays files home
+// HandleChatbotTGPhotoSizeViewFile displays files home
 func HandleChatbotTGStickerViewFile(response http.ResponseWriter, request *http.Request) {
 	start := time.Now()
 
@@ -221,6 +229,70 @@ func HandleChatbotTGStickerViewFile(response http.ResponseWriter, request *http.
 	response.Write(body)
 
 	elapsed := time.Since(start)
-	logger.Tracef("HandleChatbotTGPhotoSizeView() [%s]", elapsed)
+	logger.Tracef("HandleChatbotTGPhotoSizeViewFile() [%s]", elapsed)
+	return
+}
+
+
+// HandleChatbot displays files home
+func HandleChatbotTGUserList(response http.ResponseWriter, request *http.Request) {
+	start := time.Now()
+
+	// Init Session
+	tmplVars := &TemplateVarChatbotTGUserList{}
+	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/chatbot_tg_user_list.html")
+
+	// page stuff
+	var entriesPerPage uint = 10
+
+	// get Page Count
+	var pageCount uint = 1
+	userCount, err := models.GetTGUserCount()
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+	pageCount = userCount / entriesPerPage
+	if userCount%entriesPerPage > 0 {
+		pageCount++
+	}
+
+	// Get Page Num
+	var page uint = 1
+	queryPage := request.URL.Query().Get("page")
+	if queryPage != "" {
+		pageInt, err := strconv.Atoi(queryPage)
+		if err != nil {
+			tmplVars.AlertWarn = fmt.Sprintf("Invalid page value: %s", queryPage)
+		} else if pageInt < 1 || uint(pageInt) > pageCount {
+			tmplVars.AlertWarn = fmt.Sprintf("Invalid page number: %d", pageInt)
+		} else {
+			page = uint(pageInt)
+		}
+		logger.Tracef("HandleUserIndex: got 'page' query parameter: %s", pageInt)
+	}
+
+	// Add Pagination if needed
+	if pageCount > 1 {
+		tmplVars.Pages = makePagination("/web/admin/users/", page, pageCount, 5)
+	}
+
+	// Get Users
+	users, err := models.ReadTGUserPage(entriesPerPage, page-1)
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		return
+	}
+
+	tmplVars.Users = users
+	tmplVars.BotAPIID = telegram.MyApiID()
+
+	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
+	if err != nil {
+		logger.Warningf("HandleChatbot: template error: %s", err.Error())
+	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
 	return
 }

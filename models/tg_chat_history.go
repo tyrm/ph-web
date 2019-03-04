@@ -100,7 +100,7 @@ func CreateTGChatHistory(tgc *TGChatMeta, newType string, title sql.NullString, 
 		createdAt, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %s: %s", sqlErr.Code, sqlErr.Code.Name())
+		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 

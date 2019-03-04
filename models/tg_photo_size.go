@@ -72,7 +72,7 @@ func CreateTGPhotoSize(fileID string, width int, height int, fileSize sql.NullIn
 	err = db.QueryRow(sqlCreateTGPhotoSize, fileID, width, height, fileSize, createdAt, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+		logger.Errorf("CreateTGUserMeta error %d: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 

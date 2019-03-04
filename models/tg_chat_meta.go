@@ -31,7 +31,7 @@ func CreateTGChatMeta(apiID int64) (tgu *TGChatMeta, err error) {
 	err = db.QueryRow(sqlCreateTGChatMeta, apiID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreateTGUser error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+		logger.Errorf("CreateTGUserMeta error %d: %s", sqlErr.Code, sqlErr.Code.Name())
 		return
 	}
 
