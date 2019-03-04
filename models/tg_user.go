@@ -56,6 +56,22 @@ func (u *TGUser) GetLastSeenFormatted() string {
 	return timeStr
 }
 
+// GetLastSeen returns formatted string of LastSeen
+func (u *TGUser) GetLongFormattedName() string {
+
+	var nameStr []string
+	nameStr = append(nameStr, u.FirstName)
+
+	if u.LastName.Valid {
+		nameStr = append(nameStr, u.LastName.String)
+	}
+	if u.Username.Valid {
+		nameStr = append(nameStr, fmt.Sprintf("(@%s)", u.Username.String))
+	}
+
+	return strings.Join(nameStr, " ")
+}
+
 // GetName returns long formatted
 func (u *TGUser) GetName() string {
 	var nameStr []string

@@ -5,22 +5,18 @@ import (
 	"time"
 )
 
-type TGMessageBlock struct {
-	UserAPIID       int
-	UserDisplayName string
-	UserPictureURL  string
-	Me              bool
-
-	Messages []TGMessageBlockMessage
+type TGMessageBlocksData struct {
+	ID         int
+	APIID      int64
+	FirstName  sql.NullString
+	LastName   sql.NullString
+	Text       sql.NullString
+	StickerID  sql.NullInt64
+	Date       time.Time
+	PhotoCount int
 }
 
-type TGMessageBlockMessage struct {
-	ID   int
-	Text string
-	Date time.Time
-}
-
-const sqlReadTGMessageBlocks = `
+const sqlReadTGMessageBlocksData = `
 SELECT DISTINCT ON (m.id) m.id, fu.api_id, fh.first_name, fh.last_name, m.text, m.sticker_id, m.date, 
 sum(case when p.tgm_id = m.id then 1 else 0 end) as photos
 FROM tg_messages as m
@@ -31,17 +27,16 @@ WHERE m.chat_id = $1
 GROUP BY m.id, fu.api_id, fh.first_name, fh.last_name
 ORDER BY m.id DESC LIMIT $2 OFFSET $3;`
 
-func ReadTGMessageBlocks(chatID int64, limit uint, page uint, meAPIID int) (messageList []*TGMessageBlock, err error) {
+func ReadTGMessageBlocksData(chatID int64, limit uint, page uint) (messageList *[]TGMessageBlocksData, err error) {
 	offset := limit * page
-	//var newMessageList []*TGMessageBlock
+	var newMessageBlocks []TGMessageBlocksData
 
-	rows, err := db.Query(sqlReadTGMessageBlocks, limit, offset)
+	rows, err := db.Query(sqlReadTGMessageBlocksData, chatID, limit, offset)
 	if err != nil {
 		logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 		return
 	}
 
-	//var currentBlock *TGMessageBlock
 	for rows.Next() {
 		var newID int
 		var newAPIID int64
@@ -58,12 +53,20 @@ func ReadTGMessageBlocks(chatID int64, limit uint, page uint, meAPIID int) (mess
 			logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 			return
 		}
+		messageBlocks := TGMessageBlocksData{
+			ID         :newID,
+			APIID      :newAPIID,
+			FirstName  :newFirstName,
+			LastName   :newLastName,
+			Text       :newText,
+			StickerID  :newStickerID,
+			Date       :newDate,
+			PhotoCount :newPhotoCount,
+		}
 
-
-
+		newMessageBlocks = append(newMessageBlocks, messageBlocks)
 	}
 
-
-
+	messageList = &newMessageBlocks
 	return
 }

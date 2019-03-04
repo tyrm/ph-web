@@ -33,6 +33,7 @@ func seeSticker(apiSticker *tgbotapi.Sticker) (tgSticker *models.TGSticker, err 
 		err = err2
 		return
 	}
+	go GetStickerFile(tgps)
 	tgSticker = tgps
 	return
 }

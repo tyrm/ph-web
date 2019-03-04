@@ -39,9 +39,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		return
 	}
 
-
-	logger.Tracef("For (%v|%v|%v|%v)", apiMessage.ForwardFrom, apiMessage.ForwardFromChat, apiMessage.ForwardFromMessageID, apiMessage.ForwardDate)
-
 	var forwardedFrom *models.TGUserMeta
 	if apiMessage.ForwardFrom != nil {
 		forwardedFrom, err2 = seeUser(apiMessage.ForwardFrom)

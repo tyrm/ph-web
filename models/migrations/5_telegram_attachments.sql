@@ -21,6 +21,9 @@ CREATE TABLE "public"."tg_animations" (
   file_name character varying,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -34,6 +37,9 @@ CREATE TABLE "public"."tg_audios" (
   title character varying,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -49,6 +55,9 @@ CREATE TABLE "public"."tg_chat_animations" (
   file_name character varying,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -60,6 +69,9 @@ CREATE TABLE "public"."tg_contacts" (
   first_name character varying NOT NULL,
   last_name character varying,
   user_id integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -72,6 +84,9 @@ CREATE TABLE "public"."tg_documents" (
   file_name character varying,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -83,6 +98,9 @@ CREATE TABLE "public"."tg_games" (
   file_name character varying,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -144,6 +162,9 @@ CREATE TABLE "public"."tg_videos" (
   thumbnail integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -156,6 +177,9 @@ CREATE TABLE "public"."tg_video_notes" (
   duration integer NOT NULL,
   thumbnail integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
@@ -167,11 +191,13 @@ CREATE TABLE "public"."tg_voices" (
   duration integer NOT NULL,
   mime_types character varying,
   file_size integer,
+  file_location character varying,
+  file_suffix character varying,
+  file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;
-
 
 -- +migrate Down
 DROP TABLE "public"."tg_voices";
