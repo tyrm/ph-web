@@ -160,6 +160,16 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var voice *models.TGVoice
+	if apiMessage.Voice != nil {
+		voice, err2 = seeVoice(apiMessage.Voice)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing sticker: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	caption := sql.NullString{Valid: false}
 	if apiMessage.Caption != "" {
 		caption = sql.NullString{
@@ -190,7 +200,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, videoNotes, caption, location, venue)
+		video, videoNotes, voice, caption, location, venue)
 	if err2 != nil {
 		err = err2
 		return

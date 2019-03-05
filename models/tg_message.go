@@ -27,6 +27,7 @@ type TGMessage struct {
 	StickerID              sql.NullInt64
 	VideoID                sql.NullInt64
 	VideoNoteID            sql.NullInt64
+	VoiceID                sql.NullInt64
 	Caption                sql.NullString
 	LocationID             sql.NullInt64
 	VenueID                sql.NullInt64
@@ -56,16 +57,16 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 const sqlCreateTGMessage = `
 INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, 
 	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, 
-    sticker_id, video_id, video_note_id, caption, location_id, venue_id, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+    sticker_id, video_id, video_note_id, voice_id, caption, location_id, venue_id, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
 RETURNING id;`
 
 // CreateTGMessage
 func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGChatMeta, forwardedFrom *TGUserMeta,
 	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime,
 	replyToMessage *TGMessage, editDate pq.NullTime, text sql.NullString, audio *TGAudio, document *TGDocument,
-	animation *TGChatAnimation, sticker *TGSticker, video *TGVideo, videoNote *TGVideoNote, caption sql.NullString, location *TGLocation,
-	venue *TGVenue) (tgMessage *TGMessage, err error) {
+	animation *TGChatAnimation, sticker *TGSticker, video *TGVideo, videoNote *TGVideoNote, voice *TGVoice,
+	caption sql.NullString, location *TGLocation, venue *TGVenue) (tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
 
@@ -141,6 +142,14 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		}
 	}
 
+	voiceID := sql.NullInt64{Valid: false}
+	if voice != nil {
+		voiceID = sql.NullInt64{
+			Int64: int64(voice.ID),
+			Valid: true,
+		}
+	}
+
 	locationID := sql.NullInt64{Valid: false}
 	if location != nil {
 		locationID = sql.NullInt64{
@@ -160,7 +169,7 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 	var newID int
 	err = db.QueryRow(sqlCreateTGMessage, messageID, from.ID, date, chat.ID, forwardedFromID, forwardedFromChatID,
 		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, audioID, documentID, animationID,
-		stickerID, videoID, videoNoteID, caption, locationID, venueID, createdAt).Scan(&newID)
+		stickerID, videoID, videoNoteID, voiceID, caption, locationID, venueID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())
@@ -196,14 +205,14 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 const sqlReadTGMessageByAPIIDChat = `
 SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, forwarded_from_message_id, 
 	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
-    video_note_id, caption, location_id, venue_id, created_at
+    video_note_id, voice_id, caption, location_id, venue_id, created_at
 FROM tg_messages
 WHERE message_id = $1 AND chat_id = $2 AND edit_date IS NULL
 LIMIT 1;`
 const sqlReadTGMessageByAPIIDChatEditDate = `
 SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, forwarded_from_message_id, 
 	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
-    video_note_id, caption, location_id, venue_id, created_at
+    video_note_id, voice_id, caption, location_id, venue_id, created_at
 FROM tg_messages
 WHERE message_id = $1 AND chat_id = $2 AND edit_date = $3
 LIMIT 1;`
@@ -228,6 +237,7 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 	var stickerID sql.NullInt64
 	var videoID sql.NullInt64
 	var videoNoteID sql.NullInt64
+	var voiceID sql.NullInt64
 	var caption sql.NullString
 	var locationID sql.NullInt64
 	var venueID sql.NullInt64
@@ -239,13 +249,13 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 		err = db.QueryRow(sqlReadTGMessageByAPIIDChat, apiID, chat.ID).
 			Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID, &forwardedFromChatID,
 				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
-				&animationID, &stickerID, &videoID, &videoNoteID, &caption, &locationID, &venueID, &createdAt)
+				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &locationID, &venueID, &createdAt)
 
 	} else {
 		err = db.QueryRow(sqlReadTGMessageByAPIIDChatEditDate, apiID, chat.ID, time.Unix(int64(editDateInt), 0)).
 			Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID, &forwardedFromChatID,
 				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
-				&animationID, &stickerID, &videoID, &videoNoteID, &caption, &locationID, &venueID, &createdAt)
+				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &locationID, &venueID, &createdAt)
 	}
 
 	if err != nil {
@@ -273,7 +283,8 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 		AnimationID:            animationID,
 		StickerID:              stickerID,
 		VideoID:                videoID,
-		VideoNoteID:videoNoteID,
+		VideoNoteID:            videoNoteID,
+		VoiceID:                voiceID,
 		Caption:                caption,
 		LocationID:             locationID,
 		VenueID:                venueID,
