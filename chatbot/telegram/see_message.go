@@ -209,9 +209,20 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+
+	var leftChatMember *models.TGUserMeta
+	if apiMessage.LeftChatMember != nil {
+		leftChatMember, err2 = seeUser(apiMessage.LeftChatMember)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, videoNotes, voice, caption, contact, location, venue)
+		video, videoNotes, voice, caption, contact, location, venue, leftChatMember)
 	if err2 != nil {
 		err = err2
 		return
