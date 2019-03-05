@@ -111,6 +111,16 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var document *models.TGDocument
+	if apiMessage.Document != nil {
+		document, err2 = seeDocument(apiMessage.Document)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing audio: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	var animation *models.TGChatAnimation
 	if apiMessage.Animation != nil {
 		animation, err2 = seeChatAnimation(apiMessage.Animation)
@@ -160,7 +170,8 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	}
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
-		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, animation, sticker, caption, location, venue)
+		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
+		caption, location, venue)
 	if err2 != nil {
 		err = err2
 		return
