@@ -182,12 +182,13 @@ CREATE TABLE "public"."tg_video_notes" (
   file_id character varying NOT NULL UNIQUE,
   length integer NOT NULL,
   duration integer NOT NULL,
-  thumbnail integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  thumbnail_id integer REFERENCES tg_photo_sizes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
   file_size integer,
   file_location character varying,
   file_suffix character varying,
   file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;

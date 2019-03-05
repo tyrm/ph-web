@@ -38,7 +38,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	date := time.Unix(int64(apiMessage.Date), 0)
 
-
 	var forwardedFrom *models.TGUserMeta
 	if apiMessage.ForwardFrom != nil {
 		forwardedFrom, err2 = seeUser(apiMessage.ForwardFrom)
@@ -70,7 +69,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	forwardDate := pq.NullTime{Valid: false}
 	if apiMessage.ForwardDate != 0 {
 		forwardDate = pq.NullTime{
-			Time: time.Unix(int64(apiMessage.ForwardDate), 0),
+			Time:  time.Unix(int64(apiMessage.ForwardDate), 0),
 			Valid: true,
 		}
 	}
@@ -88,7 +87,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	editDate := pq.NullTime{Valid: false}
 	if apiMessage.EditDate != 0 {
 		editDate = pq.NullTime{
-			Time: time.Unix(int64(apiMessage.EditDate), 0),
+			Time:  time.Unix(int64(apiMessage.EditDate), 0),
 			Valid: true,
 		}
 	}
@@ -97,7 +96,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	if apiMessage.Text != "" {
 		text = sql.NullString{
 			String: apiMessage.Text,
-			Valid: true,
+			Valid:  true,
 		}
 	}
 
@@ -151,6 +150,16 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var videoNotes *models.TGVideoNote
+	if apiMessage.VideoNote != nil {
+		videoNotes, err2 = seeVideoNote(apiMessage.VideoNote)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing sticker: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	caption := sql.NullString{Valid: false}
 	if apiMessage.Caption != "" {
 		caption = sql.NullString{
@@ -181,7 +190,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, caption, location, venue)
+		video, videoNotes, caption, location, venue)
 	if err2 != nil {
 		err = err2
 		return
