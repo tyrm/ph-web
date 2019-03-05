@@ -8,34 +8,40 @@ import (
 	"time"
 
 	"../../files"
-	"../../models"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func GetChatAnimationFile(tgSticker *models.TGChatAnimation) (body []byte, err error) {
+type hasFiles interface {
+	IsFileLocationValid() bool
+	GetFileID() string
+	GetFileLocation() string
+	UpdateFileRetrieved(string, string) error
+}
+
+func GetFile(tgOjb hasFiles) (body []byte, err error) {
 	start := time.Now()
 
 	// Check if we've retrieved file already
-	if tgSticker.FileLocation.Valid {
-		b, err2 := files.GetBytes(fmt.Sprintf("chatbot/telegram/%s", tgSticker.FileLocation.String))
+	if tgOjb.IsFileLocationValid() {
+		b, err2 := files.GetBytes(fmt.Sprintf("chatbot/telegram/%s", tgOjb.GetFileLocation()))
 		if err2 == nil {
 			body = *b
 
 			elapsed := time.Since(start)
-			logger.Tracef("GetPhotoFile() [%s][HIT]", elapsed)
+			logger.Tracef("GetFile() [%s][HIT]", elapsed)
 			return
 		}
-		logger.Errorf("GetPhotoFile: error getting file bytes: %v", err)
+		logger.Errorf("GetFile: error getting file bytes: %v", err)
 
 	}
 
 	// Get File Location
 	fileConfig := tgbotapi.FileConfig{
-		FileID: tgSticker.FileID,
+		FileID: tgOjb.GetFileID(),
 	}
 	file, err := bot.GetFile(fileConfig)
 	if err != nil {
-		logger.Errorf("GetPhotoFile: error getting file config: %v", err)
+		logger.Errorf("GetFile: error getting file config: %v", err)
 		return
 	}
 	logger.Tracef("%v", file)
@@ -56,19 +62,19 @@ func GetChatAnimationFile(tgSticker *models.TGChatAnimation) (body []byte, err e
 	// Put in files
 	r := regexp.MustCompile(`([[:word:]]+/)[[:word:]]+\.([[:alnum:]]+)`)
 	urlPieces := r.FindStringSubmatch(file.FilePath)
-	filesLocation := fmt.Sprintf("%s%s.%s", urlPieces[1], tgSticker.FileID, urlPieces[2])
+	filesLocation := fmt.Sprintf("%s%s.%s", urlPieces[1], tgOjb.GetFileID(), urlPieces[2])
 
 	_, err = files.PutBytes(fmt.Sprintf("chatbot/telegram/%s", filesLocation), &body)
 	if err != nil {
 		logger.Errorf("Error putting file: %s", err)
 	}
 
-	err = tgSticker.UpdateFileRetrieved(filesLocation, urlPieces[2])
+	err = tgOjb.UpdateFileRetrieved(filesLocation, urlPieces[2])
 	if err != nil {
 		logger.Errorf("Error updated record: %s", err)
 	}
 
 	elapsed := time.Since(start)
-	logger.Tracef("GetPhotoFile() [%s][MISS]", elapsed)
+	logger.Tracef("GetFile() [%s][MISS]", elapsed)
 	return
 }

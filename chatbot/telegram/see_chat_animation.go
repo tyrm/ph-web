@@ -34,7 +34,7 @@ func seeChatAnimation(apiChatAnimation *tgbotapi.ChatAnimation) (tgAnimation *mo
 		err = err2
 		return
 	}
-	go GetChatAnimationFile(tgani)
+	go GetFile(tgani)
 	tgAnimation = tgani
 	return
 }

@@ -35,12 +35,13 @@ CREATE TABLE "public"."tg_audios" (
   duration integer NOT NULL,
   performer character varying,
   title character varying,
-  mime_types character varying,
+  mime_type character varying,
   file_size integer,
   file_location character varying,
   file_suffix character varying,
   file_retrieved_at timestamp without time zone,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;

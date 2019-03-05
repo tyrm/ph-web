@@ -59,7 +59,7 @@ func HandleChatbotTGPhotoSizeViewFile(response http.ResponseWriter, request *htt
 		return
 	}
 
-	body, err := telegram.GetPhotoFile(fileID)
+	body, err := telegram.GetFile(fileID)
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
@@ -93,7 +93,7 @@ func HandleChatbotTGStickerViewFile(response http.ResponseWriter, request *http.
 		return
 	}
 
-	body, err := telegram.GetStickerFile(sticker)
+	body, err := telegram.GetFile(sticker)
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		logger.Errorf("HandleUserGet: Error getting Stioker: %v", err)

@@ -25,6 +25,18 @@ type TGChatAnimation struct {
 	LastSeen        time.Time
 }
 
+func (myself *TGChatAnimation) GetFileID() string {
+	return myself.FileID
+}
+
+func (myself *TGChatAnimation) GetFileLocation() string {
+	return myself.FileLocation.String
+}
+
+func (myself *TGChatAnimation) IsFileLocationValid() bool {
+	return myself.FileLocation.Valid
+}
+
 const sqlTGChatAnimationUpdateFileRetrieved = `
 UPDATE tg_chat_animations
 SET file_location = $2, file_suffix = $3, file_retrieved_at = now()

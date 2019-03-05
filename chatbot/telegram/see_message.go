@@ -10,8 +10,15 @@ import (
 )
 
 func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err error) {
+	chat, err2 := seeChat(apiMessage.Chat)
+	if err2 != nil {
+		logger.Errorf("seeMessage: error seeing user: %s", err2)
+		err = err2
+		return
+	}
+
 	// Get TGMessage entry, return if exists
-	tgm, err2 := models.ReadTGMessageByAPIID(apiMessage.MessageID)
+	tgm, err2 := models.ReadTGMessageByAPIIDChat(apiMessage.MessageID, chat, apiMessage.EditDate)
 	if err2 == nil {
 		tgMessage = tgm
 		return
@@ -31,12 +38,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	date := time.Unix(int64(apiMessage.Date), 0)
 
-	chat, err2 := seeChat(apiMessage.Chat)
-	if err2 != nil {
-		logger.Errorf("seeMessage: error seeing user: %s", err2)
-		err = err2
-		return
-	}
 
 	var forwardedFrom *models.TGUserMeta
 	if apiMessage.ForwardFrom != nil {
@@ -100,6 +101,16 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var audio *models.TGAudio
+	if apiMessage.Audio != nil {
+		audio, err2 = seeAudio(apiMessage.Audio)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing audio: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	var animation *models.TGChatAnimation
 	if apiMessage.Animation != nil {
 		animation, err2 = seeChatAnimation(apiMessage.Animation)
@@ -149,7 +160,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	}
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
-		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker, caption, location, venue)
+		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, animation, sticker, caption, location, venue)
 	if err2 != nil {
 		err = err2
 		return

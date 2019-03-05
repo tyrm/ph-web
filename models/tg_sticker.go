@@ -24,6 +24,18 @@ type TGSticker struct {
 	LastSeen        time.Time
 }
 
+func (myself *TGSticker) GetFileID() string {
+	return myself.FileID
+}
+
+func (myself *TGSticker) GetFileLocation() string {
+	return myself.FileLocation.String
+}
+
+func (myself *TGSticker) IsFileLocationValid() bool {
+	return myself.FileLocation.Valid
+}
+
 const sqlTGStickerUpdateFileRetrieved = `
 UPDATE tg_stickers
 SET file_location = $2, file_suffix = $3, file_retrieved_at = now()

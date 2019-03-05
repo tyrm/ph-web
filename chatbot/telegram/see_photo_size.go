@@ -23,7 +23,7 @@ func seePhotoSize(apiPhotoSize *tgbotapi.PhotoSize) (tgPhotoSize *models.TGPhoto
 		err = err2
 		return
 	}
-	go GetPhotoFile(tgps)
+	go GetFile(tgps)
 	tgPhotoSize = tgps
 	return
 }

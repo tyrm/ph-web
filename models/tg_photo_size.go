@@ -21,6 +21,18 @@ type TGPhotoSize struct {
 	LastSeen        time.Time
 }
 
+func (myself *TGPhotoSize) GetFileID() string {
+	return myself.FileID
+}
+
+func (myself *TGPhotoSize) GetFileLocation() string {
+	return myself.FileLocation.String
+}
+
+func (myself *TGPhotoSize) IsFileLocationValid() bool {
+	return myself.FileLocation.Valid
+}
+
 const sqlTGPhotoSizeUpdateFileRetrieved = `
 UPDATE tg_photo_sizes
 SET file_location = $2, file_suffix = $3, file_retrieved_at = now()
@@ -28,15 +40,15 @@ WHERE id = $1
 RETURNING file_retrieved_at;`
 
 // UpdateLastSeen updates the LastSeen field in the database to now.
-func (tgc *TGPhotoSize) UpdateFileRetrieved(fileLocation string, fileSuffix string) error {
+func (myself *TGPhotoSize) UpdateFileRetrieved(fileLocation string, fileSuffix string) error {
 	var newRetrievedAt pq.NullTime
 
-	err := db.QueryRow(sqlTGPhotoSizeUpdateFileRetrieved, tgc.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
+	err := db.QueryRow(sqlTGPhotoSizeUpdateFileRetrieved, myself.ID, fileLocation, fileSuffix).Scan(&newRetrievedAt)
 	if err != nil {
 		return err
 	}
 
-	tgc.FileRetrievedAt = newRetrievedAt
+	myself.FileRetrievedAt = newRetrievedAt
 	return nil
 }
 
@@ -47,15 +59,15 @@ WHERE id = $1
 RETURNING last_seen;`
 
 // UpdateLastSeen updates the LastSeen field in the database to now.
-func (tgc *TGPhotoSize) UpdateLastSeen() error {
+func (myself *TGPhotoSize) UpdateLastSeen() error {
 	var newLastSeen time.Time
 
-	err := db.QueryRow(sqlUpdateTGPhotoSizeLastSeen, tgc.ID).Scan(&newLastSeen)
+	err := db.QueryRow(sqlUpdateTGPhotoSizeLastSeen, myself.ID).Scan(&newLastSeen)
 	if err != nil {
 		return err
 	}
 
-	tgc.LastSeen = newLastSeen
+	myself.LastSeen = newLastSeen
 	return nil
 }
 
