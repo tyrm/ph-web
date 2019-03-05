@@ -7,7 +7,7 @@ import (
 
 func seeLocation(apiLocation *tgbotapi.Location) (tgLocation *models.TGLocation, err error) {
 	// Get TGMessage entry, return if exists
-	tgl, err2 := models.ReadTGLocationByLatLong(apiLocation.Longitude, apiLocation.Latitude)
+	tgl, err2 := models.ReadTGLocationByLongLat(apiLocation.Longitude, apiLocation.Latitude)
 	if err2 == nil {
 		tgl.UpdateLastSeen()
 		tgLocation = tgl

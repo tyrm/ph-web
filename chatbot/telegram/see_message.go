@@ -120,8 +120,28 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var location *models.TGLocation
+	if apiMessage.Location != nil {
+		location, err2 = seeLocation(apiMessage.Location)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			err = err2
+			return
+		}
+	}
+
+	var venue *models.TGVenue
+	if apiMessage.Venue != nil {
+		venue, err2 = seeVenue(apiMessage.Venue)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
-		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker)
+		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker, location, venue)
 	if err2 != nil {
 		err = err2
 		return

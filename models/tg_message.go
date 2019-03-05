@@ -50,14 +50,14 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 
 const sqlCreateTGMessage = `
 INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, 
-	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, sticker_id, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, animation_id, sticker_id, location_id, venue_id, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 RETURNING id;`
 
 // CreateTGMessage
 func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGChatMeta, forwardedFrom *TGUserMeta,
 	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
-	editDate pq.NullTime, text sql.NullString, animation *TGChatAnimation, sticker *TGSticker) (tgMessage *TGMessage, err error) {
+	editDate pq.NullTime, text sql.NullString, animation *TGChatAnimation, sticker *TGSticker, location *TGLocation, venue *TGVenue) (tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
 
@@ -85,6 +85,15 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		}
 	}
 
+	animationID := sql.NullInt64{Valid: false}
+	if animation != nil {
+		animationID = sql.NullInt64{
+			Int64: int64(animation.ID),
+			Valid: true,
+		}
+	}
+
+
 	stickerID := sql.NullInt64{Valid: false}
 	if sticker != nil {
 		stickerID = sql.NullInt64{
@@ -93,9 +102,26 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		}
 	}
 
+	locationID := sql.NullInt64{Valid: false}
+	if location != nil {
+		locationID = sql.NullInt64{
+			Int64: int64(location.ID),
+			Valid: true,
+		}
+	}
+
+	venueID := sql.NullInt64{Valid: false}
+	if venue != nil {
+		venueID = sql.NullInt64{
+			Int64: int64(venue.ID),
+			Valid: true,
+		}
+	}
+
 	var newID int
 	err = db.QueryRow(sqlCreateTGMessage, messageID, from.ID, date, chat.ID, forwardedFromID, forwardedFromChatID,
-		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, stickerID, createdAt).Scan(&newID)
+		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, animationID, stickerID, locationID,
+		venueID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())

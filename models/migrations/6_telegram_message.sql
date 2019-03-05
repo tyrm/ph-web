@@ -24,6 +24,7 @@ CREATE TABLE "public"."tg_messages" (
     caption character varying,
     contact_id integer REFERENCES tg_contacts(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     location_id integer REFERENCES tg_locations(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    venue_id integer REFERENCES tg_venues(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     left_chat_member_id integer REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     new_chat_title character varying,
     delete_chat_photo boolean,

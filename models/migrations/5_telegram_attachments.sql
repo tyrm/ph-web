@@ -150,7 +150,9 @@ CREATE TABLE "public"."tg_venues" (
   title character varying NOT NULL,
   address character varying NOT NULL,
   foursquare_id character varying,
+  foursquare_type character varying,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;

@@ -69,20 +69,20 @@ func CreateTGLocationFromAPI(apiLocation *tgbotapi.Location) (*TGLocation, error
 	return CreateTGLocation(apiLocation.Longitude, apiLocation.Latitude)
 }
 
-const sqlReadTGLocationByLatLong = `
+const sqlReadTGLocationByLongLat = `
 SELECT id, longitude, latitude, created_at, last_seen
 FROM tg_locations
-WHERE latitude = $1 AND longitude = $2;`
+WHERE longitude = $1 AND latitude = $2;`
 
 // ReadTGPhotoSizeByFileID returns an instance of a telegram user by api_id from the database.
-func ReadTGLocationByLatLong(longitude float64, latitude float64) (tgl *TGLocation, err error) {
+func ReadTGLocationByLongLat(longitude float64, latitude float64) (tgl *TGLocation, err error) {
 	var newID int
 	var newLongitude float64
 	var newLatitude float64
 	var newCreatedAt time.Time
 	var newLastSeen time.Time
 
-	err = db.QueryRow(sqlReadTGLocationByLatLong, longitude, latitude).Scan(&newID, &newLongitude, &newLatitude,
+	err = db.QueryRow(sqlReadTGLocationByLongLat, longitude, latitude).Scan(&newID, &newLongitude, &newLatitude,
 		&newCreatedAt, &newLastSeen)
 	if err != nil {
 		if err == sql.ErrNoRows {
