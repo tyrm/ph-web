@@ -10,6 +10,7 @@ import (
 )
 
 func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err error) {
+	start := time.Now()
 	chat, err2 := seeChat(apiMessage.Chat)
 	if err2 != nil {
 		logger.Errorf("seeMessage: error seeing user: %s", err2)
@@ -178,11 +179,21 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	var contact *models.TGContact
+	if apiMessage.Contact != nil {
+		contact, err2 = seeContact(apiMessage.Contact)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			err = err2
+			return
+		}
+	}
+
 	var location *models.TGLocation
 	if apiMessage.Location != nil {
 		location, err2 = seeLocation(apiMessage.Location)
 		if err2 != nil {
-			logger.Errorf("seeMessage: error seeing animation: %s", err2)
+			logger.Errorf("seeMessage: error seeing location: %s", err2)
 			err = err2
 			return
 		}
@@ -200,7 +211,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, videoNotes, voice, caption, location, venue)
+		video, videoNotes, voice, caption, contact, location, venue)
 	if err2 != nil {
 		err = err2
 		return
@@ -246,5 +257,8 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	}
 
 	tgMessage = tgm
+
+	elapsed := time.Since(start)
+	logger.Tracef("seeMessage() [%s]", elapsed)
 	return
 }

@@ -71,10 +71,9 @@ CREATE TABLE "public"."tg_contacts" (
   first_name character varying NOT NULL,
   last_name character varying,
   user_id integer,
-  file_location character varying,
-  file_suffix character varying,
-  file_retrieved_at timestamp without time zone,
+  vcard character varying,
   created_at timestamp without time zone NOT NULL,
+  last_seen timestamp without time zone NOT NULL,
   PRIMARY KEY ("id")
 )
 ;
