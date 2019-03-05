@@ -120,6 +120,14 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	caption := sql.NullString{Valid: false}
+	if apiMessage.Caption != "" {
+		caption = sql.NullString{
+			String: apiMessage.Caption,
+			Valid:  true,
+		}
+	}
+
 	var location *models.TGLocation
 	if apiMessage.Location != nil {
 		location, err2 = seeLocation(apiMessage.Location)
@@ -141,7 +149,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	}
 
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
-		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker, location, venue)
+		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, animation, sticker, caption, location, venue)
 	if err2 != nil {
 		err = err2
 		return

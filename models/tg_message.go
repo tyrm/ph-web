@@ -21,10 +21,11 @@ type TGMessage struct {
 	ReplyToMessage         sql.NullInt64
 	EditDate               pq.NullTime
 	Text                   sql.NullString
-	AnimationID         sql.NullInt64
-	EntityIDs              []int
-	PhotoIDs               []int
+	AnimationID            sql.NullInt64
 	StickerID              sql.NullInt64
+	Caption                sql.NullString
+	LocationID             sql.NullInt64
+	VenueID                sql.NullInt64
 	CreatedAt              time.Time
 }
 
@@ -50,14 +51,16 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 
 const sqlCreateTGMessage = `
 INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, 
-	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, animation_id, sticker_id, location_id, venue_id, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, animation_id, sticker_id, caption, 
+    location_id, venue_id, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 RETURNING id;`
 
 // CreateTGMessage
 func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGChatMeta, forwardedFrom *TGUserMeta,
-	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime, replyToMessage *TGMessage,
-	editDate pq.NullTime, text sql.NullString, animation *TGChatAnimation, sticker *TGSticker, location *TGLocation, venue *TGVenue) (tgMessage *TGMessage, err error) {
+	forwardedFromChat *TGChatMeta, forwardedFromMessageID sql.NullInt64, forwardDate pq.NullTime,
+	replyToMessage *TGMessage, editDate pq.NullTime, text sql.NullString, animation *TGChatAnimation,
+	sticker *TGSticker, caption sql.NullString, location *TGLocation, venue *TGVenue) (tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
 
@@ -93,7 +96,6 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		}
 	}
 
-
 	stickerID := sql.NullInt64{Valid: false}
 	if sticker != nil {
 		stickerID = sql.NullInt64{
@@ -120,8 +122,8 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 
 	var newID int
 	err = db.QueryRow(sqlCreateTGMessage, messageID, from.ID, date, chat.ID, forwardedFromID, forwardedFromChatID,
-		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, animationID, stickerID, locationID,
-		venueID, createdAt).Scan(&newID)
+		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, animationID, stickerID, caption,
+		locationID, venueID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())
@@ -141,7 +143,11 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		ReplyToMessage:         replyToMessageID,
 		EditDate:               editDate,
 		Text:                   text,
+		AnimationID:            animationID,
 		StickerID:              stickerID,
+		Caption:                caption,
+		LocationID:             locationID,
+		VenueID:                venueID,
 		CreatedAt:              createdAt,
 	}
 	return
@@ -149,7 +155,7 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 
 const sqlReadTGMessageByAPIID = `
 SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, forwarded_from_message_id, 
-	forward_date, reply_to_message, text, sticker_id, created_at
+	forward_date, reply_to_message, text, animation_id, sticker_id, caption, location_id, venue_id, created_at
 FROM tg_messages
 WHERE message_id = $1
 LIMIT 1;`
@@ -168,12 +174,16 @@ func ReadTGMessageByAPIID(apiID int) (tgMessage *TGMessage, err error) {
 	var replyToMessage sql.NullInt64
 	var editDate pq.NullTime
 	var text sql.NullString
+	var animationID sql.NullInt64
 	var stickerID sql.NullInt64
+	var caption sql.NullString
+	var locationID sql.NullInt64
+	var venueID sql.NullInt64
 	var createdAt time.Time
 
 	err = db.QueryRow(sqlReadTGMessageByAPIID, apiID).Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID,
-		&forwardedFromChatID, &forwardedFromMessageID, &forwardDate, &replyToMessage, &editDate, &text, &stickerID,
-		&createdAt)
+		&forwardedFromChatID, &forwardedFromMessageID, &forwardDate, &replyToMessage, &editDate, &text, &animationID,
+		&stickerID, &caption, &locationID, &venueID, &createdAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrDoesNotExist
@@ -194,7 +204,11 @@ func ReadTGMessageByAPIID(apiID int) (tgMessage *TGMessage, err error) {
 		ReplyToMessage:         replyToMessage,
 		EditDate:               editDate,
 		Text:                   text,
+		AnimationID:            animationID,
 		StickerID:              stickerID,
+		Caption:                caption,
+		LocationID:             locationID,
+		VenueID:                venueID,
 		CreatedAt:              createdAt,
 	}
 	return
