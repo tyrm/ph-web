@@ -220,9 +220,17 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	newChatTitle := sql.NullString{Valid: false}
+	if apiMessage.NewChatTitle != "" {
+		newChatTitle = sql.NullString{
+			String: apiMessage.NewChatTitle,
+			Valid:  true,
+		}
+	}
+
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, videoNotes, voice, caption, contact, location, venue, leftChatMember)
+		video, videoNotes, voice, caption, contact, location, venue, leftChatMember, newChatTitle)
 	if err2 != nil {
 		err = err2
 		return
