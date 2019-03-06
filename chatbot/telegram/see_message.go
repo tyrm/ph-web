@@ -228,9 +228,27 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	migrateToChatId := sql.NullInt64{Valid: false}
+	if apiMessage.MigrateToChatID != 0 {
+		migrateToChatId = sql.NullInt64{
+			Int64:  apiMessage.MigrateToChatID,
+			Valid: true,
+		}
+	}
+
+	migrateFromChatId := sql.NullInt64{Valid: false}
+	if apiMessage.MigrateFromChatID != 0 {
+		migrateFromChatId = sql.NullInt64{
+			Int64:  apiMessage.MigrateFromChatID,
+			Valid: true,
+		}
+	}
+
 	tgm, err2 = models.CreateTGMessage(apiMessage.MessageID, from, date, chat, forwardedFrom, forwardedFromChat,
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
-		video, videoNotes, voice, caption, contact, location, venue, leftChatMember, newChatTitle)
+		video, videoNotes, voice, caption, contact, location, venue, leftChatMember, newChatTitle,
+		apiMessage.DeleteChatPhoto, apiMessage.GroupChatCreated, apiMessage.SuperGroupChatCreated,
+		apiMessage.ChannelChatCreated, migrateToChatId, migrateFromChatId)
 	if err2 != nil {
 		err = err2
 		return
