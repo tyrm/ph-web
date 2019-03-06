@@ -12,7 +12,7 @@ import (
 var bot *tgbotapi.BotAPI
 var botConnected = false
 var logger *loggo.Logger
-var messageChan chan *tgbotapi.Message
+var messageLoggingChan chan *tgbotapi.Message
 
 // Caches
 var cUserProfilePhotos *cache.Cache
@@ -21,7 +21,7 @@ func init() {
 	newLogger := loggo.GetLogger("telegram")
 	logger = &newLogger
 
-	messageChan = make(chan *tgbotapi.Message, 100)
+	messageLoggingChan = make(chan *tgbotapi.Message, 100)
 	for w := 1; w <= 3; w++ {
 		go workerMessageHandler(w)
 	}
@@ -86,7 +86,7 @@ func MyApiID() int {
 // privates
 func workerMessageHandler(id int) {
 	logger.Debugf("Starting telegram message worker %v.", id)
-	for message := range messageChan {
+	for message := range messageLoggingChan {
 		// See Message P
 		_, err := seeMessage(message)
 		if err != nil {
@@ -108,13 +108,20 @@ func workerUpdateHandler() {
 	botConnected = true
 
 	for update := range updates {
-		if update.Message == nil { // ignore any non-Message Updates
-			continue
-		}
-
 		logger.Tracef("Got update: %v", update)
 
-		messageChan <- update.Message
+		if update.Message != nil {
+			messageLoggingChan <- update.Message
+		}
+		if update.EditedMessage != nil {
+			messageLoggingChan <- update.EditedMessage
+		}
+		if update.ChannelPost != nil {
+			messageLoggingChan <- update.ChannelPost
+		}
+		if update.EditedChannelPost != nil {
+			messageLoggingChan <- update.EditedChannelPost
+		}
 	}
 
 	botConnected = false

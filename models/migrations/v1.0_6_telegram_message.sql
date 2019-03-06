@@ -16,7 +16,7 @@ CREATE TABLE "public"."tg_messages" (
     audio_id integer REFERENCES tg_audios(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     document_id integer REFERENCES tg_documents(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     animation_id integer REFERENCES tg_chat_animations(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-    game_id integer REFERENCES tg_games(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    game_id integer,
     sticker_id integer REFERENCES tg_stickers(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     video_id integer REFERENCES tg_videos(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     video_note_id integer REFERENCES tg_video_notes(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -38,6 +38,10 @@ CREATE TABLE "public"."tg_messages" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_messages" USING btree ("from_id");
+CREATE INDEX ON "public"."tg_messages" USING btree ("chat_id");
+CREATE INDEX ON "public"."tg_messages" USING btree ("message_id", "chat_id");
+CREATE INDEX ON "public"."tg_messages" USING btree ("message_id", "chat_id", "edit_date");
 
 CREATE TABLE "public"."tg_message_entities" (
     id serial NOT NULL UNIQUE,
@@ -51,6 +55,7 @@ CREATE TABLE "public"."tg_message_entities" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_message_entities" USING btree ("tgm_id");
 
 CREATE TABLE "public"."tg_message_new_chat_members" (
     id serial NOT NULL UNIQUE,
@@ -60,6 +65,8 @@ CREATE TABLE "public"."tg_message_new_chat_members" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_message_new_chat_members" USING btree ("tgm_id");
+CREATE INDEX ON "public"."tg_message_new_chat_members" USING btree ("tgu_id");
 
 CREATE TABLE "public"."tg_message_new_chat_photos" (
     id serial NOT NULL UNIQUE,
@@ -69,6 +76,8 @@ CREATE TABLE "public"."tg_message_new_chat_photos" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_message_new_chat_photos" USING btree ("tgm_id");
+CREATE INDEX ON "public"."tg_message_new_chat_photos" USING btree ("tgps_id");
 
 CREATE TABLE "public"."tg_message_photos" (
     id serial NOT NULL UNIQUE,
@@ -78,6 +87,8 @@ CREATE TABLE "public"."tg_message_photos" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_message_photos" USING btree ("tgm_id");
+CREATE INDEX ON "public"."tg_message_photos" USING btree ("tgps_id");
 
 -- +migrate Down
 DROP TABLE "public"."tg_message_entities";

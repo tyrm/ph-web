@@ -40,6 +40,7 @@ type TGMessage struct {
 	ChannelChatCreated     bool
 	MigrateToChatId        sql.NullInt64
 	MigrateFromChatId      sql.NullInt64
+	PinnedMessage          sql.NullInt64
 	CreatedAt              time.Time
 }
 
@@ -68,9 +69,9 @@ INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarde
 	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, 
     sticker_id, video_id, video_note_id, voice_id, caption, contact_id, location_id, venue_id, left_chat_member_id, 
     new_chat_title, delete_chat_photo, group_chat_created, supergroup_chat_created, channel_chat_created, 
-    migrate_to_chat_id, migrate_from_chat_id, created_at)
+    migrate_to_chat_id, migrate_from_chat_id, pinned_message_id, created_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 
-    $25, $26, $27, $28, $29, $30, $31)
+    $25, $26, $27, $28, $29, $30, $31, $32)
 RETURNING id;`
 
 // CreateTGMessage
@@ -80,7 +81,8 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 	animation *TGChatAnimation, sticker *TGSticker, video *TGVideo, videoNote *TGVideoNote, voice *TGVoice,
 	caption sql.NullString, contact *TGContact, location *TGLocation, venue *TGVenue, leftChatMember *TGUserMeta,
 	newChatTitle sql.NullString, deleteChatPhoto bool, groupChatCreated bool, superGroupChatCreated bool,
-	channelChatCreated bool, migrateToChatId sql.NullInt64, migrateFromChatId sql.NullInt64) (tgMessage *TGMessage, err error) {
+	channelChatCreated bool, migrateToChatId sql.NullInt64, migrateFromChatId sql.NullInt64, pinnedMessage *TGMessage) (
+	tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
 
@@ -196,12 +198,20 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		}
 	}
 
+	pinnedMessageID := sql.NullInt64{Valid: false}
+	if pinnedMessage != nil {
+		pinnedMessageID = sql.NullInt64{
+			Int64: int64(pinnedMessage.ID),
+			Valid: true,
+		}
+	}
+
 	var newID int
 	err = db.QueryRow(sqlCreateTGMessage, messageID, from.ID, date, chat.ID, forwardedFromID, forwardedFromChatID,
 		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, audioID, documentID, animationID,
 		stickerID, videoID, videoNoteID, voiceID, caption, contactID, locationID, venueID, leftChatMemberID,
 		newChatTitle, deleteChatPhoto, groupChatCreated, superGroupChatCreated, channelChatCreated, migrateToChatId,
-		migrateFromChatId, createdAt).Scan(&newID)
+		migrateFromChatId, pinnedMessageID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreateTGUserMeta error %s: %s", sqlErr.Code, sqlErr.Code.Name())
@@ -238,6 +248,7 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		ChannelChatCreated:     channelChatCreated,
 		MigrateToChatId:        migrateToChatId,
 		MigrateFromChatId:      migrateFromChatId,
+		PinnedMessage:          pinnedMessageID,
 		CreatedAt:              createdAt,
 	}
 	return
@@ -248,7 +259,7 @@ SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from
 	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
     video_note_id, voice_id, caption, contact_id, location_id, venue_id, left_chat_member_id, new_chat_title,
     delete_chat_photo, group_chat_created, supergroup_chat_created, channel_chat_created, migrate_to_chat_id,
-    migrate_from_chat_id, created_at
+    migrate_from_chat_id, pinned_message_id, created_at
 FROM tg_messages
 WHERE message_id = $1 AND chat_id = $2 AND edit_date IS NULL
 LIMIT 1;`
@@ -257,7 +268,7 @@ SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from
 	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
     video_note_id, voice_id, caption, contact_id, location_id, venue_id, left_chat_member_id, new_chat_title,
     delete_chat_photo, group_chat_created, supergroup_chat_created, channel_chat_created, migrate_to_chat_id, 
-    migrate_from_chat_id, created_at
+    migrate_from_chat_id, pinned_message_id, created_at
 FROM tg_messages
 WHERE message_id = $1 AND chat_id = $2 AND edit_date = $3
 LIMIT 1;`
@@ -295,6 +306,7 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 	var channelChatCreated bool
 	var migrateToChatId sql.NullInt64
 	var migrateFromChatId sql.NullInt64
+	var pinnedMessageID sql.NullInt64
 	var createdAt time.Time
 
 	logger.Tracef("ReadTGMessageByAPIIDChat: %d, %d, %d", apiID, chat.ID, editDateInt)
@@ -305,14 +317,14 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
 				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID, &venueID,
 				&leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
-				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &createdAt)
+				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
 	} else {
 		err = db.QueryRow(sqlReadTGMessageByAPIIDChatEditDate, apiID, chat.ID, time.Unix(int64(editDateInt), 0)).
 			Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID, &forwardedFromChatID,
 				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
 				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID, &venueID,
 				&leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
-				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &createdAt)
+				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
 	}
 
 	if err != nil {
@@ -354,6 +366,7 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 		ChannelChatCreated:     channelChatCreated,
 		MigrateToChatId:        migrateToChatId,
 		MigrateFromChatId:      migrateFromChatId,
+		PinnedMessage:          pinnedMessageID,
 		CreatedAt:              createdAt,
 	}
 	return

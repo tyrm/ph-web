@@ -209,7 +209,6 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
-
 	var leftChatMember *models.TGUserMeta
 	if apiMessage.LeftChatMember != nil {
 		leftChatMember, err2 = seeUser(apiMessage.LeftChatMember)
@@ -231,7 +230,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	migrateToChatId := sql.NullInt64{Valid: false}
 	if apiMessage.MigrateToChatID != 0 {
 		migrateToChatId = sql.NullInt64{
-			Int64:  apiMessage.MigrateToChatID,
+			Int64: apiMessage.MigrateToChatID,
 			Valid: true,
 		}
 	}
@@ -239,8 +238,18 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	migrateFromChatId := sql.NullInt64{Valid: false}
 	if apiMessage.MigrateFromChatID != 0 {
 		migrateFromChatId = sql.NullInt64{
-			Int64:  apiMessage.MigrateFromChatID,
+			Int64: apiMessage.MigrateFromChatID,
 			Valid: true,
+		}
+	}
+
+	var pinnedMessage *models.TGMessage
+	if apiMessage.PinnedMessage != nil {
+		pinnedMessage, err2 = seeMessage(apiMessage.PinnedMessage)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing user: %s", err2)
+			err = err2
+			return
 		}
 	}
 
@@ -248,7 +257,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		forwardedFromMessageID, forwardDate, replyToMessage, editDate, text, audio, document, animation, sticker,
 		video, videoNotes, voice, caption, contact, location, venue, leftChatMember, newChatTitle,
 		apiMessage.DeleteChatPhoto, apiMessage.GroupChatCreated, apiMessage.SuperGroupChatCreated,
-		apiMessage.ChannelChatCreated, migrateToChatId, migrateFromChatId)
+		apiMessage.ChannelChatCreated, migrateToChatId, migrateFromChatId, pinnedMessage)
 	if err2 != nil {
 		err = err2
 		return

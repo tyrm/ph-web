@@ -7,6 +7,7 @@ CREATE TABLE "public"."tg_users" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_users" USING btree ("api_id");
 CREATE TABLE "public"."tg_users_history" (
     id serial NOT NULL UNIQUE,
     tgu_id integer NOT NULL REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -19,6 +20,7 @@ CREATE TABLE "public"."tg_users_history" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_users_history" USING btree ("tgu_id");
 
 CREATE TABLE "public"."tg_chats" (
     id serial NOT NULL UNIQUE,
@@ -27,7 +29,7 @@ CREATE TABLE "public"."tg_chats" (
     PRIMARY KEY ("id")
 )
 ;
-
+CREATE INDEX ON "public"."tg_chats" USING btree ("api_id");
 CREATE TABLE "public"."tg_chats_history" (
     id serial NOT NULL UNIQUE,
     tgc_id integer NOT NULL REFERENCES tg_chats(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -42,6 +44,7 @@ CREATE TABLE "public"."tg_chats_history" (
     PRIMARY KEY ("id")
 )
 ;
+CREATE INDEX ON "public"."tg_chats_history" USING btree ("tgc_id");
 
 -- +migrate Down
 DROP TABLE "public"."tg_chats_history";

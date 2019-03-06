@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// TemplateVarFiles holds template variables for HandleFiles
+// TemplateVarChatbot holds template variables for Chatbot
 type TemplateVarChatbot struct {
 	templateVarLayout
 
