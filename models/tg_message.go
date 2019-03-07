@@ -64,6 +64,26 @@ func (m *TGMessage) CreateNewChatMember(user *TGUserMeta) (err error) {
 	return
 }
 
+const sqlCreateNewChatPhoto = `
+INSERT INTO "public"."tg_message_new_chat_photos" (tgm_id, tgps_id, created_at)
+VALUES ($1, $2, $3)
+RETURNING id;`
+
+func (m *TGMessage) CreateNewChatPhoto(photo *TGPhotoSize) (err error) {
+
+	createdAt := time.Now()
+
+	var newID int
+	err = db.QueryRow(sqlCreateNewChatPhoto, m.ID, photo.ID, createdAt).Scan(&newID)
+	if sqlErr, ok := err.(*pq.Error); ok {
+		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
+		logger.Errorf("CreatePhoto error %s: %s", sqlErr.Code, sqlErr.Code.Name())
+		return
+	}
+
+	return
+}
+
 const sqlCreatePhoto = `
 INSERT INTO "public"."tg_message_photos" (tgm_id, tgps_id, created_at)
 VALUES ($1, $2, $3)

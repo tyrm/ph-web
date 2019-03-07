@@ -320,6 +320,24 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 		}
 	}
 
+	if apiMessage.NewChatPhoto != nil {
+		for _, newPhoto := range *apiMessage.NewChatPhoto {
+
+			ps, err2 := seePhotoSize(&newPhoto)
+			if err2 != nil {
+				logger.Errorf("seeMessage: error seeing new chat photo: %s", err2)
+				err = err2
+				return
+			}
+
+			err2 = tgm.CreateNewChatPhoto(ps)
+			if err2 != nil {
+				err = err2
+				return
+			}
+		}
+	}
+
 	tgMessage = tgm
 
 	elapsed := time.Since(start)
