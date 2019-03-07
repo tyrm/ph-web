@@ -44,26 +44,6 @@ type TGMessage struct {
 	CreatedAt              time.Time
 }
 
-const sqlCreatePhoto = `
-INSERT INTO "public"."tg_message_photos" (tgm_id, tgps_id, created_at)
-VALUES ($1, $2, $3)
-RETURNING id;`
-
-func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
-
-	createdAt := time.Now()
-
-	var newID int
-	err = db.QueryRow(sqlCreatePhoto, m.ID, photo.ID, createdAt).Scan(&newID)
-	if sqlErr, ok := err.(*pq.Error); ok {
-		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
-		logger.Errorf("CreatePhoto error %s: %s", sqlErr.Code, sqlErr.Code.Name())
-		return
-	}
-
-	return
-}
-
 const sqlCreateNewChatMembers = `
 INSERT INTO "public"."tg_message_new_chat_members" (tgm_id, tgu_id, created_at)
 VALUES ($1, $2, $3)
@@ -75,6 +55,26 @@ func (m *TGMessage) CreateNewChatMember(user *TGUserMeta) (err error) {
 
 	var newID int
 	err = db.QueryRow(sqlCreateNewChatMembers, m.ID, user.ID, createdAt).Scan(&newID)
+	if sqlErr, ok := err.(*pq.Error); ok {
+		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
+		logger.Errorf("CreatePhoto error %s: %s", sqlErr.Code, sqlErr.Code.Name())
+		return
+	}
+
+	return
+}
+
+const sqlCreatePhoto = `
+INSERT INTO "public"."tg_message_photos" (tgm_id, tgps_id, created_at)
+VALUES ($1, $2, $3)
+RETURNING id;`
+
+func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
+
+	createdAt := time.Now()
+
+	var newID int
+	err = db.QueryRow(sqlCreatePhoto, m.ID, photo.ID, createdAt).Scan(&newID)
 	if sqlErr, ok := err.(*pq.Error); ok {
 		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
 		logger.Errorf("CreatePhoto error %s: %s", sqlErr.Code, sqlErr.Code.Name())

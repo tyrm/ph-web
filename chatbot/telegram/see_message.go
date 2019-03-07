@@ -301,7 +301,7 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 			}
 		}
 	}
-	
+
 	if apiMessage.NewChatMembers != nil {
 		for _, newChatMember := range *apiMessage.NewChatMembers {
 
