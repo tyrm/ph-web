@@ -8,6 +8,11 @@ import (
 )
 
 func GetBytes(objectName string) (data *[]byte, err error) {
+	if !mcInitialized {
+		err = ErrNotInit
+		return
+	}
+
 	// Upload the file
 	obj, err := mc.GetObject(bucket, objectName, minio.GetObjectOptions{})
 	if err != nil {

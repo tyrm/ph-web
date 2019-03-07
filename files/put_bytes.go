@@ -8,6 +8,11 @@ import (
 )
 
 func PutBytes(objectName string, data *[]byte) (n int64, err error) {
+	if !mcInitialized {
+		err = ErrNotInit
+		return
+	}
+
 	reader := bytes.NewReader(*data)
 	objectSize := int64(len(*data))
 

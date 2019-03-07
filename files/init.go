@@ -1,6 +1,8 @@
 package files
 
 import (
+	"errors"
+
 	"../registry"
 	"github.com/juju/loggo"
 	"github.com/minio/minio-go"
@@ -11,6 +13,10 @@ var mc *minio.Client
 var mcInitialized = false
 
 var bucket = ""
+
+var (
+	ErrNotInit = errors.New("files not initialized")
+)
 
 func init() {
 	newLogger := loggo.GetLogger("files")
