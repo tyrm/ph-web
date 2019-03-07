@@ -2,27 +2,6 @@
 
 {{define "body"}}
 <div class="container">
-{{- if .AlertSuccess}}
-    <div class="row">
-        <div class="col">
-            <div class="alert alert-success" role="alert">{{.AlertSuccess}}</div>
-        </div>
-    </div>
-{{- end}}
-{{- if .AlertError}}
-    <div class="row">
-        <div class="col">
-            <div class="alert alert-danger" role="alert">{{.AlertError}}</div>
-        </div>
-    </div>
-{{- end}}
-{{- if .AlertWarn}}
-    <div class="row">
-        <div class="col">
-            <div class="alert alert-warning" role="alert">{{.AlertWarn}}</div>
-        </div>
-    </div>
-{{- end}}
     <div class="row">
         <div class="col"><h1><i class="fas fa-book"></i> Registry Browser</h1></div>
     </div>

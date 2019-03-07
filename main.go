@@ -67,7 +67,7 @@ func main() {
 	rWeb.HandleFunc("/", web.HandleHome).Methods("GET")
 	rWeb.HandleFunc("/chatbot/", web.HandleChatbot).Methods("GET")
 	rWeb.HandleFunc("/chatbot/config", web.HandleChatbotConfig).Methods("GET")
-	rWeb.HandleFunc("/chatbot/config", web.HandleChatbotConfigPost).Methods("POST")
+	rWeb.HandleFunc("/chatbot/config", web.HandleChatbotConfig).Methods("POST")
 	rWeb.HandleFunc("/chatbot/tg/chats/", web.HandleChatbotTGChatList).Methods("GET")
 	rWeb.HandleFunc("/chatbot/tg/chats/{id}", web.HandleChatbotTGChatView).Methods("GET")
 	rWeb.HandleFunc("/chatbot/tg/photos/{id}/file", web.HandleChatbotTGPhotoSizeViewFile).Methods("GET")

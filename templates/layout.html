@@ -61,6 +61,44 @@
         </ul>
     </div>
 </nav>
+<div class="container">
+    {{- if .AlertSuccess}}
+        <div class="row">
+            <div class="col">
+                <div class="alert alert-success mb-0" role="alert">
+                    {{.AlertSuccess}}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{- end}}
+    {{- if .AlertError}}
+        <div class="row">
+            <div class="col">
+                <div class="alert alert-danger mb-0" role="alert">
+                    {{.AlertError}}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{- end}}
+    {{- if .AlertWarn}}
+        <div class="row">
+            <div class="col">
+                <div class="alert alert-warning mb-0" role="alert">
+                    {{.AlertWarn}}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{- end}}
+</div>
 {{- template "body" . -}}
 <div class="container">
     <div class="row">

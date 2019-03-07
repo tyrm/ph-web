@@ -295,6 +295,45 @@ func New(newPid int, newKey string, newValue string, newSecure bool, uid int) (r
 	return
 }
 
+
+func Set(newKey string, newValue string, newSecure bool, uid int) (*Entry, error) {
+	reg, err := Get(newKey)
+	if err == nil {
+		// if found update value
+		err2 := reg.SetValue(newValue)
+		if err2 != nil {
+			return nil, err2
+		}
+
+		return reg, nil // return registry value
+	} else if err != ErrDoesNotExist && err != nil {
+		return nil, err
+	}
+
+	// Get Parts
+	pathParts := SplitPath(newKey)
+	pathPartsCount := len(pathParts)
+
+	parentPath := fmt.Sprintf("/%s", strings.Join(pathParts[:pathPartsCount-1], "/"))
+	logger.Tracef("Set: %s doesn't exist. getting parent: %s", newKey, parentPath)
+
+	parentReg, err := Get(parentPath)
+	logger.Errorf("Set: get parent path: %s, %s", parentReg, err)
+	if err == ErrDoesNotExist {
+		var err2 error
+		parentReg, err2 = Set(parentPath, "", false, uid)
+		if err2 != nil {
+			return nil, err2
+		}
+	}
+	reg, err = New(parentReg.ID, pathParts[pathPartsCount-1], newValue, newSecure, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return reg, nil
+}
+
 // SplitPath into it's parts
 func SplitPath(path string) []string {
 	newParts := strings.Split(path, "/")
