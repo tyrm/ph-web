@@ -301,6 +301,24 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 			}
 		}
 	}
+	
+	if apiMessage.NewChatMembers != nil {
+		for _, newChatMember := range *apiMessage.NewChatMembers {
+
+			u, err2 := seeUser(&newChatMember)
+			if err2 != nil {
+				logger.Errorf("seeMessage: error seeing new chat member user: %s", err2)
+				err = err2
+				return
+			}
+
+			err2 = tgm.CreateNewChatMember(u)
+			if err2 != nil {
+				err = err2
+				return
+			}
+		}
+	}
 
 	tgMessage = tgm
 
