@@ -20,22 +20,26 @@ func PopulateProfilePhotos(userList []models.TGUser, size int) []models.TGUser {
 		// Get Smallest image larger than request
 		var fileID string
 		var foundW, foundH int
-		for _, photo := range upp.Photos[0] {
-			if photo.Width > size && photo.Height > size {
-				// Init if zero
-				if foundW == 0 || foundH == 0 {
-					foundW = photo.Width
-					foundH = photo.Height
-					fileID = photo.FileID
-				}
 
-				if photo.Width < foundW || photo.Height < foundH {
-					foundW = photo.Width
-					foundH = photo.Height
-					fileID = photo.FileID
+		if upp.Photos != nil {
+			for _, photo := range upp.Photos[0] {
+				if photo.Width > size && photo.Height > size {
+					// Init if zero
+					if foundW == 0 || foundH == 0 {
+						foundW = photo.Width
+						foundH = photo.Height
+						fileID = photo.FileID
+					}
+
+					if photo.Width < foundW || photo.Height < foundH {
+						foundW = photo.Width
+						foundH = photo.Height
+						fileID = photo.FileID
+					}
 				}
 			}
 		}
+
 
 		// If Empty return the largest image
 		if fileID == "" {

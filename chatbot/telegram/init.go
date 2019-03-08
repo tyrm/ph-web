@@ -110,7 +110,7 @@ func workerUpdateHandler() {
 	if err != nil {
 		logger.Errorf("Problem seeing telegram bot: %s", err.Error())
 	}
-	
+
 	for update := range updates {
 		logger.Tracef("Got update: %v", update)
 
