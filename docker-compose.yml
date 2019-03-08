@@ -1,0 +1,18 @@
+version: '3'
+services:
+  postgres1:
+    build:
+      context: ./
+    container_name: ph-web
+    volumes:
+      - /etc/default/ph_web_aes_secret:/run/secrets/ph_web_aes_secret:ro
+      - /etc/default/ph_web_db_engine:/run/secrets/ph_web_db_engine:ro
+    restart: always
+    networks:
+      - haus
+    external_links:
+      - caddy-web:o.pup.haus
+networks:
+  haus:
+    external:
+      name: haus
