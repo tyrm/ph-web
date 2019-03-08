@@ -22,9 +22,7 @@ func init() {
 	logger = &newLogger
 
 	messageLoggingChan = make(chan *tgbotapi.Message, 100)
-	for w := 1; w <= 3; w++ {
-		go workerMessageHandler(w)
-	}
+	go workerMessageHandler(1)
 
 	// init cache
 	cUserProfilePhotos = cache.New(5*time.Minute, 10*time.Minute)
