@@ -21,7 +21,7 @@ func PopulateProfilePhotos(userList []models.TGUser, size int) []models.TGUser {
 		var fileID string
 		var foundW, foundH int
 
-		if upp.Photos != nil {
+		if len(upp.Photos) > 0 {
 			for _, photo := range upp.Photos[0] {
 				if photo.Width > size && photo.Height > size {
 					// Init if zero
