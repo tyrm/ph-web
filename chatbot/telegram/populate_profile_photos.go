@@ -58,9 +58,13 @@ func PopulateProfilePhotos(userList []models.TGUser, size int) []models.TGUser {
 				}
 
 			}
+			userList[i].ProfilePhotoURL = fmt.Sprintf("/web/chatbot/tg/photos/%s/file", fileID)
+		} else {
+			// Return generic if no photo
+			userList[i].ProfilePhotoURL = fmt.Sprint("https://o.pup.haus/public/img/user-icon.jpg")
+
 		}
-		
-		userList[i].ProfilePhotoURL = fmt.Sprintf("/web/chatbot/tg/photos/%s/file", fileID)
+
 	}
 
 	return userList
