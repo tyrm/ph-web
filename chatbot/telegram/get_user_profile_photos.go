@@ -8,6 +8,11 @@ import (
 )
 
 func GetUserProfilePhotos(apiid int) (up *tgbotapi.UserProfilePhotos, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// check cache
 	apiidStr := strconv.Itoa(apiid)
 	if u, found := cUserProfilePhotos.Get(apiidStr); found {

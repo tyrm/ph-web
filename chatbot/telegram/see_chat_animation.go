@@ -3,9 +3,14 @@ package telegram
 import (
 	"../../models"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	)
+)
 
 func seeChatAnimation(apiChatAnimation *tgbotapi.ChatAnimation) (tgAnimation *models.TGChatAnimation, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgani, err2 := models.ReadTGChatAnimationByFileID(apiChatAnimation.FileID)
 	if err2 == nil {

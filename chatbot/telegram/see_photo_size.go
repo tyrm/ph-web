@@ -6,6 +6,11 @@ import (
 )
 
 func seePhotoSize(apiPhotoSize *tgbotapi.PhotoSize) (tgPhotoSize *models.TGPhotoSize, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgps, err2 := models.ReadTGPhotoSizeByFileID(apiPhotoSize.FileID)
 	if err2 == nil {

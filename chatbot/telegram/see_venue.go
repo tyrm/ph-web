@@ -2,12 +2,16 @@ package telegram
 
 import (
 	"database/sql"
-
 	"../../models"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 func seeVenue(apiVenue *tgbotapi.Venue) (tgVenue *models.TGVenue, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	location, err2 := seeLocation(&apiVenue.Location)
 	if err2 != nil {
 		logger.Errorf("seeSticker: error seeing thumbnail: %s", err2)

@@ -6,6 +6,11 @@ import (
 )
 
 func seeAudio(apiAudio *tgbotapi.Audio) (tgAudio *models.TGAudio, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGAudio entry, return if exists
 	tga, err2 := models.ReadTGAudioByFileID(apiAudio.FileID)
 	if err2 == nil {

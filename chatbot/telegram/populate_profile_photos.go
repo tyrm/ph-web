@@ -6,7 +6,11 @@ import (
 	"../../models"
 )
 
-func PopulateProfilePhotos(userList []models.TGUser, size int) ([]models.TGUser) {
+func PopulateProfilePhotos(userList []models.TGUser, size int) []models.TGUser {
+	if !botConnected {
+		return userList
+	}
+
 	for i := range userList {
 		upp, err := GetUserProfilePhotos(userList[i].APIID)
 		if err != nil {

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"regexp"
 	"time"
-
 	"../../files"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -19,6 +18,11 @@ type hasFiles interface {
 }
 
 func GetFile(tgOjb hasFiles) (body []byte, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	start := time.Now()
 
 	// Check if we've retrieved file already

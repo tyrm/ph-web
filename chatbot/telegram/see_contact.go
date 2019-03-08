@@ -8,6 +8,10 @@ import (
 )
 
 func seeContact(apiContact *tgbotapi.Contact) (tgContact *models.TGContact, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
 
 	lastName := sql.NullString{Valid: false}
 	if apiContact.LastName != "" {

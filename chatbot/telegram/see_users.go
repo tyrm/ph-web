@@ -6,6 +6,11 @@ import (
 )
 
 func seeUser(apiUser *tgbotapi.User) (tgUser *models.TGUserMeta, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGUserMeta entry, create if not exists
 	tgu, err2 := models.ReadTGUserMetaByAPIID(apiUser.ID)
 	if err2 == models.ErrDoesNotExist {

@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"errors"
 	"time"
 
 	"../../registry"
@@ -16,6 +17,10 @@ var messageLoggingChan chan *tgbotapi.Message
 
 // Caches
 var cUserProfilePhotos *cache.Cache
+
+var (
+	ErrNotInit = errors.New("chatbot not initialized")
+)
 
 func init() {
 	newLogger := loggo.GetLogger("telegram")
@@ -63,11 +68,6 @@ func InitClient(force bool) {
 		return
 	}
 
-	logger.Infof("Telegram connected as %s", bot.Self.UserName)
-	_, err = seeUser(&bot.Self)
-	if err != nil {
-		logger.Errorf("Problem seeing telegram bot: %s", err.Error())
-	}
 
 	go workerUpdateHandler()
 }
@@ -105,6 +105,12 @@ func workerUpdateHandler() {
 
 	botConnected = true
 
+	logger.Infof("Telegram connected as %s", bot.Self.UserName)
+	_, err = seeUser(&bot.Self)
+	if err != nil {
+		logger.Errorf("Problem seeing telegram bot: %s", err.Error())
+	}
+	
 	for update := range updates {
 		logger.Tracef("Got update: %v", update)
 

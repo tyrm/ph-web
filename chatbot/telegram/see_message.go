@@ -10,6 +10,11 @@ import (
 )
 
 func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	start := time.Now()
 	chat, err2 := seeChat(apiMessage.Chat)
 	if err2 != nil {

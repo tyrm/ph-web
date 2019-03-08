@@ -6,6 +6,11 @@ import (
 )
 
 func seeVideoNote(apiVideoNote *tgbotapi.VideoNote) (tgVideoNote *models.TGVideoNote, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgps, err2 := models.ReadTGVideoNoteByFileID(apiVideoNote.FileID)
 	if err2 == nil {

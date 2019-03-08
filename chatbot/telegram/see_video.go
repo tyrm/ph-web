@@ -6,6 +6,11 @@ import (
 )
 
 func seeVideo(apiVideo *tgbotapi.Video) (tgVideo *models.TGVideo, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgps, err2 := models.ReadTGVideoByFileID(apiVideo.FileID)
 	if err2 == nil {

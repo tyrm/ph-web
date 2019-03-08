@@ -6,6 +6,11 @@ import (
 )
 
 func seeVoice(apiVoice *tgbotapi.Voice) (tgVoice *models.TGVoice, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGVoice entry, return if exists
 	tga, err2 := models.ReadTGVoiceByFileID(apiVoice.FileID)
 	if err2 == nil {

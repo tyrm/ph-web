@@ -6,6 +6,11 @@ import (
 )
 
 func seeLocation(apiLocation *tgbotapi.Location) (tgLocation *models.TGLocation, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgl, err2 := models.ReadTGLocationByLongLat(apiLocation.Longitude, apiLocation.Latitude)
 	if err2 == nil {

@@ -6,6 +6,11 @@ import (
 )
 
 func seeSticker(apiSticker *tgbotapi.Sticker) (tgSticker *models.TGSticker, err error) {
+	if !botConnected {
+		err = ErrNotInit
+		return
+	}
+
 	// Get TGMessage entry, return if exists
 	tgps, err2 := models.ReadTGStickerByFileID(apiSticker.FileID)
 	if err2 == nil {
