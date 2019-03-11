@@ -146,6 +146,22 @@ func CreateUser(username string, password string, email string) (user User, err 
 	return
 }
 
+const sqlDeleteUser = `
+UPDATE "public"."users"
+SET deleted_at = now()
+WHERE token = $1;`
+
+// CreateUser creates a new instance of a user in the database.
+func DeleteUser(token string) (err error) {
+
+	_, err = db.Query(sqlDeleteUser, token)
+	if sqlErr, ok := err.(*pq.Error); ok {
+		// Here err is of type *pq.Error, you may inspect all its fields, e.g.:
+		logger.Errorf("DeleteUser: pq error %d: %s", sqlErr.Code, sqlErr.Code.Name())
+	}
+	return
+}
+
 const sqlUserCount = `
 SELECT count(*)
 FROM users

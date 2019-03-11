@@ -2,7 +2,7 @@
 CREATE TABLE "public"."users" (
     id serial NOT NULL UNIQUE,
     token character(8) NOT NULL UNIQUE,
-    username character varying NOT NULL UNIQUE,
+    username character varying NOT NULL,
     password character varying NOT NULL,
     email character varying NOT NULL,
     login_count integer NOT NULL DEFAULT 0,

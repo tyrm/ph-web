@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Create Top Router
-	web.Init(config.DBEngine, packr.New("templates", "./templates"))
+	web.Init(config.DBEngine, packr.New("templates", "./templates"), config.Debug)
 	defer web.Close()
 
 	r := mux.NewRouter()
@@ -79,6 +79,7 @@ func main() {
 
 	rAdmin := rWeb.PathPrefix("/admin").Subrouter()
 	rAdmin.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
+	rAdmin.HandleFunc("/users/", web.HandleUserIndex).Methods("POST")
 	rAdmin.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
 	rAdmin.HandleFunc("/users/new", web.HandleUserNew).Methods("POST")
 	rAdmin.HandleFunc("/users/{id}", web.HandleUserGet).Methods("GET")

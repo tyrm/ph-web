@@ -65,7 +65,12 @@ func HandleLogin(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if us.Values["LoggedInUserID"] != nil {
-		response.Header().Set("Location", "/web/")
+		if us.Values["LastURL"] != nil {
+			response.Header().Set("Location", us.Values["LastURL"].(string))
+		} else {
+			response.Header().Set("Location", "/web/")
+		}
+
 		response.WriteHeader(http.StatusFound)
 		return
 	}

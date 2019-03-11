@@ -59,12 +59,14 @@ func HandleChatbotConfig(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleChatbotConfig: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleChatbotConfig() [%s]", elapsed)
 	return
 }

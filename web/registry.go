@@ -41,7 +41,6 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 		MakeErrorResponse(response, 500, err.Error(), 0)
 		return
 	}
-	logger.Tracef("got post: %v", request.Form)
 
 	formAction := ""
 	if val, ok := request.Form["_action"]; ok {
@@ -306,12 +305,14 @@ func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
 		})
 	}
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleRegistryIndex: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
 	return
 }

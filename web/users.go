@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"html"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,12 +48,14 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 
 	tmplVars.User = user
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleUserGet: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleUserGet() [%s]", elapsed)
 	return
 }
@@ -64,6 +67,42 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 	// Init Session
 	tmplVars := &TemplateVarUserIndex{}
 	tmpl, us := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/users_index.html")
+
+
+	if request.Method == "POST" {
+		err := request.ParseForm()
+		if err != nil {
+			tmplVars.AlertError = fmt.Sprintf("error parsing form: %s", html.EscapeString(err.Error()))
+		} else {
+			logger.Tracef("got post: %v", request.Form)
+
+			if val, ok := request.Form["_action"]; ok {
+				formAction := val[0]
+
+				if formAction == "delete" {
+					formUserToken := ""
+					if val, ok := request.Form["user_token"]; ok {
+						formUserToken = val[0]
+					}
+
+					if formUserToken != "" {
+						err := models.DeleteUser(formUserToken)
+						if err != nil {
+							tmplVars.AlertError = fmt.Sprintf("error deleting user: %s", html.EscapeString(err.Error()))
+						} else {
+							tmplVars.AlertSuccess = fmt.Sprintf("user successfully deleted.")
+						}
+					}
+				} else {
+					tmplVars.AlertError = fmt.Sprintf("unknown action: %s", html.EscapeString(formAction))
+				}
+			} else {
+				tmplVars.AlertError = fmt.Sprintf("missing action")
+				return
+			}
+
+		}
+	}
 
 	// page stuff
 	var entriesPerPage uint = 10
@@ -114,12 +153,14 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleUserIndex: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleUserIndex() [%s]", elapsed)
 	return
 }
@@ -188,12 +229,14 @@ func HandleUserNew(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleUserNew: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleUserNew() [%s]", elapsed)
 	return
 }

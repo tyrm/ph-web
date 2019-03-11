@@ -14,12 +14,14 @@ import (
 	"github.com/juju/loggo"
 )
 
+var debugOutput bool
 var logger *loggo.Logger
 var templates *packr.Box
 var globalSessions *pgstore.PGStore
 
 type templateVars interface {
 	SetDarkMode(bool)
+	SetDebug(bool)
 	SetNavbar(*templateNavbar)
 	SetUsername(string)
 }
@@ -72,13 +74,20 @@ type templateVarLayout struct {
 	AlertError   string
 	AlertWarn    string
 
-	DarkMode bool
-	NavBar   *templateNavbar
-	Username string
+	DarkMode  bool
+	Debug     bool
+	DebugTime string
+	NavBar    *templateNavbar
+	Username  string
 }
 
 func (t *templateVarLayout) SetDarkMode(d bool) {
 	t.DarkMode = d
+	return
+}
+
+func (t *templateVarLayout) SetDebug(d bool) {
+	t.Debug = d
 	return
 }
 
@@ -98,7 +107,7 @@ func Close() {
 }
 
 // Init connects session manager to database
-func Init(db string, box *packr.Box) {
+func Init(db string, box *packr.Box, d bool) {
 	newLogger := loggo.GetLogger("web")
 	logger = &newLogger
 
@@ -111,6 +120,8 @@ func Init(db string, box *packr.Box) {
 
 	// Load Templates
 	templates = box
+
+	debugOutput = d
 }
 
 // privates
@@ -160,6 +171,7 @@ func initSessionVars(response http.ResponseWriter, request *http.Request, tmplVa
 	uid := us.Values["LoggedInUserID"].(int)
 	tmplVars.SetUsername(models.GetUsernameByID(uid))
 	tmplVars.SetNavbar(makeNavbar(request.URL.Path))
+	tmplVars.SetDebug(debugOutput)
 
 	darkMode := false
 	if us.Values["TemplateDarkMode"] != nil {

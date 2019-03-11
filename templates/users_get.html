@@ -21,7 +21,7 @@
                     <a class="nav-link" href="#"><i class="fas fa-edit"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="#"><i class="fas fa-trash-alt"></i></a>
+                    <a class="nav-link text-danger" href="#" data-toggle="modal" data-target="#deleteRegModal"><i class="fas fa-trash-alt"></i></a>
                 </li>
             </ul>
         </div>
@@ -54,4 +54,27 @@
         </div>
     </div>
 </div>
+<!-- Delete Reg Modal Start --><div class="modal fade" id="deleteRegModal" tabindex="-1" role="dialog" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteRegModalLabel"><i class="fas fa-eraser"></i> Delete User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the user <b>{{.User.Username}}</b>?
+                </div>
+                <div class="modal-footer">
+                    <form action="/web/admin/users/" method="post">
+                        <input type="hidden" name="user_token" value="{{.User.Token}}">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <input type="hidden" name="_action" value="delete">
+                    </form>
+                </div>
+        </div>
+    </div>
+</div><!-- Delete Reg Modal Stop -->
 {{end}}

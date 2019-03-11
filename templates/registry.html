@@ -3,20 +3,22 @@
 {{define "body"}}
 <div class="container">
     <div class="row">
-        <div class="col"><h1><i class="fas fa-book"></i> Registry Browser</h1></div>
+        <div class="col"><h1><i class="fas fa-book"></i>&nbsp;<span class="d-none d-sm-inline">Registry </span>Browser</h1></div>
     </div>
-    <div class="row" style="padding-top: 0px;">
-        <div class="col">
+    <div class="row">
+        <div class="col-md-6 pb-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item ml-auto" data-toggle="tooltip" data-placement="top" title="Add Sibling">
                     <a class="nav-link text-success" href="#" data-toggle="modal" data-target="#newSiblingModal"><i class="fas fa-plus"></i></a>
                 </li>
             </ul>
+            {{- template "breadcrumbs" .Breadcrumbs -}}
+            <div class="list-group">{{template "list-group" .Siblings}}</div>
         </div>
-        <div class="col">
+        <div class="col-md-6 mb-4">
             <ul class="nav nav-tabs">
                 <li class="nav-item mr-auto">
-                    <div class="nav-link active" href="#">{{.Reg.GetPath}}</div>
+                    <div class="nav-link active">{{.Reg.GetPath}}</div>
                 </li>
                 <li class="nav-item"{{if not .DisableAddChild}} data-toggle="tooltip" data-placement="top" title="Add Child"{{end}}>
                     <a class="nav-link{{if .DisableAddChild}} disabled{{else}} text-success{{end}}" href="#" data-toggle="modal" data-target="#newChildModal"><i class="fas fa-plus"></i></a>
@@ -28,14 +30,6 @@
                     <a class="nav-link{{if .DisableDelete}} disabled{{else}} text-danger{{end}}" href="#" data-toggle="modal" data-target="#deleteRegModal"><i class="fas fa-trash-alt"></i></a>
                 </li>
             </ul>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            {{- template "breadcrumbs" .Breadcrumbs -}}
-            <div class="list-group">{{template "list-group" .Siblings}}</div>
-        </div>
-        <div class="col">
         {{if .Reg.Secure}}
             <h2 class="text-center"><i class="fas fa-lock"></i></h2>
         {{else}}

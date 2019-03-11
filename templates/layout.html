@@ -16,9 +16,9 @@
     <script src="https://o.pup.haus/public/jquery-3.3.1.min.js"></script>
     <script src="https://o.pup.haus/public/bootstrap-4.3.1-dist/js/bootstrap.bundle.min.js"></script>
 </head>
-<body>
+<body class="mb-2">
 <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
-    <span class="navbar-brand"><img src="https://o.pup.haus/public/img/pup_white.svg" height="30" /><img src="https://o.pup.haus/public/img/haus_white.svg" height="30" /></span>
+    <span class="navbar-brand"><img src="https://o.pup.haus/public/img/pup_white.svg" alt="pup" height="30" /><img src="https://o.pup.haus/public/img/haus_white.svg" alt="haus" height="30" /></span>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -100,17 +100,32 @@
     {{- end}}
 </div>
 {{- template "body" . -}}
-<div class="container">
-    <div class="row">
-        <div class="col">
-            <div class="d-block d-sm-none">xs</div>
-            <div class="d-none d-sm-block d-md-none">sm</div>
-            <div class="d-none d-md-block d-lg-none">md</div>
-            <div class="d-none d-lg-block d-xl-none">lg</div>
-            <div class="d-none d-xl-block">xl</div>
+{{if .Debug}}
+    <nav class="navbar fixed-bottom navbar-expand-sm navbar-dark bg-dark">
+        <div class="navbar-brand">Debug</div>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <div class="nav-link">
+                        Size:
+                        <div class="d-inline d-sm-none">xs</div>
+                        <div class="d-none d-sm-inline d-md-none">sm</div>
+                        <div class="d-none d-md-inline d-lg-none">md</div>
+                        <div class="d-none d-lg-inline d-xl-none">lg</div>
+                        <div class="d-none d-xl-inline">xl</div></div>
+                </li>
+                {{if .DebugTime -}}
+                <li class="nav-item">
+                    <div class="nav-link">Time: {{.DebugTime}}</div>
+                </li>
+                {{end -}}
+            </ul>
         </div>
-    </div>
-</div>
+    </nav>
+{{end}}
 <!-- Logout Modal Start --><div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">

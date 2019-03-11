@@ -76,12 +76,14 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 	}
 	tmplVars.Chats = chats
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleChatbot: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
 	return
 }
@@ -116,12 +118,14 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 		tmplVars.TGChat = chat
 	}
 
+	elapsed := time.Since(start)
+	tmplVars.DebugTime = elapsed.String()
 	tmplErr := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if tmplErr != nil {
 		logger.Warningf("HandleChatbotTGChatView: template error: %s", err.Error())
 	}
 
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 	logger.Tracef("HandleChatbotTGChatView() [%s]", elapsed)
 	return
 }

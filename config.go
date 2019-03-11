@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // Config represents configuration variables collected from system environment
 type Config struct {
 	AESSecret    string
+	Debug        bool
 	DBEngine     string
 	LoggerConfig string
 }
@@ -34,6 +36,15 @@ func CollectConfig() (config Config) {
 		}
 	}
 
+	// LOGGER_LEVEL
+	var envDebug = os.Getenv("DEBUG")
+
+	if strings.ToUpper(envDebug) == "TRUE" {
+		config.Debug = true
+	} else {
+		config.Debug = false
+	}
+
 	// DB_ENGINE
 	config.DBEngine = os.Getenv("DB_ENGINE")
 	if config.DBEngine == "" {
@@ -51,7 +62,7 @@ func CollectConfig() (config Config) {
 		}
 	}
 
-	// REDIS_ADDR
+	// LOGGER_LEVEL
 	var envLoggerLevel = os.Getenv("LOGGER_LEVEL")
 
 	if envLoggerLevel == "" {
