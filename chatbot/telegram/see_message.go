@@ -35,11 +35,15 @@ func seeMessage(apiMessage *tgbotapi.Message) (tgMessage *models.TGMessage, err 
 	}
 
 	// See Relationships
-	from, err2 := seeUser(apiMessage.From)
-	if err2 != nil {
-		logger.Errorf("seeMessage: error seeing user: %s", err2)
-		err = err2
-		return
+
+	var from *models.TGUserMeta
+	if apiMessage.From != nil {
+		from, err2 = seeUser(apiMessage.From)
+		if err2 != nil {
+			logger.Errorf("seeMessage: error seeing user: %s", err2)
+			err = err2
+			return
+		}
 	}
 
 	date := time.Unix(int64(apiMessage.Date), 0)

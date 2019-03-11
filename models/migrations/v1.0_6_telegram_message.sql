@@ -2,7 +2,7 @@
 CREATE TABLE "public"."tg_messages" (
     id serial NOT NULL UNIQUE,
     message_id integer NOT NULL,
-    "from_id" integer NOT NULL REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    "from_id" integer REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     date timestamp without time zone NOT NULL,
     chat_id integer NOT NULL REFERENCES tg_chats(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
     forwarded_from_id integer REFERENCES tg_users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,

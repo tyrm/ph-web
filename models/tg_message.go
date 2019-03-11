@@ -10,7 +10,7 @@ import (
 type TGMessage struct {
 	ID                     int
 	MessageID              int
-	FromID                 int
+	FromID                 sql.NullInt64
 	Date                   time.Time
 	ChatID                 int
 	ForwardedFromID        sql.NullInt64
@@ -125,6 +125,14 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 	tgMessage *TGMessage, err error) {
 
 	createdAt := time.Now()
+
+	fromID := sql.NullInt64{Valid: false}
+	if from != nil {
+		fromID = sql.NullInt64{
+			Int64: int64(from.ID),
+			Valid: true,
+		}
+	}
 
 	forwardedFromID := sql.NullInt64{Valid: false}
 	if forwardedFrom != nil {
@@ -247,7 +255,7 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 	}
 
 	var newID int
-	err = db.QueryRow(sqlCreateTGMessage, messageID, from.ID, date, chat.ID, forwardedFromID, forwardedFromChatID,
+	err = db.QueryRow(sqlCreateTGMessage, messageID, fromID, date, chat.ID, forwardedFromID, forwardedFromChatID,
 		forwardedFromMessageID, forwardDate, replyToMessageID, editDate, text, audioID, documentID, animationID,
 		stickerID, videoID, videoNoteID, voiceID, caption, contactID, locationID, venueID, leftChatMemberID,
 		newChatTitle, deleteChatPhoto, groupChatCreated, superGroupChatCreated, channelChatCreated, migrateToChatId,
@@ -261,7 +269,7 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 	tgMessage = &TGMessage{
 		ID:                     newID,
 		MessageID:              messageID,
-		FromID:                 from.ID,
+		FromID:                 fromID,
 		Date:                   date,
 		ChatID:                 chat.ID,
 		ForwardedFromID:        forwardedFromID,
@@ -317,7 +325,7 @@ LIMIT 1;`
 func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgMessage *TGMessage, err error) {
 	var id int
 	var messageID int
-	var fromID int
+	var fromID sql.NullInt64
 	var date time.Time
 	var chatID int
 	var forwardedFromID sql.NullInt64
