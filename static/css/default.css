@@ -2,7 +2,7 @@ div.container div.row {
     padding-top: 15px;
 }
 
-img.block-user {
+img.tg-block-user {
     max-height: 64px;
     max-width: 64px;
 }
@@ -28,3 +28,4 @@ table#usersListTable td,table#usersListTable th {
     padding-top: 8px;
     padding-bottom: 8px;
 }
+

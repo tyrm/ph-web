@@ -101,7 +101,7 @@
                         {{- with .TGMessages}}
                             {{- range .}}
                                 <li class="media mb-4">
-                                    {{if .BlockUser}}<img src="{{.BlockUser.ProfilePhotoURL}}" class="mr-2 rounded-circle block-user">{{end}}
+                                    {{if .BlockUser}}<img src="{{.BlockUser.ProfilePhotoURL}}" class="mr-2 rounded-circle tg-block-user">{{end}}
                                     <div class="media-body">
                                         {{if .BlockUser}}<h5 class="mt-0 mb-1">{{if .BlockUser}}{{.BlockUser.GetName}}{{end}}</h5>{{end}}
                                         <ul class="list-unstyled">
@@ -111,11 +111,11 @@
                                 {{- if .BlockMessages}}
                                     {{- with .BlockMessages}}
                                         {{- range .}}
-                                            <li class="bg-primary m-1 p-1 rounded text-white">
+                                            <li class="bg-primary m-1 p-1 rounded text-white tg-block-message">
                                                 {{if .Text.Valid}}
-                                                    {{.Text.String}}
+                                                    <div class="text-break">{{.Text.String}}</div>
                                                 {{else if .StickerID.Valid}}
-                                                    {{.StickerID.Int64}}
+                                                    <div><img src="{{.GetStickerURL}}" class="img-fluid"></div>
                                                 {{end}}
                                                 <div class="text-right"><small>{{if .EditDate.Valid}}<i>edited</i> {{end}}{{.GetDateHuman}}</small></div>
                                             </li>

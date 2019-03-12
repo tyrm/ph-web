@@ -20,6 +20,7 @@ var cUsernameByID *cache.Cache
 
 var (
 	ErrDoesNotExist = errors.New("does not exist")
+	ErrInvalid = errors.New("invalid")
 )
 
 // Close cleans up open connections inside models

@@ -145,6 +145,56 @@ func CreateTGStickerFromAPI(apiSticker *tgbotapi.Sticker, thumbnail *TGPhotoSize
 	return CreateTGSticker(apiSticker.FileID, apiSticker.Width, apiSticker.Height, thumbnail, emoji, fileSize, setName)
 }
 
+const sqlReadTGSticker = `
+SELECT id, file_id, width, height, thumbnail_id, emoji, file_size, file_location, file_suffix, file_retrieved_at, set_name, created_at, last_seen
+FROM tg_stickers
+WHERE id = $1;`
+
+// ReadTGPhotoSizeByFileID returns an instance of a telegram user by api_id from the database.
+func ReadTGSticker(id int) (tgs *TGSticker, err error) {
+	var newID int
+	var newFileID string
+	var newWidth int
+	var newHeight int
+	var newThumbnailID sql.NullInt64
+	var newEmoji sql.NullString
+	var newFileSize sql.NullInt64
+	var newFileLocation sql.NullString
+	var newFileSuffix sql.NullString
+	var newFileRetrievedAt pq.NullTime
+	var newSetName sql.NullString
+	var newCreatedAt time.Time
+	var newLastSeen time.Time
+
+	err = db.QueryRow(sqlReadTGSticker, id).Scan(&newID, &newFileID, &newWidth, &newHeight,
+		&newThumbnailID, &newEmoji, &newFileSize, &newFileLocation, &newFileSuffix, &newFileRetrievedAt, &newSetName,
+		&newCreatedAt, &newLastSeen)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrDoesNotExist
+		}
+		return
+	}
+
+	newSticker := &TGSticker{
+		ID:              newID,
+		FileID:          newFileID,
+		Width:           newWidth,
+		Height:          newHeight,
+		ThumbnailID:     newThumbnailID,
+		Emoji:           newEmoji,
+		FileSize:        newFileSize,
+		FileLocation:    newFileLocation,
+		FileSuffix:      newFileSuffix,
+		FileRetrievedAt: newFileRetrievedAt,
+		SetName:         newSetName,
+		CreatedAt:       newCreatedAt,
+		LastSeen:        newLastSeen,
+	}
+	tgs = newSticker
+	return
+}
+
 const sqlReadTGStickerByFileID = `
 SELECT id, file_id, width, height, thumbnail_id, emoji, file_size, file_location, file_suffix, file_retrieved_at, set_name, created_at, last_seen
 FROM tg_stickers

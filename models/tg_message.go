@@ -146,6 +146,16 @@ func (m *TGMessage) GetFromUser() (*TGUser, error) {
 	return from, nil
 }
 
+func (m *TGMessage) GetStickerURL() string {
+	sticker, err := ReadTGSticker(int(m.StickerID.Int64))
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): error: %s", err)
+		return ""
+	}
+
+	return fmt.Sprintf("/web/chatbot/tg/stickers/%s/file", sticker.FileID)
+}
+
 const sqlCreateTGMessage = `
 INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, 
 	forwarded_from_message_id, forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, 
