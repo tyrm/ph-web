@@ -116,6 +116,8 @@
                                                     <div class="text-break">{{.Text.String}}</div>
                                                 {{else if .StickerID.Valid}}
                                                     <div><img src="{{.GetStickerURL}}" class="img-fluid"></div>
+                                                {{else if .HasPhotos}}
+                                                    <div><img src="{{.GetPhotoURL 450}}" class="img-fluid"></div>
                                                 {{end}}
                                                 <div class="text-right"><small>{{if .EditDate.Valid}}<i>edited</i> {{end}}{{.GetDateHuman}}</small></div>
                                             </li>

@@ -109,7 +109,6 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 	return
 }
 
-
 // GetDateHuman returns formatted string of Date
 func (m *TGMessage) GetDateHuman() string {
 	return humanize.Time(m.Date)
@@ -146,6 +145,112 @@ func (m *TGMessage) GetFromUser() (*TGUser, error) {
 	return from, nil
 }
 
+const sqlTGMessageGetPhotos = `
+SELECT mp.tgps_id, ps.file_id, ps.width, ps.height, ps.file_size, ps.created_at, ps.last_seen
+FROM tg_message_photos as mp
+LEFT JOIN tg_photo_sizes as ps ON mp.tgps_id = ps.id
+WHERE mp.tgm_id = $1
+;`
+
+func (m *TGMessage) GetPhotos() ([]*TGPhotoSize, error) {
+	var newPhotoList []*TGPhotoSize
+
+	rows, err := db.Query(sqlTGMessageGetPhotos, m.ID)
+	if err != nil {
+		logger.Tracef("GetPhotos() (nil, %v)", err)
+		return nil, err
+	}
+	for rows.Next() {
+
+		var newID int
+		var newFileID string
+		var newWidth int
+		var newHeight int
+		var newFileSize sql.NullInt64
+		var newFileLocation sql.NullString
+		var newFileSuffix sql.NullString
+		var newFileRetrievedAt pq.NullTime
+		var newCreatedAt time.Time
+		var newLastSeen time.Time
+
+		err = rows.Scan(&newID, &newFileID, &newWidth, &newHeight, &newFileSize, &newCreatedAt, &newLastSeen)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				err = ErrDoesNotExist
+			}
+			return nil, err
+		}
+
+		newPhotoSize := &TGPhotoSize{
+			ID:              newID,
+			FileID:          newFileID,
+			Width:           newWidth,
+			Height:          newHeight,
+			FileSize:        newFileSize,
+			FileLocation:    newFileLocation,
+			FileSuffix:      newFileSuffix,
+			FileRetrievedAt: newFileRetrievedAt,
+			CreatedAt:       newCreatedAt,
+			LastSeen:        newLastSeen,
+		}
+
+		newPhotoList = append(newPhotoList, newPhotoSize)
+	}
+
+	return newPhotoList, nil
+}
+
+func (m *TGMessage) GetPhotoURL(size int) string {
+	photos, err := m.GetPhotos()
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): couldn't get photos: %s", err)
+		return ""
+	}
+	// Get Smallest image larger than request
+	var fileID string
+	var foundW, foundH int
+
+	for _, photo := range photos {
+		if photo.Width > size && photo.Height > size {
+			// Init if zero
+			if foundW == 0 || foundH == 0 {
+				foundW = photo.Width
+				foundH = photo.Height
+				fileID = photo.FileID
+			}
+
+			if photo.Width < foundW || photo.Height < foundH {
+				foundW = photo.Width
+				foundH = photo.Height
+				fileID = photo.FileID
+			}
+		}
+	}
+
+	// If Empty return the largest image
+	if fileID == "" {
+		foundW = 0
+		foundH = 0
+		for _, photo := range photos {
+			if foundW == 0 || foundH == 0 {
+				foundW = photo.Width
+				foundH = photo.Height
+				fileID = photo.FileID
+			}
+
+			if photo.Width > foundW || photo.Height > foundH {
+				foundW = photo.Width
+				foundH = photo.Height
+				fileID = photo.FileID
+			}
+		}
+
+	}
+
+	logger.Tracef("/web/chatbot/tg/photos/%s/file", fileID)
+	return fmt.Sprintf("/web/chatbot/tg/photos/%s/file", fileID)
+}
+
 func (m *TGMessage) GetStickerURL() string {
 	sticker, err := ReadTGSticker(int(m.StickerID.Int64))
 	if err != nil {
@@ -155,6 +260,24 @@ func (m *TGMessage) GetStickerURL() string {
 
 	return fmt.Sprintf("/web/chatbot/tg/stickers/%s/file", sticker.FileID)
 }
+
+const sqlTGMessageHasPhotos = `
+SELECT exists(SELECT 1 FROM tg_message_photos WHERE tgm_id = $1);`
+
+// GetUsernameExists returns true if username exists in the database
+func (m *TGMessage) HasPhotos() (exists bool, err error) {
+	var newExists bool
+
+	err = db.QueryRow(sqlTGMessageHasPhotos, m.ID).Scan(&newExists)
+	if err != nil {
+		logger.Errorf("Error checking if user has photos: %s", err.Error())
+		return
+	}
+	exists = newExists
+	return
+}
+
+// publics
 
 const sqlCreateTGMessage = `
 INSERT INTO "public"."tg_messages" (message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, 
@@ -495,7 +618,8 @@ func ReadTGMessageChatPage(chat *TGChat, limit uint, page uint) ([]*TGMessage, e
 		logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
 		return nil, err
 	}
-	for rows.Next() {var id int
+	for rows.Next() {
+		var id int
 		var messageID int
 		var fromID sql.NullInt64
 		var date time.Time
@@ -530,10 +654,10 @@ func ReadTGMessageChatPage(chat *TGChat, limit uint, page uint) ([]*TGMessage, e
 		var createdAt time.Time
 
 		err = rows.Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID, &forwardedFromChatID,
-				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
-				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID, &venueID,
-				&leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
-				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
+			&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
+			&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID, &venueID,
+			&leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
+			&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
 
 		if err != nil {
 			if err == sql.ErrNoRows {
