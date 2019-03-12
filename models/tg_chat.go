@@ -74,6 +74,11 @@ func (u *TGChat) GetLongFormattedName() string {
 	return strings.Join(nameStr, " ")
 }
 
+// GetCreatedAtFormatted returns formatted string of CreatedAt
+func (c *TGChat) GetMessagesPage(limit uint, page uint) ([]*TGMessage, error) {
+	return ReadTGMessageChatPage(c, limit, page)
+}
+
 // GetName returns long formatted
 func (u *TGChat) GetName() string {
 	var nameStr []string

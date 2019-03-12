@@ -2,6 +2,11 @@ div.container div.row {
     padding-top: 15px;
 }
 
+img.block-user {
+    max-height: 64px;
+    max-width: 64px;
+}
+
 table#usersListTable td,table#usersListTable th {
     vertical-align: middle;
 }

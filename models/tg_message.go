@@ -2,8 +2,11 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/lib/pq"
 )
 
@@ -42,6 +45,8 @@ type TGMessage struct {
 	MigrateFromChatId      sql.NullInt64
 	PinnedMessage          sql.NullInt64
 	CreatedAt              time.Time
+
+	fromUser *TGUserMeta
 }
 
 const sqlCreateNewChatMembers = `
@@ -102,6 +107,43 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 	}
 
 	return
+}
+
+
+// GetDateHuman returns formatted string of Date
+func (m *TGMessage) GetDateHuman() string {
+	return humanize.Time(m.Date)
+}
+
+// GetDateFormatted returns formatted string of Date
+func (m *TGMessage) GetDateFormatted() string {
+	timeStr := ""
+
+	timeStr = fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+		m.Date.Year(), m.Date.Month(), m.Date.Day(),
+		m.Date.Hour(), m.Date.Minute(), m.Date.Second())
+
+	return timeStr
+}
+
+func (m *TGMessage) GetFromName() string {
+	from, err := m.GetFromUser()
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): error: %s", err)
+		return strconv.Itoa(int(m.FromID.Int64))
+	}
+
+	return from.GetName()
+}
+
+func (m *TGMessage) GetFromUser() (*TGUser, error) {
+	from, err := ReadTGUserByAPIID(int(m.FromID.Int64))
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): error: %s", err)
+		return nil, err
+	}
+
+	return from, nil
 }
 
 const sqlCreateTGMessage = `
@@ -418,4 +460,119 @@ func ReadTGMessageByAPIIDChat(apiID int, chat *TGChatMeta, editDateInt int) (tgM
 		CreatedAt:              createdAt,
 	}
 	return
+}
+
+const sqlReadTGMessageChatPage = `
+SELECT DISTINCT ON (message_id) id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, forwarded_from_message_id, 
+	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
+    video_note_id, voice_id, caption, contact_id, location_id, venue_id, left_chat_member_id, new_chat_title,
+    delete_chat_photo, group_chat_created, supergroup_chat_created, channel_chat_created, migrate_to_chat_id, 
+    migrate_from_chat_id, pinned_message_id, created_at
+FROM tg_messages
+WHERE chat_id = $1
+ORDER BY message_id DESC, edit_date DESC NULLS LAST
+LIMIT $2 OFFSET $3;`
+
+// ReadTGMessageByAPIIDChat returns an instance of a telegram chat by api_id from the database.
+func ReadTGMessageChatPage(chat *TGChat, limit uint, page uint) ([]*TGMessage, error) {
+	start := time.Now()
+
+	offset := limit * page
+	var newMessageList []*TGMessage
+
+	rows, err := db.Query(sqlReadTGMessageChatPage, chat.ID, limit, offset)
+	if err != nil {
+		logger.Tracef("ReadUsersPage(%d, %d) (%v, %v)", limit, page, nil, err)
+		return nil, err
+	}
+	for rows.Next() {var id int
+		var messageID int
+		var fromID sql.NullInt64
+		var date time.Time
+		var chatID int
+		var forwardedFromID sql.NullInt64
+		var forwardedFromChatID sql.NullInt64
+		var forwardedFromMessageID sql.NullInt64
+		var forwardDate pq.NullTime
+		var replyToMessage sql.NullInt64
+		var newEditDate pq.NullTime
+		var text sql.NullString
+		var audioID sql.NullInt64
+		var documentID sql.NullInt64
+		var animationID sql.NullInt64
+		var stickerID sql.NullInt64
+		var videoID sql.NullInt64
+		var videoNoteID sql.NullInt64
+		var voiceID sql.NullInt64
+		var caption sql.NullString
+		var contactID sql.NullInt64
+		var locationID sql.NullInt64
+		var venueID sql.NullInt64
+		var leftChatMemberID sql.NullInt64
+		var newChatTitle sql.NullString
+		var deleteChatPhoto bool
+		var groupChatCreated bool
+		var superGroupChatCreated bool
+		var channelChatCreated bool
+		var migrateToChatId sql.NullInt64
+		var migrateFromChatId sql.NullInt64
+		var pinnedMessageID sql.NullInt64
+		var createdAt time.Time
+
+		err = rows.Scan(&id, &messageID, &fromID, &date, &chatID, &forwardedFromID, &forwardedFromChatID,
+				&forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate, &text, &audioID, &documentID,
+				&animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID, &venueID,
+				&leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
+				&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				err = ErrDoesNotExist
+			}
+			return nil, err
+		}
+
+		tgMessage := &TGMessage{
+			ID:                     id,
+			MessageID:              messageID,
+			FromID:                 fromID,
+			Date:                   date,
+			ChatID:                 chatID,
+			ForwardedFromID:        forwardedFromID,
+			ForwardedFromChatID:    forwardedFromChatID,
+			ForwardedFromMessageID: forwardedFromMessageID,
+			ForwardDate:            forwardDate,
+			ReplyToMessage:         replyToMessage,
+			EditDate:               newEditDate,
+			Text:                   text,
+			AudioID:                audioID,
+			DocumentID:             documentID,
+			AnimationID:            animationID,
+			StickerID:              stickerID,
+			VideoID:                videoID,
+			VideoNoteID:            videoNoteID,
+			VoiceID:                voiceID,
+			Caption:                caption,
+			ContactID:              contactID,
+			LocationID:             locationID,
+			VenueID:                venueID,
+			LeftChatMember:         leftChatMemberID,
+			NewChatTitle:           newChatTitle,
+			DeleteChatPhoto:        deleteChatPhoto,
+			GroupChatCreated:       groupChatCreated,
+			SuperGroupChatCreated:  superGroupChatCreated,
+			ChannelChatCreated:     channelChatCreated,
+			MigrateToChatId:        migrateToChatId,
+			MigrateFromChatId:      migrateFromChatId,
+			PinnedMessage:          pinnedMessageID,
+			CreatedAt:              createdAt,
+		}
+
+		newMessageList = append(newMessageList, tgMessage)
+	}
+
+	elapsed := time.Since(start)
+	logger.Tracef("ReadTGMessageChatPage(%d, %d, %d) (%d, %v) [%s]", chat.ID, limit, offset, len(newMessageList),
+		nil, elapsed)
+	return newMessageList, nil
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"../chatbot/telegram"
 	"../models"
 	"github.com/gorilla/mux"
 )
@@ -21,8 +22,16 @@ type TemplateVarChatbotTGChatView struct {
 	templateVarLayout
 
 	TGChat *models.TGChat
+	TGMessages []*TemplateVarChatbotMessageBlock
 
 	IsInit bool
+}
+
+type TemplateVarChatbotMessageBlock struct {
+	IsMe bool
+
+	BlockMessages []*models.TGMessage
+	BlockUser *models.TGUser
 }
 
 // HandleChatbot displays files home
@@ -112,10 +121,23 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 			MakeErrorResponse(response, 500, err.Error(), 0)
 			logger.Errorf("HandleChatbotTGChatView: Error getting chat: %v", err)
 			return
-
 		}
 	} else {
 		tmplVars.TGChat = chat
+
+		messages, err := chat.GetMessagesPage(20,0)
+		if err == models.ErrDoesNotExist {
+			tmplVars.AlertError = fmt.Sprintf("could not retrieve messages: %s", err)
+		} else {
+			if len(messages) > 0 {
+				msgBlocks, err := makeMessageBlocks(messages)
+				if err == models.ErrDoesNotExist {
+					tmplVars.AlertError = fmt.Sprintf("could not build message blocks: %s", err)
+				} else {
+					tmplVars.TGMessages = msgBlocks
+				}
+			}
+		}
 	}
 
 	elapsed := time.Since(start)
@@ -128,4 +150,61 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 	elapsed = time.Since(start)
 	logger.Tracef("HandleChatbotTGChatView() [%s]", elapsed)
 	return
+}
+
+func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBlock, error) {
+	start := time.Now()
+
+	var blockList []*TemplateVarChatbotMessageBlock
+	var lastFrom int64 = -1
+
+	var newBlock *TemplateVarChatbotMessageBlock
+
+	for _, msg := range msgs {
+		// check if we need a new block
+		if !msg.FromID.Valid && lastFrom != 0  {
+			if newBlock != nil {
+				blockList = append(blockList, newBlock)
+			}
+
+			// create empty block
+			newBlock = &TemplateVarChatbotMessageBlock{}
+
+			lastFrom = 0
+		} else if lastFrom != msg.FromID.Int64 {
+			if newBlock != nil {
+				blockList = append(blockList, newBlock)
+			}
+
+			// create new block with user
+			fromUser, err := msg.GetFromUser()
+			if err != nil {
+				elapsed := time.Since(start)
+				logger.Debugf("makeMessageBlocks(%d) (nil, %v) [%s]",len(msgs), err, elapsed)
+				return nil, err
+			}
+
+			fromUserPhoto, err := telegram.GetUserProfilePhotoCurrent(fromUser.APIID, 64)
+			if err != nil {
+				logger.Warningf("makeMessageBlocks: could not get photo url: %s", err)
+			} else {
+				fromUser.ProfilePhotoURL = fromUserPhoto
+			}
+
+			newBlock = &TemplateVarChatbotMessageBlock{
+				BlockUser: fromUser,
+			}
+
+			lastFrom = msg.FromID.Int64
+		}
+
+		// add message to block
+		newBlock.BlockMessages = append(newBlock.BlockMessages, msg)
+	}
+
+	blockList = append(blockList, newBlock)
+
+	elapsed := time.Since(start)
+	logger.Tracef("makeMessageBlocks(%d) (%d, nil) [%s]",len(msgs), len(blockList), elapsed)
+	return blockList, nil
 }
