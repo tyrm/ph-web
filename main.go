@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"./chatbot"
@@ -13,6 +14,7 @@ import (
 	"./models"
 	"./registry"
 	"./web"
+	"github.com/bamzi/jobrunner"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"github.com/juju/loggo"
@@ -20,6 +22,8 @@ import (
 )
 
 var logger *loggo.Logger
+var stsd *statsd.Client
+var stsdPrefix string
 
 func main() {
 
@@ -39,6 +43,7 @@ func main() {
 	defer models.Close()
 
 	// Open StatsD Client
+	stsdPrefix = config.StatsdPrefix
 	sd, err := statsd.New(
 		statsd.Address(config.StatsdAddress),
 		)
@@ -46,6 +51,14 @@ func main() {
 		log.Print(err)
 	}
 	defer sd.Close()
+	stsd = sd
+
+	// Start Job Runner
+	jobrunner.Start() // optional: jobrunner.Start(pool int, concurrent int) (10, 1)
+	err = jobrunner.Schedule("@every 15s", StatusSender{})
+	if err != nil {
+		logger.Errorf("error starting job running: %s", err)
+	}
 
 	// Open Registry
 	registry.Init(config.DBEngine, config.AESSecret)
@@ -118,4 +131,19 @@ func main() {
 	logger.Infof("%s", <-nch)
 
 	logger.Infof("Done!")
+}
+
+type StatusSender struct {
+}
+
+func (_ StatusSender) Run() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	stsd.Gauge(fmt.Sprintf("%s.mem.Alloc", stsdPrefix), m.Alloc)
+	stsd.Gauge(fmt.Sprintf("%s.mem.HeapAlloc", stsdPrefix), m.HeapAlloc)
+	stsd.Gauge(fmt.Sprintf("%s.mem.TotalAlloc", stsdPrefix), m.TotalAlloc)
+	stsd.Gauge(fmt.Sprintf("%s.mem.Sys", stsdPrefix), m.Sys)
+	stsd.Gauge(fmt.Sprintf("%s.mem.NumGC", stsdPrefix), m.NumGC)
+
 }
