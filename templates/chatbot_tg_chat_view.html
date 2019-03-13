@@ -117,11 +117,11 @@
                                                 {{else if .StickerID.Valid}}
                                                     <div><img src="{{.GetStickerURL}}" class="img-fluid"></div>
                                                 {{else if .LocationID.Valid}}
-                                                    <div id="{{.ID}}mapdiv" style="height:250px"></div>
-                                                    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+                                                    <div id="mapdiv{{.ID}}" style="height:250px"></div>
+                                                    <script src="https://o.pup.haus/public/openlayers-2.13.1/OpenLayers.js"></script>
                                                     <script>
-                                                        map = new OpenLayers.Map("{{.ID}}mapdiv");
-                                                        map.addLayer(new OpenLayers.Layer.OSM());
+                                                        map = new OpenLayers.Map("mapdiv{{.ID}}");
+                                                        map.addLayer(new OpenLayers.Layer.OSM("WikiMedia", ["https://maps.wikimedia.org/osm-intl/${z}/${x}/${y}.png"]));
 
                                                         var lonLat = new OpenLayers.LonLat({{.GetLocationLon}} ,{{.GetLocationLat}} )
                                                             .transform(
