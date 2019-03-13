@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,6 +17,7 @@ type TemplateVarChatbotConfig struct {
 
 // HandleChatbotConfig displays config for chatbot
 func HandleChatbotConfig(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotConfig", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

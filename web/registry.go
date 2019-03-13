@@ -30,6 +30,7 @@ type templateVarRegistryIndex struct {
 
 // HandleRegistryPost handles registry change requests
 func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleRegistryPost", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -202,6 +203,7 @@ func HandleRegistryPost(response http.ResponseWriter, request *http.Request) {
 
 // HandleRegistryIndex displays registry tree
 func HandleRegistryIndex(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleRegistryIndex", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

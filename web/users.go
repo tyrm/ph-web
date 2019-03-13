@@ -32,6 +32,7 @@ type TemplateVarUserView struct {
 
 // HandleUserGet displays information about a user
 func HandleUserGet(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleUserGet", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -62,6 +63,7 @@ func HandleUserGet(response http.ResponseWriter, request *http.Request) {
 
 // HandleUserIndex displays a list of users
 func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleUserIndex", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -167,6 +169,7 @@ func HandleUserIndex(response http.ResponseWriter, request *http.Request) {
 
 // HandleUserNew handles creating a new user
 func HandleUserNew(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleUserNew", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

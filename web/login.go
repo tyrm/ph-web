@@ -2,6 +2,7 @@ package web
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,6 +17,7 @@ type TemplateVarLogin struct {
 
 // HandleLogin handles logging in a user
 func HandleLogin(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleLogin", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

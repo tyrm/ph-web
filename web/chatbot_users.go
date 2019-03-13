@@ -19,6 +19,7 @@ type TemplateVarChatbotTGUserList struct {
 
 // HandleChatbotTGUserList displays files home
 func HandleChatbotTGUserList(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGUserList", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

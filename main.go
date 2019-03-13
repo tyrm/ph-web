@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +16,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"github.com/juju/loggo"
+	"gopkg.in/alexcesaro/statsd.v2"
 )
 
 var logger *loggo.Logger
@@ -36,6 +38,15 @@ func main() {
 	models.Init(config.DBEngine)
 	defer models.Close()
 
+	// Open StatsD Client
+	sd, err := statsd.New(
+		statsd.Address(config.StatsdAddress),
+		)
+	if err != nil {
+		log.Print(err)
+	}
+	defer sd.Close()
+
 	// Open Registry
 	registry.Init(config.DBEngine, config.AESSecret)
 	defer registry.Close()
@@ -54,7 +65,7 @@ func main() {
 	}
 
 	// Create Top Router
-	web.Init(config.DBEngine, packr.New("templates", "./templates"), config.Debug)
+	web.Init(config.DBEngine, packr.New("templates", "./templates"), sd, config.StatsdPrefix, config.Debug)
 	defer web.Close()
 
 	r := mux.NewRouter()

@@ -8,6 +8,7 @@ import (
 // ProtectMiddleware redirects users who aren't logged in to the login page
 func ProtectMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.ProtectMiddleware", stsdPrefix))
 		us, err := globalSessions.Get(r, "session-key")
 		if err != nil {
 			MakeErrorResponse(w, 500, err.Error(), 0)

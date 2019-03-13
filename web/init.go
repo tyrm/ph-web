@@ -12,12 +12,15 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/sessions"
 	"github.com/juju/loggo"
+	"gopkg.in/alexcesaro/statsd.v2"
 )
 
 var debugOutput bool
 var logger *loggo.Logger
 var templates *packr.Box
 var globalSessions *pgstore.PGStore
+var stsd *statsd.Client
+var stsdPrefix string
 
 type templateVars interface {
 	SetDarkMode(bool)
@@ -107,7 +110,7 @@ func Close() {
 }
 
 // Init connects session manager to database
-func Init(db string, box *packr.Box, d bool) {
+func Init(db string, box *packr.Box, s *statsd.Client, sp string, d bool) {
 	newLogger := loggo.GetLogger("web")
 	logger = &newLogger
 
@@ -122,6 +125,8 @@ func Init(db string, box *packr.Box, d bool) {
 	templates = box
 
 	debugOutput = d
+	stsd = s
+	stsdPrefix = sp
 }
 
 // privates

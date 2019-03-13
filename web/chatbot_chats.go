@@ -36,6 +36,7 @@ type TemplateVarChatbotMessageBlock struct {
 
 // HandleChatbot displays files home
 func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGChatList", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -99,6 +100,7 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 
 // HandleChatbot displays files home
 func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGChatView", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -153,7 +155,7 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 }
 
 func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBlock, error) {
-	start := time.Now()
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.makeMessageBlocks", stsdPrefix))
 
 	var blockList []*TemplateVarChatbotMessageBlock
 	var lastFrom int64 = -1
@@ -179,8 +181,7 @@ func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBl
 			// create new block with user
 			fromUser, err := msg.GetFromUser()
 			if err != nil {
-				elapsed := time.Since(start)
-				logger.Debugf("makeMessageBlocks(%d) (nil, %v) [%s]",len(msgs), err, elapsed)
+				logger.Debugf("makeMessageBlocks(%d) (nil, %v)",len(msgs), err)
 				return nil, err
 			}
 
@@ -204,7 +205,6 @@ func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBl
 
 	blockList = append(blockList, newBlock)
 
-	elapsed := time.Since(start)
-	logger.Tracef("makeMessageBlocks(%d) (%d, nil) [%s]",len(msgs), len(blockList), elapsed)
+	logger.Tracef("makeMessageBlocks(%d) (%d, nil)",len(msgs), len(blockList))
 	return blockList, nil
 }

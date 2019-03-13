@@ -1,12 +1,14 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
 
 // HandleLogout destroys the current session and logs out the user
 func HandleLogout(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleLogout", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session

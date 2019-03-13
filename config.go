@@ -9,10 +9,12 @@ import (
 
 // Config represents configuration variables collected from system environment
 type Config struct {
-	AESSecret    string
-	Debug        bool
-	DBEngine     string
-	LoggerConfig string
+	AESSecret     string
+	Debug         bool
+	DBEngine      string
+	LoggerConfig  string
+	StatsdAddress string
+	StatsdPrefix  string
 }
 
 // CollectConfig collects configuration variables from system environment
@@ -69,6 +71,24 @@ func CollectConfig() (config Config) {
 		config.LoggerConfig = "<root>=INFO"
 	} else {
 		config.LoggerConfig = fmt.Sprintf("<root>=%s", envLoggerLevel)
+	}
+
+	// STATSD_ADDR
+	var envStatsdAddress = os.Getenv("STATSD_ADDR")
+
+	if envStatsdAddress == "" {
+		config.StatsdAddress = "127.0.0.1:8125"
+	} else {
+		config.StatsdAddress = envStatsdAddress
+	}
+
+	// STATSD_PREFIX
+	var envStatsdPrefix = os.Getenv("STATSD_PREFIX")
+
+	if envStatsdPrefix == "" {
+		config.StatsdPrefix = "ph-web"
+	} else {
+		config.StatsdPrefix = envStatsdPrefix
 	}
 
 	// Validation

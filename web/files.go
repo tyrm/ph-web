@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	"../files"
@@ -28,6 +29,7 @@ type TemplateVarFilesConfig struct {
 
 // HandleFiles displays files home
 func HandleFiles(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleFiles", stsdPrefix, request.Method))
 	// Init Session
 	tmplVars := &TemplateVarFiles{}
 	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/files.html")
@@ -41,6 +43,7 @@ func HandleFiles(response http.ResponseWriter, request *http.Request) {
 
 // HandleFilesConfig displays files config page
 func HandleFilesConfig(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleFilesConfig", stsdPrefix, request.Method))
 	// Init Session
 	tmplVars := &TemplateVarFilesConfig{}
 	tmpl, us := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/files_config.html")

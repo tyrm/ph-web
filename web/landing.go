@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	"../models"
@@ -13,6 +14,7 @@ type TemplateVarLanding struct {
 
 // HandleLanding displays the landing page
 func HandleLanding(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleLanding", stsdPrefix, request.Method))
 	us, err := globalSessions.Get(request, "session-key")
 	if err != nil {
 		MakeErrorResponse(response, 500, err.Error(), 0)

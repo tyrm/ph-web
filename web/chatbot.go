@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ func (_ *TemplateVarChatbot) TelegramIsInit() bool {
 
 // HandleChatbot displays files home
 func HandleChatbot(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbot", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -41,6 +43,7 @@ func HandleChatbot(response http.ResponseWriter, request *http.Request) {
 
 // HandleChatbotTGPhotoSizeViewFile displays files home
 func HandleChatbotTGPhotoSizeViewFile(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGPhotoSizeViewFile", stsdPrefix, request.Method))
 	start := time.Now()
 
 	// Init Session
@@ -79,6 +82,7 @@ func HandleChatbotTGPhotoSizeViewFile(response http.ResponseWriter, request *htt
 
 // HandleChatbotTGPhotoSizeViewFile displays files home
 func HandleChatbotTGStickerViewFile(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGStickerViewFile", stsdPrefix, request.Method))
 	start := time.Now()
 
 	vars := mux.Vars(request)
