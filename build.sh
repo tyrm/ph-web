@@ -3,6 +3,7 @@
 rm -Rf ph-web
 
 go get github.com/antonlindstrom/pgstore
+go get github.com/bamzi/jobrunner
 go get github.com/dustin/go-humanize
 go get github.com/eefret/gravatar
 go get github.com/go-telegram-bot-api/telegram-bot-api
