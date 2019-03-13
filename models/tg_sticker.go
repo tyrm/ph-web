@@ -155,7 +155,7 @@ WHERE id = $1;`
 // ReadTGPhotoSizeByFileID returns an instance of a telegram user by api_id from the database.
 func ReadTGSticker(id int) (tgs *TGSticker, err error) {
 	idStr := strconv.Itoa(id)
-	if u, found := cTGUserByID.Get(idStr); found {
+	if u, found := cTGStickerByID.Get(idStr); found {
 		tgs = u.(*TGSticker)
 		logger.Tracef("ReadTGSticker(%d) (%s) [HIT]", id, tgs.FileID)
 		return
@@ -202,7 +202,7 @@ func ReadTGSticker(id int) (tgs *TGSticker, err error) {
 	}
 
 	logger.Tracef("ReadTGSticker(%d) (%s) [MISS]", id, tgs.FileID)
-	cTGUserByID.Set(idStr, tgs, cache.DefaultExpiration)
+	cTGStickerByID.Set(idStr, tgs, cache.DefaultExpiration)
 	return
 }
 

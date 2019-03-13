@@ -90,133 +90,87 @@
                     </div>
                 </div>
             </div>
+            <div class="row pt-4">
+                <div class="col">
+                    <form method="post">
+                        <div class="bg-light border border-primary rounded">
+                            <h4 class="text-white bg-primary mb-0 p-1">Send Message</h4>
+                            <div class="form-group m-2">
+                                <textarea class="form-control" id="exampleFormControlTextarea1" name="messageText" rows="3"></textarea>
+
+                                <div class="text-right mt-1">
+                                    <input type="hidden" name="_action" value="send_message">
+                                    <input type="hidden" name="chatID" value="{{.TGChat.APIID}}">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="col-lg-6">
             <div class="bg-light border border-primary rounded">
                 <div class="float-right mr-2 mt-1"><a href="/web/chatbot/tg/chats/{{.TGChat.APIID}}/messages" class="text-white">See More</a></div>
-                <h4 class="text-white bg-primary mb-0 p-1">Recent Messages</h4>
-                <ul class="list-unstyled p-1">
+                <h4 class="text-white bg-primary mb-2 p-1">Recent Messages</h4>
+                <ul class="list-unstyled p-2">
                     {{- $LastFromID := 0}}
                     {{- if .TGMessages}}
                         {{- with .TGMessages}}
                             {{- range .}}
-                                <li class="media mb-4">
-                                    {{if .BlockUser}}<img src="{{.BlockUser.ProfilePhotoURL}}" class="mr-2 rounded-circle tg-block-user">{{end}}
+                                <li class="media mb-2">
+                                {{if not .IsMe}}{{if .BlockUser}}<img src="{{.BlockUser.ProfilePhotoURL}}" class="mr-2 rounded-circle tg-block-user">{{end}}{{end}}
                                     <div class="media-body">
-                                        {{if .BlockUser}}<h5 class="mt-0 mb-1">{{if .BlockUser}}{{.BlockUser.GetName}}{{end}}</h5>{{end}}
+                                        {{if .BlockUser}}<h5 class="{{if .IsMe}}text-right {{end}}mt-0 mb-1">{{if .BlockUser}}{{.BlockUser.GetName}}{{end}}</h5>{{end}}
                                         <ul class="list-unstyled">
-
                                             {{ $color := .ColorNum}}
-                                {{- if .BlockMessages}}
-                                    {{- with .BlockMessages}}
-                                        {{- range .}}
-                                            <li class="chat-bubble-{{$color}} m-1 p-1 rounded text-white tg-block-message">
-                                                {{if .Text.Valid}}
-                                                    <div class="text-break">{{.Text.String}}</div>
-                                                {{else if .StickerID.Valid}}
-                                                    <div><img src="{{.GetStickerURL}}" class="img-fluid"></div>
-                                                {{else if .LocationID.Valid}}
-                                                    <div id="mapdiv{{.ID}}" style="height:250px"></div>
-                                                    <script src="https://o.pup.haus/public/openlayers-2.13.1/OpenLayers.js"></script>
-                                                    <script>
-                                                        map = new OpenLayers.Map("mapdiv{{.ID}}");
-                                                        map.addLayer(new OpenLayers.Layer.OSM("WikiMedia", ["https://maps.wikimedia.org/osm-intl/${z}/${x}/${y}.png"]));
+                                            {{ $isMe := .IsMe}}
+                                            {{- if .BlockMessages}}
+                                                {{- with .BlockMessages}}
+                                                    {{- range .}}
+                                                        <li class="{{if eq $color 0}}{{if $isMe}}bg-secondary{{else}}bg-primary{{end}}{{else}}chat-bubble-{{$color}}{{end}} m-1 p-1 rounded text-white tg-block-message">
+                                                            {{if .Text.Valid}}
+                                                                <div class="text-break">{{.Text.String}}</div>
+                                                            {{else if .StickerID.Valid}}
+                                                                <div><img src="{{.GetStickerURL}}" class="img-fluid"></div>
+                                                            {{else if .LocationID.Valid}}
+                                                                <div id="mapdiv{{.ID}}" style="height:250px"></div>
+                                                                <script src="https://o.pup.haus/public/openlayers-2.13.1/OpenLayers.js"></script>
+                                                                <script>
+                                                                    map = new OpenLayers.Map("mapdiv{{.ID}}");
+                                                                    map.addLayer(new OpenLayers.Layer.OSM("WikiMedia", ["https://maps.wikimedia.org/osm-intl/${z}/${x}/${y}.png"]));
 
-                                                        var lonLat = new OpenLayers.LonLat({{.GetLocationLon}} ,{{.GetLocationLat}} )
-                                                            .transform(
-                                                                new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
-                                                                map.getProjectionObject() // to Spherical Mercator Projection
-                                                            );
+                                                                    var lonLat = new OpenLayers.LonLat({{.GetLocationLon}} ,{{.GetLocationLat}} )
+                                                                        .transform(
+                                                                            new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+                                                                            map.getProjectionObject() // to Spherical Mercator Projection
+                                                                        );
 
-                                                        var zoom=16;
+                                                                    var zoom=16;
 
-                                                        var markers = new OpenLayers.Layer.Markers( "Markers" );
-                                                        map.addLayer(markers);
+                                                                    var markers = new OpenLayers.Layer.Markers( "Markers" );
+                                                                    map.addLayer(markers);
 
-                                                        markers.addMarker(new OpenLayers.Marker(lonLat));
+                                                                    markers.addMarker(new OpenLayers.Marker(lonLat));
 
-                                                        map.setCenter (lonLat, zoom);
-                                                    </script>
-                                                {{else if .HasPhotos}}
-                                                    <div><img src="{{.GetPhotoURL 450}}" class="img-fluid"></div>
-                                                {{end}}
-                                                <div class="text-right"><small>{{if .EditDate.Valid}}<i>edited</i> {{end}}{{.GetDateHuman}}</small></div>
-                                            </li>
-                                        {{- end}}
-                                    {{- end}}
-                                {{- end}}
-
-
-
+                                                                    map.setCenter (lonLat, zoom);
+                                                                </script>
+                                                            {{else if .HasPhotos}}
+                                                                <div><img src="{{.GetPhotoURL 450}}" class="img-fluid"></div>
+                                                            {{end}}
+                                                            <div class="text-right"><small>{{if .EditDate.Valid}}<i>edited</i> {{end}}{{.GetDateHuman}}</small></div>
+                                                        </li>
+                                                    {{- end}}
+                                                {{- end}}
+                                            {{- end}}
                                         </ul>
                                     </div>
+                                    {{if .IsMe}}{{if .BlockUser}}<img src="{{.BlockUser.ProfilePhotoURL}}" class="ml-2 rounded-circle tg-block-user">{{end}}{{end}}
                                 </li>
                             {{- end}}
                         {{- end}}
                     {{- end}}
 
-
-
-                    <!--<li class="media mb-4">
-                        <img src="https://via.placeholder.com/64" class="mr-2 rounded-circle">
-                        <div class="media-body">
-                            <h5 class="mt-0 mb-1">Tyr</h5>
-                            <ul class="list-unstyled">
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-                    <li class="media mb-4">
-                        <div class="media-body">
-                            <h5 class="text-right mt-0 mb-1">VestaBot</h5>
-                            <ul class="list-unstyled">
-                                <li class="bg-secondary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-secondary m-1 p-1 rounded text-white">
-                                    Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-secondary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                            </ul>
-                        </div>
-                        <img src="https://via.placeholder.com/64" class="ml-2 rounded-circle">
-                    </li>
-                    <li class="media mb-4">
-                        <img src="https://via.placeholder.com/64" class="mr-2 rounded-circle">
-                        <div class="media-body">
-                            <h5 class="mt-0 mb-1">Tyr</h5>
-                            <ul class="list-unstyled">
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                                <li class="bg-primary m-1 p-1 rounded text-white">
-                                    OMG Bot HIIII
-                                    <div class="text-right"><small>12/25/1986 10:00</small></div>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>-->
                 </ul>
             </div>
         </div>

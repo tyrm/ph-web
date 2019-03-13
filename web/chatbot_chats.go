@@ -39,7 +39,6 @@ type TemplateVarChatbotMessageBlock struct {
 // HandleChatbot displays files home
 func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request) {
 	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGChatList", stsdPrefix, request.Method))
-	start := time.Now()
 
 	// Init Session
 	tmplVars := &TemplateVarChatbotTGChatList{}
@@ -88,15 +87,11 @@ func HandleChatbotTGChatList(response http.ResponseWriter, request *http.Request
 	}
 	tmplVars.Chats = chats
 
-	elapsed := time.Since(start)
-	tmplVars.DebugTime = elapsed.String()
 	err = tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if err != nil {
 		logger.Warningf("HandleChatbot: template error: %s", err.Error())
 	}
 
-	elapsed = time.Since(start)
-	logger.Tracef("HandleRegistryIndex() [%s]", elapsed)
 	return
 }
 
@@ -108,6 +103,49 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 	// Init Session
 	tmplVars := &TemplateVarChatbotTGChatView{}
 	tmpl, _ := initSessionVars(response, request, tmplVars, "templates/layout.html", "templates/chatbot_tg_chat_view.html")
+
+	if request.Method == "POST" {
+		err := request.ParseForm()
+		if err != nil {
+			tmplVars.AlertError = fmt.Sprintf("error parsing form: %s", err.Error())
+		} else {
+			logger.Tracef("got post: %v", request.Form)
+
+			if val, ok := request.Form["_action"]; ok {
+				formAction := val[0]
+
+				if formAction == "send_message" {
+					formChat := ""
+					if val, ok := request.Form["chatID"]; ok {
+						formChat = val[0]
+					}
+					formText := ""
+					if val, ok := request.Form["messageText"]; ok {
+						formText = val[0]
+					}
+
+					if formChat == "" || formText == "" {
+						tmplVars.AlertError = fmt.Sprintf("missing element",)
+					} else {
+						n, err := strconv.ParseInt(formChat, 10, 64)
+						if err != nil {
+							tmplVars.AlertError = fmt.Sprintf("error parsing int: %s", err.Error())
+						} else {
+							chat, err := models.ReadTGChatByAPIID(n)
+							if err != nil {
+								tmplVars.AlertError = fmt.Sprintf("error getting chat: %s", err.Error())
+							} else {
+								err  = telegram.SendMessage(chat, formText)
+								if err != nil {
+									tmplVars.AlertError = fmt.Sprintf("error sending message: %s", err.Error())
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	vars := mux.Vars(request)
 	n, err := strconv.ParseInt(vars["id"], 10, 64)
@@ -148,7 +186,7 @@ func HandleChatbotTGChatView(response http.ResponseWriter, request *http.Request
 	tmplVars.DebugTime = elapsed.String()
 	tmplErr := tmpl.ExecuteTemplate(response, "layout", tmplVars)
 	if tmplErr != nil {
-		logger.Warningf("HandleChatbotTGChatView: template error: %s", err.Error())
+		logger.Warningf("HandleChatbotTGChatView: template error: %s", tmplErr.Error())
 	}
 
 	elapsed = time.Since(start)
@@ -199,21 +237,27 @@ func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBl
 			}
 
 			newColorNum := 0
-			if val, ok := colorDB[fromUser.ID]; ok {
-				newColorNum = val
+			isMe := false
+			if fromUser.APIID == telegram.MyApiID() {
+				isMe = true
 			} else {
-				newColorNum = lastColor + 1
-				colorDB[fromUser.ID] = newColorNum
-				if lastColor < 9 {
-					lastColor = lastColor +1
+				if val, ok := colorDB[fromUser.ID]; ok {
+					newColorNum = val
 				} else {
-					lastColor = 0
+					newColorNum = lastColor + 1
+					colorDB[fromUser.ID] = newColorNum
+					if lastColor < 9 {
+						lastColor = lastColor +1
+					} else {
+						lastColor = 0
+					}
 				}
 			}
 
 			newBlock = &TemplateVarChatbotMessageBlock{
 				BlockUser: fromUser,
 				ColorNum: newColorNum,
+				IsMe: isMe,
 			}
 
 			lastFrom = msg.FromID.Int64
