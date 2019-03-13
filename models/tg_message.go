@@ -47,6 +47,7 @@ type TGMessage struct {
 	CreatedAt              time.Time
 
 	fromUser *TGUserMeta
+	location *TGLocation
 }
 
 const sqlCreateNewChatMembers = `
@@ -143,6 +144,36 @@ func (m *TGMessage) GetFromUser() (*TGUser, error) {
 	}
 
 	return from, nil
+}
+
+func (m *TGMessage) GetLocationLon() float64 {
+	if m.location != nil {
+		return m.location.Longitude
+	}
+
+	location, err := ReadTGLocation(int(m.LocationID.Int64))
+	if err != nil {
+		logger.Errorf("(%d) GetLocationLonLat(): error: %s", m.ID, err)
+		return 0
+	}
+
+	m.location = location
+	return m.location.Longitude
+}
+
+func (m *TGMessage) GetLocationLat() float64 {
+	if m.location != nil {
+		return m.location.Latitude
+	}
+
+	location, err := ReadTGLocation(int(m.LocationID.Int64))
+	if err != nil {
+		logger.Errorf("(%d) GetLocationLonLat(): error: %s", m.ID, err)
+		return 0
+	}
+
+	m.location = location
+	return location.Latitude
 }
 
 const sqlTGMessageGetPhotos = `
