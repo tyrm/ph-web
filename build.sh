@@ -16,6 +16,7 @@ go get github.com/minio/minio-go
 go get github.com/patrickmn/go-cache
 go get github.com/rubenv/sql-migrate
 go get golang.org/x/crypto/bcrypt
+go get gopkg.in/alexcesaro/statsd.v2
 
 #packr2 clean
 #packr2 install
