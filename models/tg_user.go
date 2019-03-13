@@ -3,10 +3,12 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/patrickmn/go-cache"
 )
 
 type TGUser struct {
@@ -106,7 +108,14 @@ ON tg_users."id" = tg_users_history.tgu_id
 WHERE tg_users.id = $1
 ORDER BY tg_users.id ASC, tg_users_history.last_seen DESC;`
 
-func ReadTGUserByAPIID(apiID int) (user *TGUser, err error) {
+func ReadTGUser(id int) (user *TGUser, err error) {
+	idStr := strconv.Itoa(id)
+	if u, found := cTGUserByID.Get(idStr); found {
+		user = u.(*TGUser)
+		logger.Tracef("ReadTGUser(%d) (%s) [HIT]", id, user.APIID)
+		return
+	}
+
 	var newID int
 	var newAPIID int
 	var newIsBot bool
@@ -117,13 +126,13 @@ func ReadTGUserByAPIID(apiID int) (user *TGUser, err error) {
 	var newCreatedAt time.Time
 	var newLastSeen time.Time
 
-	err = db.QueryRow(sqlReadTGUser, apiID).Scan(&newID, &newAPIID, &newIsBot, &newFirstName, &newLastName,
+	err = db.QueryRow(sqlReadTGUser, id).Scan(&newID, &newAPIID, &newIsBot, &newFirstName, &newLastName,
 		&newUsername, &newLanguageCode, &newCreatedAt, &newLastSeen)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrDoesNotExist
 		}
-		logger.Tracef("ReadTGChatByAPIID(%d) (%v, %v)", apiID, nil, err)
+		logger.Tracef("ReadTGChatByAPIID(%d) (%v, %v)", id, nil, err)
 		return
 	}
 
@@ -138,6 +147,9 @@ func ReadTGUserByAPIID(apiID int) (user *TGUser, err error) {
 		CreatedAt:    newCreatedAt,
 		LastSeen:     newLastSeen,
 	}
+
+	logger.Tracef("ReadTGUser(%d) (%s) [MISS]", id, user.APIID)
+	cTGUserByID.Set(idStr, user, cache.DefaultExpiration)
 	return
 }
 

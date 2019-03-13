@@ -16,6 +16,8 @@ import (
 var db *sql.DB
 var logger *loggo.Logger
 
+var cTGStickerByID *cache.Cache
+var cTGUserByID *cache.Cache
 var cUsernameByID *cache.Cache
 
 var (
@@ -63,6 +65,8 @@ func Init(connectionString string) {
 	}
 
 	// init cache
+	cTGStickerByID = cache.New(5*time.Minute, 10*time.Minute)
+	cTGUserByID = cache.New(5*time.Minute, 10*time.Minute)
 	cUsernameByID = cache.New(5*time.Minute, 10*time.Minute)
 
 	return

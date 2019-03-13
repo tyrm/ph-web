@@ -2,10 +2,12 @@ package models
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/lib/pq"
+	"github.com/patrickmn/go-cache"
 )
 
 type TGSticker struct {
@@ -152,6 +154,13 @@ WHERE id = $1;`
 
 // ReadTGPhotoSizeByFileID returns an instance of a telegram user by api_id from the database.
 func ReadTGSticker(id int) (tgs *TGSticker, err error) {
+	idStr := strconv.Itoa(id)
+	if u, found := cTGUserByID.Get(idStr); found {
+		tgs = u.(*TGSticker)
+		logger.Tracef("ReadTGSticker(%d) (%s) [HIT]", id, tgs.FileID)
+		return
+	}
+
 	var newID int
 	var newFileID string
 	var newWidth int
@@ -176,7 +185,7 @@ func ReadTGSticker(id int) (tgs *TGSticker, err error) {
 		return
 	}
 
-	newSticker := &TGSticker{
+	tgs = &TGSticker{
 		ID:              newID,
 		FileID:          newFileID,
 		Width:           newWidth,
@@ -191,7 +200,9 @@ func ReadTGSticker(id int) (tgs *TGSticker, err error) {
 		CreatedAt:       newCreatedAt,
 		LastSeen:        newLastSeen,
 	}
-	tgs = newSticker
+
+	logger.Tracef("ReadTGSticker(%d) (%s) [MISS]", id, tgs.FileID)
+	cTGUserByID.Set(idStr, tgs, cache.DefaultExpiration)
 	return
 }
 

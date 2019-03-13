@@ -137,7 +137,7 @@ func (m *TGMessage) GetFromName() string {
 }
 
 func (m *TGMessage) GetFromUser() (*TGUser, error) {
-	from, err := ReadTGUserByAPIID(int(m.FromID.Int64))
+	from, err := ReadTGUser(int(m.FromID.Int64))
 	if err != nil {
 		logger.Errorf("(%d) GetFromName(): error: %s", err)
 		return nil, err

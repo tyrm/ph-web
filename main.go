@@ -145,5 +145,6 @@ func (_ StatusSender) Run() {
 	stsd.Gauge(fmt.Sprintf("%s.mem.TotalAlloc", stsdPrefix), m.TotalAlloc)
 	stsd.Gauge(fmt.Sprintf("%s.mem.Sys", stsdPrefix), m.Sys)
 	stsd.Gauge(fmt.Sprintf("%s.mem.NumGC", stsdPrefix), m.NumGC)
+	stsd.Gauge(fmt.Sprintf("%s.goroutines", stsdPrefix), runtime.NumGoroutine())
 
 }
