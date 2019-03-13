@@ -29,3 +29,30 @@ table#usersListTable td,table#usersListTable th {
     padding-bottom: 8px;
 }
 
+.chat-bubble-1 {
+    background-color: #6610f2;
+}
+.chat-bubble-2 {
+    background-color: #fd7e14;
+}
+.chat-bubble-3 {
+    background-color: #18BC9C;
+}
+.chat-bubble-4 {
+    background-color: #e83e8c;
+}
+.chat-bubble-5 {
+    background-color: #6f42c1;
+}
+.chat-bubble-6 {
+    background-color: #3498DB;
+}
+.chat-bubble-7 {
+    background-color: #F39C12;
+}
+.chat-bubble-8 {
+    background-color: #E74C3C;
+}
+.chat-bubble-9 {
+    background-color: #20c997;
+}

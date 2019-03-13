@@ -32,6 +32,8 @@ type TemplateVarChatbotMessageBlock struct {
 
 	BlockMessages []*models.TGMessage
 	BlockUser *models.TGUser
+
+	ColorNum int
 }
 
 // HandleChatbot displays files home
@@ -160,6 +162,10 @@ func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBl
 	var blockList []*TemplateVarChatbotMessageBlock
 	var lastFrom int64 = -1
 
+	var colorDB map[int]int
+	colorDB = make(map[int]int)
+	lastColor := 0
+
 	var newBlock *TemplateVarChatbotMessageBlock
 
 	for _, msg := range msgs {
@@ -192,8 +198,22 @@ func makeMessageBlocks(msgs []*models.TGMessage) ([]*TemplateVarChatbotMessageBl
 				fromUser.ProfilePhotoURL = fromUserPhoto
 			}
 
+			newColorNum := 0
+			if val, ok := colorDB[fromUser.ID]; ok {
+				newColorNum = val
+			} else {
+				newColorNum = lastColor + 1
+				colorDB[fromUser.ID] = newColorNum
+				if lastColor < 9 {
+					lastColor = lastColor +1
+				} else {
+					lastColor = 0
+				}
+			}
+
 			newBlock = &TemplateVarChatbotMessageBlock{
 				BlockUser: fromUser,
+				ColorNum: newColorNum,
 			}
 
 			lastFrom = msg.FromID.Int64
