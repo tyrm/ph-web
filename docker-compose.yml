@@ -5,7 +5,7 @@ services:
       context: ./
     container_name: ph-web
     environment:
-      - "STATSD_ADDR"
+      - "STATSD_ADDR=172.18.0.1:8125"
     volumes:
       - /etc/default/ph_web_aes_secret:/run/secrets/ph_web_aes_secret:ro
       - /etc/default/ph_web_db_engine:/run/secrets/ph_web_db_engine:ro
