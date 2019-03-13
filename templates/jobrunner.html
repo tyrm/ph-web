@@ -1,0 +1,43 @@
+{{define "title"}}PUPHAUS{{end}}
+
+{{define "body"}}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h1><i class="far fa-clock"></i> Job Runner</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="table-responsive">
+                <table class="table" id="usersListTable">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-nowrap">Last Run</th>
+                        <th scope="col" class="text-nowrap">Next Run</th>
+                        <th scope="col" class="text-nowrap">Latency</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{- with .Jobs}}
+                        {{- range .}}
+                            <tr>
+                                <td>{{.Id}}</td>
+                                <td>{{.JobRunner.Name}}</td>
+                                <td>{{.JobRunner.Status}}</td>
+                                <td>{{if not .Prev.IsZero}}{{.Prev.Format "2006-01-02 15:04:05"}}{{end}}</td>
+                                <td>{{if not .Next.IsZero}}{{.Next.Format "2006-01-02 15:04:05"}}{{end}}</td>
+                                <td>{{.JobRunner.Latency}}</td>
+                            </tr>
+                        {{- end}}
+                    {{- end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

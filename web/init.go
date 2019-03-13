@@ -77,11 +77,12 @@ type templateVarLayout struct {
 	AlertError   string
 	AlertWarn    string
 
-	DarkMode  bool
-	Debug     bool
-	DebugTime string
-	NavBar    *templateNavbar
-	Username  string
+	DarkMode    bool
+	Debug       bool
+	DebugTime   string
+	MetaRefresh int
+	NavBar      *templateNavbar
+	Username    string
 }
 
 func (t *templateVarLayout) SetDarkMode(d bool) {
@@ -214,10 +215,17 @@ func makeNavbar(path string) (navbar *templateNavbar) {
 				URL:    "#",
 				Children: []*tempalteNavbarNode{
 					{
+						Text:     "Job Runner",
+						MatchStr: "^/web/admin/jobrunner/.*$",
+						FAIcon:   "clock",
+						URL:      "/web/admin/jobrunner/",
+					},
+					{
 						Text:     "Oauth Clients",
 						MatchStr: "^/web/admin/oauth-clients/.*$",
 						FAIcon:   "desktop",
 						URL:      "/web/admin/oauth-clients/",
+						Disabled: true,
 					},
 					{
 						Text:     "Registry",

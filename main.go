@@ -103,6 +103,8 @@ func main() {
 	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("POST")
 
 	rAdmin := rWeb.PathPrefix("/admin").Subrouter()
+	rAdmin.HandleFunc("/jobrunner/", web.HandleJobrunner).Methods("GET")
+	rAdmin.HandleFunc("/jobrunner/json", web.HandleJobrunnerJSON).Methods("GET")
 	rAdmin.HandleFunc("/users/", web.HandleUserIndex).Methods("GET")
 	rAdmin.HandleFunc("/users/", web.HandleUserIndex).Methods("POST")
 	rAdmin.HandleFunc("/users/new", web.HandleUserNew).Methods("GET")
