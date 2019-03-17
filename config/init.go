@@ -1,12 +1,15 @@
-package main
+package config
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/juju/loggo"
 	"gopkg.in/ini.v1"
 )
+
+var logger *loggo.Logger
 
 // Config represents configuration variables collected from system environment
 type Config struct {
@@ -140,4 +143,9 @@ func CollectConfig() (config Config) {
 	}
 
 	return
+}
+
+func init() {
+	newLogger := loggo.GetLogger("config")
+	logger = &newLogger
 }

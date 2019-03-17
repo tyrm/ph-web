@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"./chatbot"
+	"./config"
 	"./files"
 	"./models"
 	"./registry"
@@ -30,7 +31,7 @@ func main() {
 	newLogger := loggo.GetLogger("main")
 	logger = &newLogger
 
-	config := CollectConfig()
+	config := config.CollectConfig()
 
 	err := loggo.ConfigureLoggers(config.LoggerConfig)
 	if err != nil {
@@ -90,8 +91,6 @@ func main() {
 	rWeb.Use(web.ProtectMiddleware) // Require Valid Bearer
 	rWeb.HandleFunc("/", web.HandleHome).Methods("GET")
 	rWeb.HandleFunc("/chatbot/", web.HandleChatbot).Methods("GET")
-	rWeb.HandleFunc("/chatbot/config", web.HandleChatbotConfig).Methods("GET")
-	rWeb.HandleFunc("/chatbot/config", web.HandleChatbotConfig).Methods("POST")
 	rWeb.HandleFunc("/chatbot/tg/chats/", web.HandleChatbotTGChatList).Methods("GET")
 	rWeb.HandleFunc("/chatbot/tg/chats/{id}", web.HandleChatbotTGChatView).Methods("GET")
 	rWeb.HandleFunc("/chatbot/tg/chats/{id}", web.HandleChatbotTGChatView).Methods("POST")
@@ -100,8 +99,6 @@ func main() {
 	rWeb.HandleFunc("/chatbot/tg/stickers/{id}/file", web.HandleChatbotTGStickerViewFile).Methods("GET")
 	rWeb.HandleFunc("/chatbot/tg/users/", web.HandleChatbotTGUserList).Methods("GET")
 	rWeb.HandleFunc("/files/", web.HandleFiles).Methods("GET")
-	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("GET")
-	rWeb.HandleFunc("/files/config", web.HandleFilesConfig).Methods("POST")
 
 	rAdmin := rWeb.PathPrefix("/admin").Subrouter()
 	rAdmin.HandleFunc("/jobrunner/", web.HandleJobrunner).Methods("GET")
@@ -126,7 +123,7 @@ func main() {
 	go http.ListenAndServe(":8080", r)
 
 	// Init Files
-	go files.InitClient(false)
+	go files.InitClient(config, false)
 	go chatbot.InitClients()
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
