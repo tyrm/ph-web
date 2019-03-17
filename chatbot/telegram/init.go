@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"../../registry"
+	"../../config"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/juju/loggo"
 	"github.com/patrickmn/go-cache"
@@ -34,40 +34,19 @@ func init() {
 }
 
 // InitClient for telegram
-func InitClient(force bool) {
+func InitClient(config config.Config, force bool) {
 	if botConnected && !force {
 		return
 	}
 
 	logger.Infof("Initializing telegram")
-	var missingReg []string
-	regToken, err := registry.Get("/system/chatbot/telegram/token")
-	if err != nil {
-		if err == registry.ErrDoesNotExist {
-			missingReg = append(missingReg, "token")
-		} else {
-			logger.Errorf("Problem getting [token]: %s", err.Error())
-			return
-		}
-	}
 
-	if len(missingReg) > 0 {
-		logger.Warningf("Could not init telegram, missing registry items: %v", missingReg)
-		return
-	}
-
-	token, err := regToken.GetValue()
-	if err != nil {
-		logger.Errorf("Problem getting [token] value: %s", err.Error())
-		return
-	}
-
-	bot, err = tgbotapi.NewBotAPI(token)
+	var err error
+	bot, err = tgbotapi.NewBotAPI(config.TGToken)
 	if err != nil {
 		logger.Errorf("Problem starting telegram bot: %s", err.Error())
 		return
 	}
-
 
 	go workerUpdateHandler()
 }

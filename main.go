@@ -124,7 +124,7 @@ func main() {
 
 	// Init Files
 	go files.InitClient(config, false)
-	go chatbot.InitClients()
+	go chatbot.InitClients(config)
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
 	nch := make(chan os.Signal)

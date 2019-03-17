@@ -1,6 +1,7 @@
 package chatbot
 
 import (
+	"../config"
 	"./telegram"
 	"github.com/juju/loggo"
 )
@@ -13,6 +14,6 @@ func init() {
 }
 
 // InitClients tries to init bot clients
-func InitClients() {
-	telegram.InitClient(false)
+func InitClients(config config.Config) {
+	telegram.InitClient(config, false)
 }
