@@ -74,9 +74,49 @@ func (m *TGMessage) CreateMessageEntityFromAPI(apiMessageEntity *tgbotapi.Messag
 	if apiMessageEntity.URL != "" {
 		url = sql.NullString{
 			String: apiMessageEntity.URL,
-			Valid: true,
+			Valid:  true,
 		}
 	}
 
 	return m.CreateMessageEntity(apiMessageEntity.Type, offset, length, url, user)
+}
+
+const sqlReadMessageEntities = `
+SELECT id, tgm_id, "type", "offset", "length", url, "user", created_at
+FROM "public"."tg_message_entities"
+WHERE tgm_id = $1
+ORDER BY "offset" ASC;`
+
+func (m *TGMessage) ReadMessageEntities() (tgMessageEntities []*TGMessageEntity, err error) {
+	rows, err := db.Query(sqlReadMessageEntities, m.ID)
+	if err != nil {
+		logger.Tracef("ReadMessageEntities() (nil, %v)", err)
+		return nil, err
+	}
+	for rows.Next() {
+		var newID int
+		var newTGMessageID int
+		var newType string
+		var newOffset sql.NullInt64
+		var newLength sql.NullInt64
+		var newURL sql.NullString
+		var newUserID sql.NullInt64
+		var newCreatedAt time.Time
+
+		err = rows.Scan(&newID, &newTGMessageID, &newType, &newOffset, &newLength, &newURL, &newUserID, &newCreatedAt)
+
+		tgMessageEntities = append(tgMessageEntities, &TGMessageEntity{
+			ID:          newID,
+			TGMessageID: newTGMessageID,
+			Type:        newType,
+			Offset:      newOffset,
+			Length:      newLength,
+			URL:         newURL,
+			UserID:      newUserID,
+			CreatedAt:   newCreatedAt,
+		})
+	}
+
+	return
+
 }

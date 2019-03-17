@@ -42,6 +42,44 @@ func HandleChatbot(response http.ResponseWriter, request *http.Request) {
 }
 
 // HandleChatbotTGPhotoSizeViewFile displays files home
+func HandleChatbotTGChatAnimationViewFile(response http.ResponseWriter, request *http.Request) {
+	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGPhotoSizeViewFile", stsdPrefix, request.Method))
+	start := time.Now()
+
+	// Init Session
+	tmplVars := &TemplateVarChatbot{}
+	_, _ = initSessionVars(response, request, tmplVars)
+
+	vars := mux.Vars(request)
+	fileID, err := models.ReadTGChatAnimationByFileID(vars["id"])
+	if err != nil {
+		if err == models.ErrDoesNotExist {
+			MakeErrorResponse(response, 404, vars["id"], 0)
+			return
+		}
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
+		return
+	}
+
+	body, err := telegram.GetFile(fileID)
+	if err != nil {
+		MakeErrorResponse(response, 500, err.Error(), 0)
+		logger.Errorf("HandleUserGet: Error getting PhotoSize: %v", err)
+		return
+	}
+
+
+	response.Write(body)
+
+	//_ , _ = fmt.Fprintf(response, "Hello %v", fileID)
+
+	elapsed := time.Since(start)
+	logger.Tracef("HandleChatbotTGChatAnimationViewFile() [%s]", elapsed)
+	return
+}
+
+// HandleChatbotTGPhotoSizeViewFile displays files home
 func HandleChatbotTGPhotoSizeViewFile(response http.ResponseWriter, request *http.Request) {
 	defer stsd.NewTiming().Send(fmt.Sprintf("%s.web.%s.HandleChatbotTGPhotoSizeViewFile", stsdPrefix, request.Method))
 	start := time.Now()

@@ -2,98 +2,139 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
+
+	"gopkg.in/ini.v1"
 )
 
 // Config represents configuration variables collected from system environment
 type Config struct {
-	AESSecret     string
-	Debug         bool
-	DBEngine      string
-	LoggerConfig  string
+	AESSecret string
+
+	Debug bool
+
+	DBEngine string
+
+	FilesAccessKey string
+	FilesBucket string
+	FilesEndpoint string
+	FilesKeyID string
+
+	LoggerConfig string
+
 	StatsdAddress string
 	StatsdPrefix  string
+
+	TGToken string
 }
 
 // CollectConfig collects configuration variables from system environment
 func CollectConfig() (config Config) {
-	var missingEnv []string
 
-	// AES_SECRET
-	config.AESSecret = os.Getenv("AES_SECRET")
-	if config.AESSecret == "" {
-		AESSecretFile := os.Getenv("AES_SECRET_FILE")
-		if AESSecretFile == "" {
-			AESSecretFile = "/run/secrets/ph_web_aes_secret"
-		}
-
-		data, err := ioutil.ReadFile(AESSecretFile)
-		if err != nil {
-			missingEnv = append(missingEnv, "AES_SECRET")
-			missingEnv = append(missingEnv, "AES_SECRET_FILE")
-		} else {
-			config.AESSecret = string(data)
-		}
+	// CONFIG_FILE
+	configFile := "/etc/ph-web.ini"
+	var envConfigFile = os.Getenv("CONFIG_FILE")
+	if envConfigFile != "" {
+		configFile = envConfigFile
 	}
 
-	// LOGGER_LEVEL
-	var envDebug = os.Getenv("DEBUG")
+	cfg, err := ini.Load(configFile)
+	if err != nil {
+		fmt.Printf("Fail to read file: %v", err)
+		os.Exit(1)
+	}
 
+	fmt.Printf("%v", cfg)
+
+	var missingEnv []string
+
+
+	// DEFAULT
+	var envAESSecret = cfg.Section("").Key("aes_secret").String()
+	if envAESSecret != "" {
+		config.AESSecret = envAESSecret
+	} else {
+		missingEnv = append(missingEnv, "aes_secret")
+	}
+
+	var envDBEngine = cfg.Section("").Key("db_engine").String()
+	if envDBEngine != "" {
+		config.DBEngine = envDBEngine
+	} else {
+		missingEnv = append(missingEnv, "db_engine")
+	}
+
+	// chatbot
+	var envTGToken = cfg.Section("chatbot").Key("tg_token").String()
+	if envTGToken != "" {
+		config.TGToken = envTGToken
+	} else {
+		missingEnv = append(missingEnv, "chatbot:tg_token")
+	}
+
+	// debug
+	var envDebug = cfg.Section("debug").Key("web").String()
 	if strings.ToUpper(envDebug) == "TRUE" {
 		config.Debug = true
 	} else {
 		config.Debug = false
 	}
 
-	// DB_ENGINE
-	config.DBEngine = os.Getenv("DB_ENGINE")
-	if config.DBEngine == "" {
-		DBEngineFile := os.Getenv("DB_ENGINE_FILE")
-		if DBEngineFile == "" {
-			DBEngineFile = "/run/secrets/ph_web_db_engine"
-		}
-
-		data, err := ioutil.ReadFile(DBEngineFile)
-		if err != nil {
-			missingEnv = append(missingEnv, "DB_ENGINE")
-			missingEnv = append(missingEnv, "DB_ENGINE_FILE")
-		} else {
-			config.DBEngine = string(data)
-		}
-	}
-
-	// LOGGER_LEVEL
-	var envLoggerLevel = os.Getenv("LOGGER_LEVEL")
-
+	var envLoggerLevel = cfg.Section("debug").Key("log_level").String()
 	if envLoggerLevel == "" {
 		config.LoggerConfig = "<root>=INFO"
 	} else {
-		config.LoggerConfig = fmt.Sprintf("<root>=%s", envLoggerLevel)
+		config.LoggerConfig = fmt.Sprintf("<root>=%s", strings.ToUpper(envLoggerLevel))
 	}
 
-	// STATSD_ADDR
-	var envStatsdAddress = os.Getenv("STATSD_ADDR")
-
-	if envStatsdAddress == "" {
-		config.StatsdAddress = "127.0.0.1:8125"
+	// files
+	var envFilesAccessKey = cfg.Section("files").Key("access_key").String()
+	if envFilesAccessKey != "" {
+		config.FilesAccessKey = envFilesAccessKey
 	} else {
+		missingEnv = append(missingEnv, "files:access_key")
+	}
+
+	var envFilesBucket = cfg.Section("files").Key("bucket").String()
+	if envFilesBucket != "" {
+		config.FilesBucket = envFilesBucket
+	} else {
+		missingEnv = append(missingEnv, "files:access_key")
+	}
+
+	var envFilesEndpoint = cfg.Section("files").Key("endpoint").String()
+	if envFilesEndpoint != "" {
+		config.FilesEndpoint = envFilesEndpoint
+	} else {
+		missingEnv = append(missingEnv, "files:endpoint")
+	}
+
+	var envFilesKeyID = cfg.Section("files").Key("key_id").String()
+	if envFilesKeyID != "" {
+		config.FilesKeyID = envFilesKeyID
+	} else {
+		missingEnv = append(missingEnv, "files:key_id")
+	}
+
+	// statsd
+	var envStatsdAddress = cfg.Section("statsd").Key("address").String()
+	if envStatsdAddress != "" {
 		config.StatsdAddress = envStatsdAddress
+	} else {
+		config.StatsdAddress = "127.0.0.1:8125"
 	}
 
-	// STATSD_PREFIX
-	var envStatsdPrefix = os.Getenv("STATSD_PREFIX")
-
-	if envStatsdPrefix == "" {
-		config.StatsdPrefix = "ph-web"
-	} else {
+	var envStatsdPrefix = cfg.Section("statsd").Key("address").String()
+	if envStatsdPrefix != "" {
 		config.StatsdPrefix = envStatsdPrefix
+	} else {
+		config.StatsdPrefix = "ph-web"
 	}
 
 	// Validation
 	if len(missingEnv) > 0 {
-		var msg = fmt.Sprintf("Environment variables missing: %v", missingEnv)
+		var msg = fmt.Sprintf("Config parameters missing: %v", missingEnv)
 		logger.Criticalf(msg)
 		panic(fmt.Sprint(msg))
 	}

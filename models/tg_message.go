@@ -3,7 +3,9 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -46,8 +48,9 @@ type TGMessage struct {
 	PinnedMessage          sql.NullInt64
 	CreatedAt              time.Time
 
-	fromUser *TGUserMeta
+	fromUser *TGUser
 	location *TGLocation
+	replyToMessage *TGMessage
 }
 
 const sqlCreateNewChatMembers = `
@@ -110,6 +113,16 @@ func (m *TGMessage) CreatePhoto(photo *TGPhotoSize) (err error) {
 	return
 }
 
+func (m *TGMessage) GetChatAnimationURL() string {
+	chatAnimation, err := ReadTGChatAnimation(int(m.AnimationID.Int64))
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): error: %s", err)
+		return ""
+	}
+
+	return fmt.Sprintf("/web/chatbot/tg/chat_animations/%s/file", chatAnimation.FileID)
+}
+
 // GetDateHuman returns formatted string of Date
 func (m *TGMessage) GetDateHuman() string {
 	return humanize.Time(m.Date)
@@ -137,12 +150,17 @@ func (m *TGMessage) GetFromName() string {
 }
 
 func (m *TGMessage) GetFromUser() (*TGUser, error) {
+	if m.fromUser != nil {
+		return m.fromUser, nil
+	}
+
 	from, err := ReadTGUser(int(m.FromID.Int64))
 	if err != nil {
 		logger.Errorf("(%d) GetFromName(): error: %s", err)
 		return nil, err
 	}
 
+	m.fromUser = from
 	return from, nil
 }
 
@@ -282,6 +300,32 @@ func (m *TGMessage) GetPhotoURL(size int) string {
 	return fmt.Sprintf("/web/chatbot/tg/photos/%s/file", fileID)
 }
 
+func (m *TGMessage) GetReplyToMessage() *TGMessage {
+	if !m.ReplyToMessage.Valid {
+		return nil
+	}
+
+	if m.replyToMessage != nil {
+		return m.replyToMessage
+	}
+
+	msg, err := ReadTGMessage(int(m.ReplyToMessage.Int64))
+	if err != nil {
+		return nil
+	}
+
+	return msg
+}
+
+func (m *TGMessage) GetReplyToFromName() string {
+	msg := m.GetReplyToMessage()
+	if msg == nil {
+		return ""
+	}
+
+	return msg.GetFromName()
+}
+
 func (m *TGMessage) GetStickerURL() string {
 	sticker, err := ReadTGSticker(int(m.StickerID.Int64))
 	if err != nil {
@@ -290,6 +334,48 @@ func (m *TGMessage) GetStickerURL() string {
 	}
 
 	return fmt.Sprintf("/web/chatbot/tg/stickers/%s/file", sticker.FileID)
+}
+
+func (m *TGMessage) GetTextHTML() template.HTML {
+	me, err := m.ReadMessageEntities()
+	if err != nil {
+		logger.Errorf("(%d) GetFromName(): error: %s", err)
+		return template.HTML(m.Text.String)
+	}
+
+	if len(me) == 0 {
+		return template.HTML(m.Text.String)
+	}
+
+	// Get the beginning
+	var textHTML strings.Builder
+	textHTML.WriteString(m.Text.String[:me[0].Offset.Int64])
+
+	meCount := len(me)
+	for k := range me {
+		meText := m.Text.String[me[k].Offset.Int64 : me[k].Offset.Int64+me[k].Length.Int64]
+		switch os := me[k].Type; os {
+		case "url":
+			textHTML.WriteString(fmt.Sprintf("<a href=\"%s\" target=\"_blank\">%s</a>", meText, meText))
+		case "mention":
+			textHTML.WriteString(fmt.Sprintf("<span class=\"badge badge-info\">%s</span>", meText))
+		case "hashtag":
+			textHTML.WriteString(fmt.Sprintf("<span class=\"badge badge-success\">%s</span>", meText))
+		default:
+			logger.Debugf("%s: %s", me[k].Type, meText)
+			textHTML.WriteString(meText)
+		}
+
+		// Text in between
+		if k < meCount-1 {
+			textHTML.WriteString(m.Text.String[me[k].Offset.Int64+me[k].Length.Int64 : me[k+1].Offset.Int64])
+		}
+	}
+
+	// Get the end
+	textHTML.WriteString(m.Text.String[me[meCount-1].Offset.Int64+me[meCount-1].Length.Int64:])
+
+	return template.HTML(textHTML.String())
 }
 
 const sqlTGMessageHasPhotos = `
@@ -490,6 +576,105 @@ func CreateTGMessage(messageID int, from *TGUserMeta, date time.Time, chat *TGCh
 		StickerID:              stickerID,
 		VideoID:                videoID,
 		VideoNoteID:            videoNoteID,
+		Caption:                caption,
+		ContactID:              contactID,
+		LocationID:             locationID,
+		VenueID:                venueID,
+		LeftChatMember:         leftChatMemberID,
+		NewChatTitle:           newChatTitle,
+		DeleteChatPhoto:        deleteChatPhoto,
+		GroupChatCreated:       groupChatCreated,
+		SuperGroupChatCreated:  superGroupChatCreated,
+		ChannelChatCreated:     channelChatCreated,
+		MigrateToChatId:        migrateToChatId,
+		MigrateFromChatId:      migrateFromChatId,
+		PinnedMessage:          pinnedMessageID,
+		CreatedAt:              createdAt,
+	}
+	return
+}
+
+const sqlReadTGMessage = `
+SELECT id, message_id, from_id, date, chat_id, forwarded_from_id, forwarded_from_chat_id, forwarded_from_message_id, 
+	forward_date, reply_to_message, edit_date, text, audio_id, document_id, animation_id, sticker_id, video_id, 
+    video_note_id, voice_id, caption, contact_id, location_id, venue_id, left_chat_member_id, new_chat_title,
+    delete_chat_photo, group_chat_created, supergroup_chat_created, channel_chat_created, migrate_to_chat_id, 
+    migrate_from_chat_id, pinned_message_id, created_at
+FROM tg_messages
+WHERE id = $1
+LIMIT 1;`
+
+// ReadTGMessageByAPIIDChat returns an instance of a telegram chat by api_id from the database.
+func ReadTGMessage(id int) (tgMessage *TGMessage, err error) {
+	var nid int
+	var messageID int
+	var fromID sql.NullInt64
+	var date time.Time
+	var chatID int
+	var forwardedFromID sql.NullInt64
+	var forwardedFromChatID sql.NullInt64
+	var forwardedFromMessageID sql.NullInt64
+	var forwardDate pq.NullTime
+	var replyToMessage sql.NullInt64
+	var newEditDate pq.NullTime
+	var text sql.NullString
+	var audioID sql.NullInt64
+	var documentID sql.NullInt64
+	var animationID sql.NullInt64
+	var stickerID sql.NullInt64
+	var videoID sql.NullInt64
+	var videoNoteID sql.NullInt64
+	var voiceID sql.NullInt64
+	var caption sql.NullString
+	var contactID sql.NullInt64
+	var locationID sql.NullInt64
+	var venueID sql.NullInt64
+	var leftChatMemberID sql.NullInt64
+	var newChatTitle sql.NullString
+	var deleteChatPhoto bool
+	var groupChatCreated bool
+	var superGroupChatCreated bool
+	var channelChatCreated bool
+	var migrateToChatId sql.NullInt64
+	var migrateFromChatId sql.NullInt64
+	var pinnedMessageID sql.NullInt64
+	var createdAt time.Time
+
+	logger.Tracef("ReadTGMessageByAPIIDChat: %d, %d, %d", nid)
+
+	err = db.QueryRow(sqlReadTGMessage, id).Scan(&nid, &messageID, &fromID, &date, &chatID,	&forwardedFromID,
+		&forwardedFromChatID, &forwardedFromMessageID, &forwardDate, &replyToMessage, &newEditDate,	&text, &audioID,
+		&documentID, &animationID, &stickerID, &videoID, &videoNoteID, &voiceID, &caption, &contactID, &locationID,
+		&venueID, &leftChatMemberID, &newChatTitle, &deleteChatPhoto, &groupChatCreated, &superGroupChatCreated,
+		&channelChatCreated, &migrateToChatId, &migrateFromChatId, &pinnedMessageID, &createdAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrDoesNotExist
+		}
+		return
+	}
+
+	tgMessage = &TGMessage{
+		ID:                     nid,
+		MessageID:              messageID,
+		FromID:                 fromID,
+		Date:                   date,
+		ChatID:                 chatID,
+		ForwardedFromID:        forwardedFromID,
+		ForwardedFromChatID:    forwardedFromChatID,
+		ForwardedFromMessageID: forwardedFromMessageID,
+		ForwardDate:            forwardDate,
+		ReplyToMessage:         replyToMessage,
+		EditDate:               newEditDate,
+		Text:                   text,
+		AudioID:                audioID,
+		DocumentID:             documentID,
+		AnimationID:            animationID,
+		StickerID:              stickerID,
+		VideoID:                videoID,
+		VideoNoteID:            videoNoteID,
+		VoiceID:                voiceID,
 		Caption:                caption,
 		ContactID:              contactID,
 		LocationID:             locationID,

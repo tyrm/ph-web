@@ -147,6 +147,58 @@ func CreateTGChatAnimationFromAPI(apiChatAnimation *tgbotapi.ChatAnimation, thum
 	return CreateTGChatAnimation(apiChatAnimation.FileID, apiChatAnimation.Width, apiChatAnimation.Height, apiChatAnimation.Duration, thumbnail, fileName, mimeType, fileSize)
 }
 
+const sqlReadTGChatAnimation = `
+SELECT id, file_id, width, height, duration, thumbnail_id, file_name, mime_type, file_size, file_location, file_suffix, file_retrieved_at, created_at, last_seen
+FROM tg_chat_animations
+WHERE id = $1;`
+
+// ReadTGPhotoSizeByFileID returns an instance of a telegram user by api_id from the database.
+func ReadTGChatAnimation(id int) (tgca *TGChatAnimation, err error) {
+	var newID int
+	var newFileID string
+	var newWidth int
+	var newHeight int
+	var newDuration int
+	var newThumbnailID sql.NullInt64
+	var newFileName sql.NullString
+	var newMimeType sql.NullString
+	var newFileSize sql.NullInt64
+	var newFileLocation sql.NullString
+	var newFileSuffix sql.NullString
+	var newFileRetrievedAt pq.NullTime
+	var newCreatedAt time.Time
+	var newLastSeen time.Time
+
+	err = db.QueryRow(sqlReadTGChatAnimation, id).Scan(&newID, &newFileID, &newWidth, &newHeight,
+		&newDuration, &newThumbnailID, &newFileName, &newMimeType, &newFileSize, &newFileLocation, &newFileSuffix,
+		&newFileRetrievedAt, &newCreatedAt, &newLastSeen)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrDoesNotExist
+		}
+		return
+	}
+
+	newChatAnimation := &TGChatAnimation{
+		ID:              newID,
+		FileID:          newFileID,
+		Width:           newWidth,
+		Height:          newHeight,
+		Duration:        newDuration,
+		ThumbnailID:     newThumbnailID,
+		FileName:        newFileName,
+		MimeType:        newMimeType,
+		FileSize:        newFileSize,
+		FileLocation:    newFileLocation,
+		FileSuffix:      newFileSuffix,
+		FileRetrievedAt: newFileRetrievedAt,
+		CreatedAt:       newCreatedAt,
+		LastSeen:        newLastSeen,
+	}
+	tgca = newChatAnimation
+	return
+}
+
 const sqlReadTGChatAnimationByFileID = `
 SELECT id, file_id, width, height, duration, thumbnail_id, file_name, mime_type, file_size, file_location, file_suffix, file_retrieved_at, created_at, last_seen
 FROM tg_chat_animations
