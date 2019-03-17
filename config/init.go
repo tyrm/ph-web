@@ -48,10 +48,7 @@ func CollectConfig() (config Config) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("%v", cfg)
-
 	var missingEnv []string
-
 
 	// DEFAULT
 	var envAESSecret = cfg.Section("").Key("aes_secret").String()

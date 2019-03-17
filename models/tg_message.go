@@ -48,6 +48,7 @@ type TGMessage struct {
 	PinnedMessage          sql.NullInt64
 	CreatedAt              time.Time
 
+	forwardedFromUser *TGUser
 	fromUser *TGUser
 	location *TGLocation
 	replyToMessage *TGMessage
@@ -137,6 +138,43 @@ func (m *TGMessage) GetDateFormatted() string {
 		m.Date.Hour(), m.Date.Minute(), m.Date.Second())
 
 	return timeStr
+}
+func (m *TGMessage) GetForwardedFromAPIID() int {
+	if m.forwardedFromUser != nil {
+		return m.forwardedFromUser.APIID
+	}
+
+	if !m.ForwardedFromID.Valid {
+		logger.Warningf("GetForwardedFromName: message %d not forwarded", m.ID)
+		return 0
+	}
+
+	user, err := ReadTGUser(int(m.ForwardedFromID.Int64))
+	if err != nil {
+		logger.Errorf("GetForwardedFromName: error getting user: %s", err)
+		return 0
+	}
+	m.forwardedFromUser = user
+	return  user.APIID
+}
+
+func (m *TGMessage) GetForwardedFromName() string {
+	if m.forwardedFromUser != nil {
+		return m.forwardedFromUser.GetName()
+	}
+
+	if !m.ForwardedFromID.Valid {
+		logger.Warningf("GetForwardedFromName: message %d not forwarded", m.ID)
+		return ""
+	}
+
+	user, err := ReadTGUser(int(m.ForwardedFromID.Int64))
+	if err != nil {
+		logger.Errorf("GetForwardedFromName: error getting user: %s", err)
+		return ""
+	}
+	m.forwardedFromUser = user
+	return user.GetName()
 }
 
 func (m *TGMessage) GetFromName() string {
