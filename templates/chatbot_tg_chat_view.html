@@ -32,7 +32,7 @@
                 {{- else if eq .TGChat.Type "channel"}}<i class="fas fa-bullhorn"></i>
                 {{- end -}}
                 &nbsp;{{.TGChat.GetLongFormattedName}}
-                {{- if .TGChat.AllMembersAreAdmins}}<span class="badge badge-info">All Admin</span>{{end}}
+                &nbsp;{{- if .TGChat.AllMembersAreAdmins}}<span class="badge badge-info">All Admin</span>{{end}}
             </h3>
         </div>
     </div>
