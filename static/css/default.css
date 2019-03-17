@@ -11,6 +11,10 @@ table#usersListTable td,table#usersListTable th {
     vertical-align: middle;
 }
 
+.olControlAttribution {
+    display: none !important;
+}
+
 .fa-aws {
     color: #FF9900;
 }
