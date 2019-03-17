@@ -129,7 +129,7 @@
                                                                     {{- template "message_body" .GetReplyToMessage -}}
                                                                 </div>
                                                             {{- end}}
-                                                            {{- if .ForwardedFromID.Valid}}<h6 class="mb-0">Forwarded from <a href="/web/chatbot/tg/users/{{.GetForwardedFromAPIID}}" class="text-white">{{.GetForwardedFromName}}</a></h6>{{end}}
+                                                            {{- if .ForwardedFromID.Valid}}<h6 class="mb-0"><i class="fas fa-caret-right"></i> Forwarded from <a href="/web/chatbot/tg/users/{{.GetForwardedFromAPIID}}" class="text-white">{{.GetForwardedFromName}}</a></h6>{{end}}
                                                             {{- template "message_body" . -}}
                                                             <div class="text-right"><small>{{if .EditDate.Valid}}<i>edited</i> {{end}}{{.GetDateHuman}}</small></div>
                                                         </li>
